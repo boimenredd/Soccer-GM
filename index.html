@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PITCH — Global Football Simulation v4</title>
+<title>PITCH — Global Football Simulation v5</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -21,6 +21,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 #topbar{height:48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
 #content{flex:1;overflow-y:auto;padding:20px;scroll-behavior:smooth}
+.page-wrap{max-width:1400px;margin-left:auto;margin-right:auto}
 .sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
 .sb-logo h1{font-family:var(--fd);font-size:34px;font-weight:800;letter-spacing:3px;color:var(--accent);line-height:1}
 .sb-logo p{font-size:9px;letter-spacing:4px;color:var(--text3);text-transform:uppercase;margin-top:1px}
@@ -296,7 +297,7 @@ input[type=number]:focus{border-color:var(--accent)}
 <div id="setup">
 <div class="setup-wrap">
   <div class="setup-logo">PITCH</div>
-  <div class="setup-tag">Global Football Simulation Engine v4.0</div>
+  <div class="setup-tag">Global Football Simulation Engine v5.0</div>
 
   <!-- Step indicator -->
   <div class="setup-steps" id="setup-steps">
@@ -397,7 +398,7 @@ input[type=number]:focus{border-color:var(--accent)}
 <!-- ══════════════════════ MAIN APP ══════════════════════ -->
 <div id="app" style="display:none">
   <div id="sidebar">
-    <div class="sb-logo"><h1>PITCH</h1><p>Football Engine v4</p></div>
+    <div class="sb-logo"><h1>PITCH</h1><p>Football Engine v5</p></div>
     <div class="sb-club">
       <div class="sb-club-name" id="sb-name">—</div>
       <div class="sb-club-meta" id="sb-meta">—</div>
@@ -545,9 +546,9 @@ input[type=number]:focus{border-color:var(--accent)}
   <!-- Controls -->
   <div class="lm-controls">
     <span style="font-size:11px;color:var(--text3)">Speed:</span>
-    <button class="lm-speed-btn" onclick="setLiveSpeed(800)">1×</button>
-    <button class="lm-speed-btn active" onclick="setLiveSpeed(300)">2×</button>
-    <button class="lm-speed-btn" onclick="setLiveSpeed(80)">5×</button>
+    <button class="lm-speed-btn" onclick="setLiveSpeed(800)">1x</button>
+    <button class="lm-speed-btn active" onclick="setLiveSpeed(300)">2x</button>
+    <button class="lm-speed-btn" onclick="setLiveSpeed(80)">5x</button>
     <button class="lm-speed-btn" onclick="setLiveSpeed(20)">Max</button>
     <button class="lm-speed-btn" id="lm-pause-btn" onclick="toggleLivePause()" style="margin-left:8px">⏸ Pause</button>
     <span style="flex:1"></span>
@@ -555,13 +556,12 @@ input[type=number]:focus{border-color:var(--accent)}
   </div>
 </div>
 
-<script>
-'use strict';
-// ═══════════════════════════════════════════════
-//  PITCH v3 — Global Football Simulation Engine
-// ═══════════════════════════════════════════════
+<script charset="utf-8">
+// ===============================================
+//  PITCH v3   Global Football Simulation Engine
+// ===============================================
 
-// ── CONSTANTS ──────────────────────────────────
+// -- CONSTANTS ----------------------------------
 const FORMATIONS = {
   '4-3-3':  {pos:['GK','LB','CB','CB','RB','CM','CM','CM','LW','ST','RW'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[25,52],[50,52],[75,52],[18,28],[50,16],[82,28]]},
   '4-2-3-1':{pos:['GK','LB','CB','CB','RB','CDM','CDM','CAM','LW','RW','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[33,62],[67,62],[50,44],[18,30],[82,30],[50,14]]},
@@ -574,20 +574,40 @@ const FORMATIONS = {
 
 const POS_TYPE = {GK:'gk',CB:'def',LB:'def',RB:'def',LWB:'def',RWB:'def',CDM:'mid',CM:'mid',CAM:'mid',LM:'mid',RM:'mid',LW:'fwd',RW:'fwd',ST:'fwd',CF:'fwd'};
 
-const NAT_FLAGS = {
-  English:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',Spanish:'🇪🇸',German:'🇩🇪',French:'🇫🇷',Brazilian:'🇧🇷',Argentine:'🇦🇷',
-  Italian:'🇮🇹',Portuguese:'🇵🇹',Dutch:'🇳🇱',Belgian:'🇧🇪',Uruguayan:'🇺🇾',Colombian:'🇨🇴',
-  Chilean:'🇨🇱',American:'🇺🇸',Mexican:'🇲🇽',Japanese:'🇯🇵',Korean:'🇰🇷',Chinese:'🇨🇳',
-  Saudi:'🇸🇦',Moroccan:'🇲🇦',Senegalese:'🇸🇳',Nigerian:'🇳🇬',Ghanaian:'🇬🇭',Croatian:'🇭🇷',
-  Serbian:'🇷🇸',Polish:'🇵🇱',Turkish:'🇹🇷',Swedish:'🇸🇪',Danish:'🇩🇰',Norwegian:'🇳🇴',
-  Scottish:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',Russian:'🇷🇺',Greek:'🇬🇷',Swiss:'🇨🇭',Austrian:'🇦🇹',Czech:'🇨🇿',
-  Romanian:'🇷🇴',Ukrainian:'🇺🇦',Hungarian:'🇭🇺',Ivorian:'🇨🇮',Cameroonian:'🇨🇲',
-  Algerian:'🇩🇿',Egyptian:'🇪🇬',Israeli:'🇮🇱',Paraguayan:'🇵🇾',Ecuadorian:'🇪🇨',
-  Bolivian:'🇧🇴',Peruvian:'🇵🇪',Venezuelan:'🇻🇪',Jamaican:'🇯🇲',Trinidadian:'🇹🇹',
+// NAT_FLAGS: nationality code map for flagcdn.com
+const NAT_FLAG_CODES = {
+  English:"gb-eng",Scottish:"gb-sct",Welsh:"gb-wls",
+  Spanish:"es",German:"de",French:"fr",Italian:"it",Portuguese:"pt",Dutch:"nl",
+  Belgian:"be",Croatian:"hr",Serbian:"rs",Polish:"pl",Turkish:"tr",Swedish:"se",
+  Danish:"dk",Norwegian:"no",Russian:"ru",Greek:"gr",Swiss:"ch",Austrian:"at",
+  Czech:"cz",Romanian:"ro",Ukrainian:"ua",Hungarian:"hu",Slovak:"sk",Slovenian:"si",
+  Finnish:"fi",Icelandic:"is",Irish:"ie",Albanian:"al",Bulgarian:"bg",
+  Bosnian:"ba",Montenegrin:"me",Macedonian:"mk",Georgian:"ge",Armenian:"am",
+  Azerbaijani:"az",Kazakh:"kz",Kyrgyz:"kg",Tajik:"tj",Belarusian:"by",Uzbek:"uz",
+  Moldovan:"md",Lithuanian:"lt",Latvian:"lv",Estonian:"ee",Luxembourgish:"lu",
+  Kosovar:"xk",Maltese:"mt",Brazilian:"br",Argentine:"ar",Colombian:"co",
+  Chilean:"cl",Uruguayan:"uy",Peruvian:"pe",Ecuadorian:"ec",Venezuelan:"ve",
+  Paraguayan:"py",Bolivian:"bo",American:"us",Mexican:"mx",Canadian:"ca",
+  Jamaican:"jm",Panamanian:"pa",Honduran:"hn",Guatemalan:"gt",Cuban:"cu",
+  Trinidadian:"tt",Japanese:"jp",Korean:"kr",Chinese:"cn",Australian:"au",
+  Saudi:"sa",Emirati:"ae",Qatari:"qa",Iranian:"ir",Iraqi:"iq",
+  Jordanian:"jo",Lebanese:"lb",Israeli:"il",Indian:"in",Pakistani:"pk",
+  Indonesian:"id",Thai:"th",Vietnamese:"vn",Malaysian:"my",
+  Afghan:"af",Mongolian:"mn",Moroccan:"ma",Algerian:"dz",Tunisian:"tn",
+  Egyptian:"eg",Nigerian:"ng",Ghanaian:"gh",Senegalese:"sn",Ivorian:"ci",
+  Cameroonian:"cm",Kenyan:"ke",Ugandan:"ug",Rwandan:"rw",Tanzanian:"tz",
+  Ethiopian:"et",Malian:"ml",Guinean:"gn",Congolese:"cd",Namibian:"na",
+  Zambian:"zm",Zimbabwean:"zw",Angolan:"ao",Mozambican:"mz",
 };
-const NATS = Object.keys(NAT_FLAGS);
+function natFlag(nat) {
+  var code = NAT_FLAG_CODES[nat];
+  if(!code) return "";
+  return "<img src=\"https://flagcdn.com/w20/"+code+".png\" width=\"18\" height=\"12\" style=\"object-fit:cover;border-radius:1px;vertical-align:middle\" title=\""+nat+"\">";
+}
+var NAT_FLAGS = new Proxy({}, { get: function(t,k){ return natFlag(k); } });
+const NATS = Object.keys(NAT_FLAG_CODES);
 
-// Country → nationality mapping
+// Country   nationality mapping
 const COUNTRY_NAT = {
   England:'English',Spain:'Spanish',Germany:'German',France:'French',Italy:'Italian',
   Portugal:'Portuguese',Netherlands:'Dutch',Belgium:'Belgian',Turkey:'Turkish',Scotland:'Scottish',
@@ -596,154 +616,366 @@ const COUNTRY_NAT = {
   'Saudi Arabia':'Saudi',China:'Chinese',Russia:'Russian',Israel:'Israeli',
 };
 
-const FN=['James','Carlos','Marco','Luca','Andre','Sven','Diego','Kai','Lucas','Alexis','Thiago','Raheem','Ivan','Toni','Kylian','Vinicius','Phil','Jude','Erling','Harry','Mo','Sadio','Romelu','Christian','Patrick','Kevin','Bruno','Paul','Antoine','Riyad','Karim','Robert','Lautaro','Victor','Bukayo','Pedri','Gavi','Federico','Ousmane','Leandro','Rafael','Trent','Mason','Jack','Ben','Jordan','Curtis','Daniel','Emile','Harvey','Cody','Xavi','Frenkie','Memphis','Stefan','Dusan','Aleksandar','Piotr','Omar','Yusuf','Ahmed','Nnamdi','Kwame','Ibrahim','Moussa'];
-const LN=['Smith','Müller','Silva','Rossi','Santos','García','Fernández','Weber','Dubois','Martínez','Brown','Johnson','Williams','Taylor','Anderson','Thomas','Jackson','Wilson','Harris','Martin','Thompson','White','Walker','Hall','Allen','Young','Hernández','López','González','Pérez','Sánchez','Ramírez','Torres','Flores','Rivera','Gómez','Díaz','Reyes','Cruz','Morales','Nguyen','Tanaka','Park','Kim','Zhang','Liu','Wang','Chen','Ibrahim','Okafor','Diallo','Mané','Touré','Mbappé','Kane','Salah','Benzema','Lewandowski','Álvarez'];
+// -- NATIONALITY-BASED NAME POOLS --------------
+const NAT_NAMES = {
+  English:  {fn:['James','Harry','Jack','Declan','Mason','Phil','Marcus','Trent','Bukayo','Jude','Jordan','Daniel','Ben','Kalvin','Emile','Harvey','Conor','Lewis','Aaron','Reece'],ln:['Smith','Jones','Williams','Taylor','Brown','Davies','Evans','Wilson','Thomas','Roberts','Johnson','Walker','White','Hall','Green','Wood','Hughes','Clarke','Harris','Martin']},
+  Spanish:  {fn:['Pedri','Gavi','Ferran','Ansu','Dani','Pablo','Mikel','Iker','Sergio','David','Alvaro','Borja','Marco','Diego','Jesus','Rodri','Fabian','Marcos','Carlos','Alejandro'],ln:['Garcia','Martinez','Lopez','Sanchez','Gonzalez','Fernandez','Rodriguez','Perez','Gomez','Torres','Ruiz','Diaz','Jimenez','Moreno','Alvarez','Munoz','Romero','Molina','Navarro','Ortega']},
+  German:   {fn:['Kai','Leroy','Timo','Leon','Niklas','Joshua','Serge','Ilkay','Thomas','Manuel','Jamal','Florian','Marco','Mario','Julian','Luca','Maximilian','Kevin','Sven','Hans'],ln:['Muller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz','Hoffmann','Koch','Richter','Klein','Wolf','Neuer','Kroos','Klose','Reus','Gotze','Draxler']},
+  French:   {fn:['Kylian','Karim','Paul','Antoine','Ousmane','Presnel','Lucas','Benjamin','Theo','Wissam','Kingsley','Christopher','Moussa','Jonathan','Corentin','Matteo','Adrien','William','Clement','Raphael'],ln:['Dupont','Martin','Bernard','Thomas','Robert','Petit','Dubois','Leroy','Moreau','Laurent','Simon','Michel','Lefebvre','Lefevre','Roux','Fontaine','Giroud','Pogba','Mbappe','Benzema']},
+  Italian:  {fn:['Lorenzo','Federico','Nicolo','Giacomo','Marco','Luca','Andrea','Alessandro','Davide','Ciro','Gianluca','Mattia','Roberto','Emerson','Leonardo','Stefano','Giovanni','Maurizio','Antonio','Riccardo'],ln:['Rossi','Ferrari','Esposito','Bianchi','Romano','Colombo','Ricci','Marino','Greco','Bruno','Gallo','Conti','De Luca','Mancini','Pellegrini','Barella','Verratti','Donnarumma','Bonucci','Chiellini']},
+  Portuguese:{fn:['Bruno','Joao','Diogo','Ruben','Bernardo','Goncalo','Nelson','Danilo','Vitinha','Matheus','Andre','Pedro','Ruben','William','Rafael','Cristiano','Luis','Nuno','Domingos','Abel'],ln:['Silva','Santos','Oliveira','Costa','Ferreira','Carvalho','Rodrigues','Martins','Goncalves','Lopes','Pinto','Alves','Neto','Moutinho','Pepe','Cancelo','Fernandes','Leao','Jota','Horta']},
+  Dutch:    {fn:['Frenkie','Cody','Memphis','Davy','Virgil','Georginio','Denzel','Daley','Steven','Ryan','Wout','Nathan','Luuk','Donyell','Calvin','Justin','Quincy','Tijjani','Jordy','Xavi'],ln:['de Jong','Gakpo','Depay','Klaassen','van Dijk','Wijnaldum','Dumfries','Blind','Bergwijn','Gravenberch','Weghorst','Ake','de Vrij','Malen','Stengs','Koopmeiners','Promes','Nakamba','Kluivert','Simons']},
+  Belgian:  {fn:['Kevin','Romelu','Eden','Dries','Jan','Toby','Thomas','Youri','Axel','Nacer','Timothy','Lois','Jeremy','Christian','Leandro','Thorgan','Dennis','Divock','Michy','Arthur'],ln:['De Bruyne','Lukaku','Hazard','Mertens','Vertonghen','Alderweireld','Meunier','Tielemans','Witsel','Chadli','Castagne','Openda','Doku','Benteke','Trossard','Origi','Batshuayi','Kompany','Januzaj','Carrasco']},
+  Brazilian:{fn:['Vinicius','Rodrygo','Neymar','Raphinha','Richarlison','Gabriel','Casemiro','Thiago','Lucas','Antony','Endrick','Marquinhos','Alisson','Ederson','Alex','Bremer','Danilo','Militao','Paqueta','Firmino'],ln:['Silva','Santos','Oliveira','Costa','Ferreira','Jesus','Barbosa','Alves','Neto','Araujo','Pereira','Rodrigues','Gomes','Souza','Lima','Cunha','Nascimento','Carvalho','Ribeiro','Moura']},
+  Argentine:{fn:['Lionel','Paulo','Lautaro','Rodrigo','Nicolas','Alejandro','Leandro','Julian','Joaquin','Angel','Giovani','Nahuel','Enzo','Exequiel','Marcos','Facundo','Gonzalo','Mauro','Roberto','Alejandro'],ln:['Messi','Dybala','Martinez','De Paul','Gonzalez','Garnacho','Paredes','Alvarez','Correa','Di Maria','Lo Celso','Molina','Fernandez','Palacios','Acuna','Buonanotte','Higuain','Icardi','Pereyra','Simeone']},
+  Colombian:{fn:['Luis','James','Juan','Radamel','Edwin','Carlos','Davinson','Yerry','Miguel','Cuadrado','Duvan','Rafael','Sebastian','Fredy','Teo','Jhon','Gustavo','Javier','Miguel','Carlos'],ln:['Diaz','Rodriguez','Cuadrado','Falcao','Cardona','Bacca','Sanchez','Mina','Borja','Ospina','Zapata','Santos','Villa','Guarin','Castano','Murillo','Quintero','Lerma','Arias','Mosquera']},
+  Chilean:  {fn:['Alexis','Charles','Arturo','Gary','Mauricio','Ben','Claudio','Erick','Sebastian','Pablo','Eduardo','Felipe','Marcelo','Esteban','Jorge','Rodrigo','Nicolas','Cristobal','Diego','Ivan'],ln:['Sanchez','Aranguiz','Vidal','Medel','Isla','Brereton','Bravo','Pulgar','Pinilla','Hernandez','Vargas','Gutierrez','Diaz','Suazo','Valdivia','Valdes','Millar','Pizarro','Mena','Castillo']},
+  American: {fn:['Christian','Tyler','Weston','Pulisic','Gio','Sergino','Josh','Matt','DeAndre','Zack','John','Jordan','Brendan','Cameron','Aaron','Jordan','Ricardo','Paxten','Cade','Sam'],ln:['Pulisic','Adams','McKennie','Reyna','Dest','Sargent','Turner','Yedlin','Steffen','Brooks','Aaronson','Weah','Cannon','Carter-Vickers','Long','Morris','Pepi','Aaronson','Lletget','Robinson']},
+  Mexican:  {fn:['Hirving','Raul','Guillermo','Edson','Henry','Carlos','Jesus','Hector','Andres','Roberto','Uriel','Santiago','Orbelin','Chucky','Alan','Rodolfo','Cesar','Oswaldo','Jonathan','Diego'],ln:['Lozano','Jimenez','Ochoa','Alvarez','Moreno','Vela','Corona','Herrera','Guardado','Alvarado','Antuna','Munoz','Pineda','Tecatito','Pulido','Pizarro','Montes','Suarez','Urretaviscaya','Valdes']},
+  Japanese: {fn:['Takumi','Kaoru','Ritsu','Wataru','Shoya','Maya','Ao','Junya','Takehiro','Yuta','Daichi','Ayase','Hiroki','Kou','Takuya','Daizen','Koki','Sho','Naomichi','Miki'],ln:['Minamino','Mitoma','Doan','Endo','Nakamura','Yoshida','Tanaka','Ito','Tomiyasu','Yano','Kamada','Ueda','Ito','Hata','Matsuda','Maeda','Hashioka','Kushibiki','Ueda','Ito']},
+  Korean:   {fn:['Son','Lee','Kim','Park','Hwang','Cho','Jung','Kwon','Oh','Na','Lim','Bae','Jeon','Kang','Choi','Yoon','Shin','Ha','Yoo','Ryu'],ln:['Heung-min','Jae-sung','Min-jae','Ji-sung','Hee-chan','Gue-sung','Woo-young','Chang-hoon','Se-jun','Sang-ho','Seung-woo','Jun-ho','Seong-ryong','In-beom','Hyun-woo','Jong-kyu','Seok-hyeon','Chang-woo','Hyeon-jun','Ui-jo']},
+  Saudi:    {fn:['Salem','Mohammed','Abdullah','Saleh','Firas','Hattan','Ali','Yasser','Ahmad','Nawaf','Saud','Sultan','Fahad','Turki','Khalid','Riyadh','Saad','Hamdan','Nasser','Omar'],ln:['Al-Dawsari','Al-Buraikan','Al-Ghannam','Al-Malki','Al-Brikan','Bahbri','Al-Hassan','Al-Shahrani','Al-Tambakti','Al-Aqidi','Al-Mutairi','Asiri','Al-Ghamdi','Al-Shehri','Alharbi','Kanno','Fallatah','Saleh','Al-Majrishi','Hilal']},
+  Chinese:  {fn:['Wei','Fei','Yang','Lei','Xin','Hao','Tao','Jun','Bin','Peng','Chao','Rui','Kun','Kai','Bo','Jian','Ming','Long','Xiang','Feng'],ln:['Wang','Zhang','Li','Liu','Chen','Yang','Wu','Zhao','Huang','Zhou','Sun','Ma','Zhu','Hu','Guo','He','Lin','Gao','Luo','Zheng']},
+  Turkish:  {fn:['Hakan','Burak','Cengiz','Caglar','Ozan','Kenan','Ferdi','Okay','Salih','Zeki','Dorukhan','Yusuf','Umut','Merih','Kaan','Irfan','Berkan','Orkun','Serdar','Arda'],ln:['Calhanoglu','Ylmaz','Under','Soyuncu','Kabak','Yldz','Kadoglu','Yokuslu','Ozcan','Celik','Tokoz','Yazc','Bulut','Demiral','Ayhan','Can','Kokcu','Kokcu','Gulbrandsen','Turan']},
+  Norwegian:{fn:['Erling','Martin','Alexander','Kristoffer','Sander','Mathias','Elias','Kristian','Mohamed','Veton','Ole','Stefan','Birger','Lasse','Ola','rjan','Even','John','Mats','Kristoffer'],ln:['Haaland','degaard','Srloth','Thorstvedt','Berge','Normann','Ajer','Selnaes','Elyounoussi','Berisha','Solskjr','Johansen','Helland','Berg','Gunnarsson','Nyland','Henriksen','Arne','Pedersen','Bjrnbak']},
+  Scottish: {fn:['Scott','Andrew','Ryan','James','Steven','Kieran','Grant','Craig','Kenny','David','John','Paul','Gary','Barry','Callum','Lewis','Billy','Robbie','Kevin','Allan'],ln:['McTominay','Robertson','Christie','Forrest','Tierney','Hanley','Kennedy','McLean','Gilmour','McGinn','Armstrong','Burke','Dykes','Fleck','Adams','Patterson','Cooper','Burke','McKenna','Ralston']},
+  Swedish:  {fn:['Zlatan','Alexander','Dejan','Victor','Sebastian','Marcus','Robin','Emil','Anthony','Oscar','Jens','Gustav','Filip','Jonathan','Linus','Albin','Andreas','Viktor','Hugo','Pontus'],ln:['Ibrahimovic','Isak','Kulusevski','Nilsson','Larsson','Berg','Quaison','Forsberg','Elanga','Krafth','Eliasson','Svensson','Helander','Bengtsson','Wahlqvist','Ekdal','Granqvist','Claesson','Kvist','Jansson']},
+  Danish:   {fn:['Christian','Pierre','Andreas','Kasper','Simon','Jannik','Daniel','Jonas','Yussuf','Joakim','Martin','Mikkel','Victor','Alexander','Joachim','Mathias','Thomas','Rasmus','Nicolai','Mads'],ln:['Eriksen','Emile Hojbjerg','Christiansen','Schmeichel','Kjr','Vestergaard','Wass','Wind','Poulsen','Maehle','Braithwaite','Damsgaard','Boilesen','Bah','Andersen','Jensen','Delaney','Nrgaard','Hjer','Skov']},
+  Moroccan: {fn:['Achraf','Youssef','Sofiane','Hakim','Noussair','Abdelhamid','Romain','Selim','Brahim','Ayoub','Munir','Nayef','Adam','Zakaria','Ilias','Jawad','Sofyan','Youssef','Nizar','Yassine'],ln:['Hakimi','En-Nesyri','Boufal','Ziyech','Mazraoui','Sabiri','Saiss','Benrahma','Amrabat','El Yaagoubi','Ounahi','Aguerd','El Ouahabi','Aboukhlal','El Arabi','Benkhaire','Chair','Benoun','Tagnaouti','Bono']},
+  Nigerian: {fn:['Victor','Wilfried','Kelechi','Alex','Ahmed','Emmanuel','Leon','Odion','William','Zaidu','Chidera','Paul','Chukwueze','Troost','Nnamdi','Kenneth','Taiwo','Moses','Ola','Ebunoluwa'],ln:['Osimhen','Ndidi','Iheanacho','Musa','Musa','Eze','Balogun','Ighalo','Troost-Ekong','Sanusi','Ejuke','Obi','Chukwueze','Lekaj','Onyekuru','Omeruo','Awoniyi','Simon','Ebisindei','Ajayi']},
+  Senegalese:{fn:['Sadio','Kalidou','Edouard','Pape','Boulaye','Idrissa','Ismaila','Nampalys','Famara','Mbaye','Gana','Bamba','Lamine','Moussa','Omar','Habib','Mamadou','Ibrahima','Cheikhou','Alfred'],ln:['Mane','Koulibaly','Mendy','Matar Gueye','Dia','Gueye','Sarr','Mendy','Diedhiou','Diagne','Gueye','Diallo','Camara','Kouyate','Thiam','Diallo','Niang','Mbaye','Kouyate','Ndiaye']},
+  Uruguayan:{fn:['Luis','Edinson','Diego','Federico','Ronald','Maxi','Rodrigo','Nahitan','Lucas','Sebastian','Giorgian','Mathias','Jose','Facundo','Nicolas','Darwin','Agustin','Carlos','Guillermo','Pablo'],ln:['Suarez','Cavani','Godin','Valverde','Araujo','Gomez','Bentancur','Nandez','Torreira','Coates','De Arrascaeta','Olivera','Gimenez','Torres','Lodeiro','Nunez','Canobbio','Viana','Varela','Garcia']},
+  Polish:   {fn:['Robert','Piotr','Wojciech','Grzegorz','Kamil','Jan','Arkadiusz','Maciej','Bartosz','Jakub','Karol','Damian','Sebastian','Krzysztof','Mariusz','Przemysaw','Micha','ukasz','Mateusz','Rafa'],ln:['Lewandowski','Zielinski','Szczesny','Krychowiak','Glik','Bednarek','Milik','Rybus','Bereszynski','Moder','Linetty','Szymanski','Walukiewicz','Piatek','Klich','Frankowski','Helik','Fabianski','Kownacki','Sousa']},
+  Russian:  {fn:['Artem','Aleksei','Aleksandr','Fedor','Daniil','Dmitry','Igor','Ivan','Sergei','Yuri','Georgi','Pavel','Anton','Roman','Mikhail','Nikita','Kirill','Maxim','Andrei','Oleg'],ln:['Dzyuba','Miranchuk','Golovin','Smolov','Kuzyaev','Cheryshev','Akinfeev','Zhirkov','Ignashevich','Fernandes','Zhirkov','Mamayev','Petrov','Shirokov','Berezutsky','Mostovoy','Kuzmin','Komlichenko','Ionov','Samedov']},
+  Croatian: {fn:['Luka','Ivan','Marcelo','Mateo','Ante','Dejan','Josko','Borna','Nikola','Josip','Mario','Sime','Tin','Petar','Domagoj','Andrej','Duje','Ivan','Tomislav','Bruno'],ln:['Modric','Perisic','Brozovic','Kovacic','Rebic','Lovren','Gvardiol','Sosa','Vlasic','Juranuic','Budimir','Vrsaljko','Jedvaj','Vusio','Vida','Kramaric','Caleta-Car','Strinic','Pjaca','Petkovic']},
+  Israeli:  {fn:['Eran','Dor','Manor','Munas','Loai','Neta','Idan','Dia','Almog','Bar','Omri','Omer','Sagiv','Tomer','Nikita','Gal','Matan','Eden','Nili','Chen'],ln:['Zahavi','Peretz','Solomon','Dabbur','Taha','Lavi','Ben Basat','Elmkies','Cohen','Abu Hanna','Ben Harush','Atzili','Jehezkel','Hemed','Rukavytsya','Kricheli','Haziza','Shabailov','Einbinder','Mika']},
+};
+
+// Fallback pool for unlisted nationalities
+const NAME_FALLBACK = {
+  fn:['Omar','Ibrahim','Yusuf','Ahmed','Kwame','Nnamdi','Moussa','Enzo','Mateo','Diego','Alexis','Rafael','Lucas','Felipe','Marco','Ivan','Toni','Stefan','André','Leandro'],
+  ln:['Diallo','Touré','Koné','Ibrahim','Okafor','Diatta','Traore','Silva','Santos','García','Fernandez','Torres','Rodrigues','Martins','Costa','Petrov','Novak','Popov','Hansen','Lindqvist']
+};
+
+function getNameForNat(nat) {
+  const pool = NAT_NAMES[nat] || NAME_FALLBACK;
+  return `${pick(pool.fn)} ${pick(pool.ln)}`;
+}
+
+// -- SVG FACE GENERATOR ------------------------
+// Generates a simple deterministic cartoon face based on player id
+function genFaceSvg(pid, nat='English') {
+  // Use pid as seed for deterministic appearance
+  const s = (pid * 7919 + 12345);
+  const rng = (max, off=0) => ((s * (off+1) * 2654435761 >>> 0) % max);
+
+  // Skin tone by nationality group
+  const skinTones = {
+    English:'#f5c5a3',Spanish:'#e8b48a',German:'#f5c5a3',French:'#c8956c',Italian:'#d4a574',
+    Portuguese:'#d4a574',Dutch:'#f5c5a3',Belgian:'#e8b48a',Brazilian:'#c8956c',Argentine:'#d4a574',
+    Colombian:'#c07c4a',Chilean:'#c07c4a',American:'#d4956c',Mexican:'#c8854a',
+    Japanese:'#f0d0a8',Korean:'#f0d0a8',Chinese:'#f0d0a8',Saudi:'#c8956c',
+    Turkish:'#d4a574',Norwegian:'#f8d5b0',Scottish:'#f5c5a3',Swedish:'#f5c5a3',
+    Danish:'#f5c5a3',Moroccan:'#c07c4a',Nigerian:'#7d4a24',Senegalese:'#7d4a24',
+    Uruguayan:'#d4a574',Croatian:'#e8b48a',Polish:'#f5c5a3',Russian:'#f5c5a3',
+    Israeli:'#d4a574',Ghanaian:'#7d4a24',Ivorian:'#7d4a24',Cameroonian:'#7d4a24',
+  };
+  const skin = skinTones[nat] || '#d4a574';
+
+  // Hair styles + colors
+  const hairColors = ['#1a0a00','#2c1a0a','#4a2a10','#8b6340','#c8a870','#e0c898','#1a1a2e','#2c2c3e'];
+  const hair = hairColors[rng(hairColors.length, 1)];
+
+  // Eye color
+  const eyeColors = ['#3d2b1f','#5c3a1e','#4a6741','#3d6b8c','#6b4a3d'];
+  const eye = eyeColors[rng(eyeColors.length, 2)];
+
+  // Hair style (0=short, 1=medium, 2=curly, 3=bald)
+  const hairStyle = rng(4, 3);
+
+  // Facial hair
+  const hasFacialHair = rng(3, 4) === 0;
+  const facialHairColor = hair;
+
+  // Jersey number color based on nationality group
+  const jerseyColors = ['#e63946','#457b9d','#1d3557','#f1a208','#2d6a4f','#6b2737','#8338ec','#fb5607'];
+  const jerseyCol = jerseyColors[rng(jerseyColors.length, 5)];
+
+  const hairPaths = [
+    // Short
+    `<ellipse cx="50" cy="28" rx="22" ry="14" fill="${hair}"/>`,
+    // Medium
+    `<ellipse cx="50" cy="28" rx="22" ry="14" fill="${hair}"/><rect x="28" y="28" width="6" height="14" rx="3" fill="${hair}"/><rect x="66" y="28" width="6" height="14" rx="3" fill="${hair}"/>`,
+    // Curly
+    `<ellipse cx="50" cy="26" rx="22" ry="16" fill="${hair}"/><circle cx="36" cy="22" r="7" fill="${hair}"/><circle cx="50" cy="18" r="7" fill="${hair}"/><circle cx="64" cy="22" r="7" fill="${hair}"/>`,
+    // Bald / very short
+    `<ellipse cx="50" cy="30" rx="20" ry="10" fill="${hair}" opacity=".4"/>`,
+  ];
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  
+  <ellipse cx="50" cy="95" rx="30" ry="18" fill="${jerseyCol}"/>
+  <rect x="30" y="78" width="40" height="22" rx="4" fill="${jerseyCol}"/>
+  
+  <rect x="44" y="60" width="12" height="20" rx="4" fill="${skin}"/>
+  
+  <ellipse cx="50" cy="46" rx="22" ry="26" fill="${skin}"/>
+  
+  ${hairPaths[hairStyle]}
+  
+  <ellipse cx="42" cy="44" rx="4" ry="4.5" fill="white"/>
+  <ellipse cx="58" cy="44" rx="4" ry="4.5" fill="white"/>
+  <circle cx="${42 - rng(2,10) + 1}" cy="${44 - rng(2,11) + 1}" r="2.5" fill="${eye}"/>
+  <circle cx="${58 - rng(2,12) + 1}" cy="${44 - rng(2,13) + 1}" r="2.5" fill="${eye}"/>
+  <circle cx="${42 - rng(2,10) + 1}" cy="${44 - rng(2,11) + 1}" r="1" fill="#000" opacity=".5"/>
+  <circle cx="${58 - rng(2,12) + 1}" cy="${44 - rng(2,13) + 1}" r="1" fill="#000" opacity=".5"/>
+  
+  <path d="M38 38 Q42 36 46 38" stroke="${hair}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M54 38 Q58 36 62 38" stroke="${hair}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  
+  <ellipse cx="50" cy="52" rx="2.5" ry="3" fill="${skin}" stroke="${skin}" stroke-width=".5"/>
+  <path d="M47 54 Q50 56 53 54" stroke="#b8866a" stroke-width="1" fill="none" stroke-linecap="round" opacity=".6"/>
+  
+  <path d="M44 61 Q50 65 56 61" stroke="#b8525a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  ${hasFacialHair ? `<path d="M42 62 Q50 68 58 62 Q56 65 50 66 Q44 65 42 62Z" fill="${facialHairColor}" opacity=".7"/>` : ''}
+  
+  <ellipse cx="28" cy="46" rx="4" ry="5" fill="${skin}"/>
+  <ellipse cx="72" cy="46" rx="4" ry="5" fill="${skin}"/>
+</svg>`;
+}
+
+// Player face HTML (returns an img-like div)
+function playerFaceHtml(p, size=64) {
+  const custom = G.playerImages[p.id];
+  if(custom) return `<div style="width:${size}px;height:${size}px;border-radius:${size/8}px;overflow:hidden;flex-shrink:0;border:1px solid var(--border);background:var(--bg4)">${`<img src="${custom}" style="width:100%;height:100%;object-fit:cover">`}</div>`;
+  return `<div style="width:${size}px;height:${size}px;border-radius:${size/8}px;overflow:hidden;flex-shrink:0;border:1px solid var(--border);background:var(--bg4)">${genFaceSvg(p.id, p.nationality)}</div>`;
+}
 const ROLES={GK:['Traditional Keeper','Sweeper Keeper'],CB:['Ball-Playing Defender','Stopper','Sweeper','No-Nonsense CB'],LB:['Wing Back','Full Back','Inverted Full Back'],RB:['Wing Back','Full Back','Inverted Full Back'],LWB:['Wing Back','Wide Midfielder'],RWB:['Wing Back','Wide Midfielder'],CDM:['Anchor Man','Deep-Lying Playmaker','Ball-Winning Midfielder','Regista'],CM:['Box-to-Box','Advanced Playmaker','Mezzala','Central Midfielder'],CAM:['Advanced Playmaker','Enganche','Shadow Striker','Trequartista'],LM:['Wide Midfielder','Inside Forward','Winger'],RM:['Wide Midfielder','Inside Forward','Winger'],LW:['Winger','Inside Forward','Wide Playmaker','Inverted Winger'],RW:['Winger','Inside Forward','Wide Playmaker','Inverted Winger'],ST:['Advanced Forward','Target Man','False Nine','Poacher','Deep-Lying Forward'],CF:['Shadow Striker','Advanced Forward','Target Man']};
 const PERSONALITIES=['Leader','Professional','Temperamental','Model Citizen','Light-Hearted','Determined','Ambitious','Spirited','Driven','Influential'];
 
-// ── LEAGUE TIER SYSTEM (Transfermarkt-inspired) ─────────────────
+// -- LEAGUE TIER SYSTEM -------------------------
 const LEAGUE_TIERS = {
-  // Tier 1 – Elite
-  'England_Premier_Division': 1,
-  'Spain_Primera_Liga': 1,
-  'Germany_Bundesliga': 1,
-  'Italy_Serie_Uno': 1,
-  'France_Ligue_Premiere': 1,
-  // Tier 2 – Strong
-  'Portugal_Primeira_Liga': 2,
-  'Netherlands_Eredivisie': 2,
-  'Brazil_Serie_A': 2,
-  'Argentina_Primera_Division': 2,
-  // Tier 3 – Mid
-  'USA_MLS': 3,
-  'Mexico_Liga_MX': 3,
-  'Belgium_Pro_League': 3,
-  'Turkey_Super_Lig': 3,
-  'Saudi_Arabia_Saudi_Pro_League': 3,
-  'Scotland_Scottish_Premier': 3,
-  'England_Championship': 3,
-  // Tier 4 – Lower
-  'China_Chinese_Super_League': 4,
-  'Japan_J-League': 4,
-  'South_Korea_K-League': 4,
-  'Colombia_Liga_BetPlay': 4,
-  'Chile_Primera_Division': 4,
+  'England_Premier_League':1,'Spain_La_Liga':1,'Germany_Bundesliga':1,'Italy_Serie_A':1,'France_Ligue_1':1,
+  'Portugal_Primeira_Liga':2,'Netherlands_Eredivisie':2,'Brazil_Brasileirao':2,'Argentina_Primera_Division':2,
+  'USA_MLS':3,'Mexico_Liga_MX':3,'Belgium_Pro_League':3,'Turkey_Super_Lig':3,'Saudi_Arabia_Saudi_Pro_League':3,'Scotland_Scottish_Premiership':3,'England_Championship':3,
+  'China_Chinese_Super_League':4,'Japan_J-League':4,'South_Korea_K_League_1':4,'Colombia_Liga_BetPlay':4,'Chile_Primera_Division':4,
 };
 
-// OVR ranges by tier and player category
+// OVR ranges by tier and player category (FIFA-realistic: world class ~87-91, average pro ~68-74)
 const TIER_OVR = {
-  1: { star:[85,95], starter:[75,85], bench:[65,75], youth:[58,72] },
-  2: { star:[80,88], starter:[70,80], bench:[60,70], youth:[55,68] },
-  3: { star:[75,83], starter:[65,75], bench:[55,65], youth:[52,65] },
-  4: { star:[68,78], starter:[58,68], bench:[50,60], youth:[48,62] },
+  1: { star:[82,91], starter:[72,82], bench:[63,72], youth:[55,68] },
+  2: { star:[77,85], starter:[68,77], bench:[58,68], youth:[52,65] },
+  3: { star:[72,80], starter:[63,72], bench:[53,63], youth:[48,62] },
+  4: { star:[65,75], starter:[55,65], bench:[47,57], youth:[44,58] },
 };
 
-// Potential ranges by tier
+// Potential ranges by tier (max potential for a top prospect ~92-94)
 const TIER_POT = {
-  1: { high:[85,97], mid:[75,88], low:[65,78] },
-  2: { high:[80,93], mid:[70,83], low:[60,75] },
-  3: { high:[75,88], mid:[65,78], low:[55,70] },
-  4: { high:[68,82], mid:[58,72], low:[50,65] },
+  1: { high:[84,93], mid:[74,86], low:[64,76] },
+  2: { high:[79,90], mid:[70,82], low:[60,73] },
+  3: { high:[74,86], mid:[65,77], low:[55,68] },
+  4: { high:[67,81], mid:[57,71], low:[48,63] },
 };
 
-// ── WORLD DATABASE ──────────────────────────────
+// -- WORLD DATABASE (Real Team Names) -------------------
 const WORLD_DB = {
   Europe:{
     England:{
-      'Premier Division':{rep:90,tier:1,teams:['London United','Mersey Rovers','Manchester Blues','Manchester Reds','North London Athletic','South London FC','West London City','Midlands Villa','Yorkshire United','Newcastle Eagles','Leicester City','Southampton FC','Crystal Palace','Wolves Athletic','Brighton Albion','Brentford United','Fulham Athletic','Bournemouth FC','Burnley Town','Sheffield Eagles']},
-      'Championship':{rep:72,tier:3,teams:['Leeds Athletic','Sunderland City','Derby County','Norwich City','Coventry Athletic','Watford FC','Bristol City','Preston North','Millwall FC','Blackburn Rovers','West Brom Athletic','Hull City','Stoke Athletic','Birmingham City','Middlesbrough FC','Swansea City','Cardiff Athletic','QPR Athletic','Reading FC','Ipswich Town']}
+      'Premier League':{rep:90,tier:1,teams:['Manchester City','Arsenal','Liverpool','Aston Villa','Tottenham','Chelsea','Newcastle','Manchester United','West Ham','Brighton','Wolves','Fulham','Bournemouth','Crystal Palace','Brentford','Everton','Nottm Forest','Luton','Burnley','Sheffield United']},
+      'Championship':{rep:72,tier:3,teams:['Leeds United','Sunderland','Derby County','Norwich City','Coventry City','Watford','Bristol City','Preston North End','Millwall','Blackburn Rovers','West Brom','Hull City','Stoke City','Birmingham City','Middlesbrough','Swansea City','Cardiff City','QPR','Reading','Ipswich Town']}
     },
     Spain:{
-      'Primera Liga':{rep:88,tier:1,teams:['Madrid Royals','Catalonia FC','Atletico de Madrid','Basque Athletic','Seville United','Valencia Athletic','Real Betis','Villarreal FC','Sociedad Real','Osasuna Athletic','Celta Atlantic','Granada FC','Getafe Athletic','Rayo United','Mallorca FC','Cadiz Athletic','Las Palmas','Girona Athletic','Almeria FC','Alaves Athletic']}
+      'La Liga':{rep:88,tier:1,teams:['Real Madrid','Barcelona','Atletico Madrid','Athletic Club','Sevilla','Valencia','Real Betis','Villarreal','Real Sociedad','Osasuna','Celta Vigo','Granada','Getafe','Rayo Vallecano','Mallorca','Cadiz','Las Palmas','Girona','Almeria','Alaves']}
     },
     Germany:{
-      'Bundesliga':{rep:86,tier:1,teams:['Munich Titans','Rhine United','Leipzig Athletic','Frankfurt Eagles','Dortmund FC','Leverkusen Athletic','Hamburg United','Bremen Athletic','Cologne FC','Freiburg Athletic','Stuttgart United','Wolfsburg Athletic','Mainz FC','Gladbach United','Hoffenheim FC','Augsburg Athletic','Bochum FC','Heidenheim Athletic']}
+      'Bundesliga':{rep:86,tier:1,teams:['Bayern Munich','Borussia Dortmund','RB Leipzig','Eintracht Frankfurt','Bayer Leverkusen','Wolfsburg','Borussia Monchengladbach','Hoffenheim','Freiburg','Mainz','Stuttgart','Augsburg','Union Berlin','Werder Bremen','Cologne','Bochum','Heidenheim','Darmstadt']}
     },
     Italy:{
-      'Serie Uno':{rep:85,tier:1,teams:['Milan Rosso','Milan Azzurro','Turin Vecchia','Naples United','Rome Capital','Rome Giallorossi','Atalanta Athletic','Florence FC','Lazio Athletic','Bologna United','Torino FC','Genoa Athletic','Sassuolo United','Udinese FC','Monza Athletic','Lecce United','Verona Athletic','Cagliari FC','Frosinone Athletic','Salernitana United']}
+      'Serie A':{rep:85,tier:1,teams:['Inter Milan','AC Milan','Juventus','Napoli','Roma','Lazio','Atalanta','Fiorentina','Torino','Bologna','Genoa','Sassuolo','Udinese','Monza','Lecce','Verona','Cagliari','Frosinone','Salernitana','Empoli']}
     },
     France:{
-      'Ligue Premiere':{rep:82,tier:1,teams:['Paris Capital FC','Marseille Athletic','Monaco Royale','Lyon United','Lille FC','Nice Athletic','Rennes FC','Lens Athletic','Reims United','Toulouse FC','Montpellier Athletic','Nantes FC','Metz Athletic','Strasbourg United','Brest FC','Le Havre Athletic','Clermont FC','Lorient Athletic','Auxerre FC','Rodez Athletic']}
+      'Ligue 1':{rep:82,tier:1,teams:['Paris Saint-Germain','Marseille','Monaco','Lyon','Lille','Nice','Rennes','Lens','Reims','Toulouse','Montpellier','Nantes','Metz','Strasbourg','Brest','Le Havre','Clermont Foot','Lorient','Auxerre','Metz']}
     },
     Netherlands:{
-      'Eredivisie':{rep:78,tier:2,teams:['Amsterdam Ajax','Rotterdam Eagles','Eindhoven United','Alkmaar Athletic','Utrecht FC','Feyenoord Athletic','Twente United','Arnhem Eagles','Groningen FC','Heerenveen Athletic','NEC Nijmegen','Fortuna Sittard','Cambuur','Waalwijk Athletic','Volendam FC','Excelsior Rotterdam','Almere Athletic','Emmen FC']}
+      'Eredivisie':{rep:78,tier:2,teams:['Ajax','Feyenoord','PSV Eindhoven','AZ Alkmaar','Utrecht','Twente','Vitesse','Groningen','Heerenveen','NEC Nijmegen','Fortuna Sittard','Cambuur','RKC Waalwijk','Volendam','Excelsior','Almere City','Go Ahead Eagles','Emmen']}
     },
     Portugal:{
-      'Primeira Liga':{rep:80,tier:2,teams:['Lisbon Eagles','Porto United','Sporting Lisbon','Braga Athletic','Benfica FC','Vitoria Guimaraes','Gil Vicente','Moreirense FC','Famalicao Athletic','Boavista FC','Arouca United','Santa Clara','Estoril Athletic','Casa Pia FC','Portimonense Athletic','Vizela FC','Rio Ave Athletic','Pacos Ferreira']}
+      'Primeira Liga':{rep:80,tier:2,teams:['Benfica','Porto','Sporting CP','Braga','Vitoria Guimaraes','Gil Vicente','Moreirense','Famalicao','Boavista','Arouca','Santa Clara','Estoril','Casa Pia','Portimonense','Vizela','Rio Ave','Pacos Ferreira','Chaves']}
     },
     Belgium:{
-      'Pro League':{rep:76,tier:3,teams:['Brussels United','Brugge Athletic','Anderlecht FC','Gent United','Standard Athletic','Antwerp FC','Genk Athletic','Westerlo United','Cercle Brugge','Mechelen FC','Charleroi Athletic','Kortrijk FC','Eupen United','Sint-Truiden Athletic','Zulte-Waregem FC']}
+      'Pro League':{rep:76,tier:3,teams:['Club Brugge','Anderlecht','Gent','Standard Liege','Antwerp','Genk','Westerlo','Cercle Brugge','Mechelen','Charleroi','Kortrijk','Eupen','Sint-Truiden','Zulte Waregem','OH Leuven']}
     },
     Turkey:{
-      'Super Lig':{rep:78,tier:3,teams:['Istanbul United','Istanbul Blues','Istanbul Athletic','Ankara FC','Trabzon Athletic','Besiktas FC','Basaksehir United','Konyaspor Athletic','Kayserispor FC','Sivasspor Athletic','Antalyaspor United','Adana City','Fenerbahce FC','Galatasaray Athletic','Alanyaspor FC','Gaziantep Athletic','Hatayspor FC','Giresunspor Athletic']}
+      'Super Lig':{rep:78,tier:3,teams:['Galatasaray','Fenerbahce','Besiktas','Trabzonspor','Basaksehir','Konyaspor','Kayserispor','Sivasspor','Antalyaspor','Adana Demirspor','Gaziantep FK','Hatayspor','Giresunspor','Kasimpasa','Alanyaspor','Rizespor','Samsunspor','Pendikspor']}
     },
     Scotland:{
-      'Scottish Premier':{rep:72,tier:3,teams:['Glasgow United','Glasgow Athletic','Edinburgh FC','Aberdeen Athletic','Hearts FC','Hibernian Athletic','Dundee United','Livingston FC','St Mirren Athletic','Motherwell FC','Kilmarnock Athletic','Ross County FC','St Johnstone Athletic','Dundee FC','Inverness Athletic']}
+      'Scottish Premiership':{rep:72,tier:3,teams:['Celtic','Rangers','Hearts','Hibernian','Aberdeen','Dundee United','Livingston','St Mirren','Motherwell','Kilmarnock','Ross County','St Johnstone','Dundee','Inverness','Hamilton']}
     }
   },
   SouthAmerica:{
     Brazil:{
-      'Serie A':{rep:84,tier:2,teams:['Flamengo Rio','São Paulo Athletic','Corinthians United','Palmeiras FC','Santos Athletic','Vasco da Gama','Botafogo United','Fluminense FC','Atletico Mineiro','Cruzeiro Athletic','Internacional FC','Gremio Athletic','Bragantino United','Fortaleza FC','Cuiaba Athletic','Coritiba United','Goias FC','Ceara Athletic','Bahia United','Juventude FC']}
+      'Brasileirao':{rep:84,tier:2,teams:['Flamengo','Sao Paulo','Corinthians','Palmeiras','Santos','Vasco da Gama','Botafogo','Fluminense','Atletico Mineiro','Cruzeiro','Internacional','Gremio','Red Bull Bragantino','Fortaleza','Cuiaba','Coritiba','Goias','Ceara','Bahia','Juventude']}
     },
     Argentina:{
-      'Primera Division':{rep:83,tier:2,teams:['Buenos Aires United','Buenos Aires Juniors','Buenos Aires Racing','Buenos Aires Independent','Buenos Aires Athletic','Velez Sarsfield','San Lorenzo FC','Huracan Athletic','Lanus United','Banfield FC','Defensa United','Talleres Athletic','Atletico Tucuman','Newells Athletic','Rosario Central','Colon Athletic','Godoy Cruz FC','River Plate','Boca Juniors','Racing Club']}
+      'Primera Division':{rep:83,tier:2,teams:['River Plate','Boca Juniors','Racing Club','Independiente','San Lorenzo','Velez Sarsfield','Huracan','Lanus','Banfield','Defensa y Justicia','Talleres','Atletico Tucuman','Newells Old Boys','Rosario Central','Colon','Godoy Cruz','Estudiantes','Tigre','Platense','Barracas Central']}
     },
     Colombia:{
-      'Liga BetPlay':{rep:72,tier:4,teams:['Bogota United','Medellin Athletic','Cali FC','Junior Atlantic','Nacional Athletic','America Cali','Deportivo Pereira','Once Caldas','Tolima United','Millonarios FC','Santa Fe Athletic','Envigado FC','Pasto Athletic','Alianza United','Jaguares FC']}
+      'Liga BetPlay':{rep:72,tier:4,teams:['Atletico Nacional','America de Cali','Junior','Millonarios','Santa Fe','Deportivo Cali','Deportivo Pereira','Once Caldas','Deportes Tolima','Independiente Medellin','Envigado','Deportivo Pasto','Alianza Petrolera','Jaguares','Aguilas Doradas']}
     },
     Chile:{
-      'Primera Division':{rep:70,tier:4,teams:['Colo Colo','Universidad de Chile','Universidad Catolica','Antofagasta FC','Iquique Athletic','OHiggins United','Huachipato FC','Cobresal Athletic','Everton Chile','Audax Italiano','La Serena FC','Curico United','Deportes Temuco','Palestino FC','Union La Calera']}
+      'Primera Division':{rep:70,tier:4,teams:['Colo-Colo','Universidad de Chile','Universidad Catolica','Antofagasta','Deportes Iquique','OHiggins','Huachipato','Cobresal','Everton','Audax Italiano','Deportes La Serena','Curico Unido','Deportes Temuco','Palestino','Union La Calera']}
     }
   },
   NorthAmerica:{
     USA:{
-      'MLS':{rep:74,tier:3,teams:['New York City FC','Los Angeles Galaxy','Atlanta United','Inter Miami FC','Seattle Sounders','Portland Timbers','Colorado Rapids','Philadelphia Union','New York Red Bulls','Chicago Fire','Toronto FC','Montreal Impact','Columbus Crew','Orlando City','DC United','Vancouver Whitecaps','San Jose Earthquakes','FC Dallas','Houston Dynamo','Real Salt Lake']}
+      'MLS':{rep:74,tier:3,teams:['NYCFC','LA Galaxy','Atlanta United','Inter Miami','Seattle Sounders','Portland Timbers','Colorado Rapids','Philadelphia Union','New York Red Bulls','Chicago Fire','Toronto FC','CF Montreal','Columbus Crew','Orlando City','DC United','Vancouver Whitecaps','San Jose Earthquakes','FC Dallas','Houston Dynamo','Real Salt Lake']}
     },
     Mexico:{
-      'Liga MX':{rep:80,tier:3,teams:['Club America','Guadalajara Chivas','Tigres UANL','Monterrey Athletic','Cruz Azul','UNAM Pumas','Atlas FC','Toluca Athletic','Santos Laguna','Leon FC','Pachuca Athletic','Tijuana FC','Queretaro United','Juarez Athletic','Necaxa FC','Atletico San Luis','Puebla FC','Mazatlan Athletic','Bravos FC','Xolos Athletic']}
+      'Liga MX':{rep:80,tier:3,teams:['Club America','Guadalajara','Tigres UANL','Monterrey','Cruz Azul','UNAM Pumas','Atlas','Toluca','Santos Laguna','Leon','Pachuca','Tijuana','Queretaro','FC Juarez','Necaxa','Atletico San Luis','Puebla','Mazatlan FC','Bravos FC','Club Tijuana']}
     }
   },
   Asia:{
     Japan:{
-      'J-League':{rep:72,tier:4,teams:['Tokyo FC','Yokohama United','Osaka Athletic','Nagoya Grampus','Kobe Athletic','Urawa Reds','Gamba Osaka','Kashima Athletic','Kawasaki FC','Sapporo United','Sendai Athletic','Hiroshima FC','Vissel Kobe','Cerezo Osaka','Sanfrecce Athletic','Shonan Bellmare','FC Tokyo II','Jubilo Iwata','Albirex Niigata','Kyoto Sanga']}
+      'J-League':{rep:72,tier:4,teams:['FC Tokyo','Yokohama F. Marinos','Gamba Osaka','Nagoya Grampus','Vissel Kobe','Urawa Reds','Kashima Antlers','Kawasaki Frontale','Sapporo','Sendai','Sanfrecce Hiroshima','Cerezo Osaka','Shonan Bellmare','Jubilo Iwata','Albirex Niigata','Kyoto Sanga','Kashiwa Reysol','Avispa Fukuoka','Tokyo Verdy','Yokohama FC']}
     },
     'South Korea':{
-      'K-League':{rep:70,tier:4,teams:['Seoul United','Jeonbuk Athletic','Ulsan City','Suwon Samsung','Pohang Athletic','Jeju United','Daegu Athletic','Incheon United','Seongnam FC','Daejeon Athletic','Gimcheon Athletic','Gangwon FC','Seoul E-Land','Gyeongnam FC','Busan IPark']}
+      'K League 1':{rep:70,tier:4,teams:['Jeonbuk Hyundai','Ulsan Hyundai','Suwon Samsung Bluewings','Pohang Steelers','Jeju United','Daegu FC','Incheon United','Seongnam FC','Daejeon Citizen','Gimcheon Sangmu','Gangwon FC','Seoul E-Land FC','Gyeongnam FC','Busan IPark','Seoul']}
     },
     'Saudi Arabia':{
-      'Saudi Pro League':{rep:82,tier:3,teams:['Riyadh Victory','Riyadh City FC','Jeddah Athletic','Jeddah United','Al-Noor FC','Eastern Athletic','Al-Qadsiah FC','Al-Ittifaq Athletic','Al-Fayha FC','Al-Wehda Athletic','Abha FC','Al-Hazem Athletic','Al-Akhdoud FC','Al-Riyadh Athletic','Al-Shabab FC','Al-Hilal Athletic']}
+      'Saudi Pro League':{rep:82,tier:3,teams:['Al-Hilal','Al-Nassr','Al-Ittihad','Al-Ahli','Al-Qadsiah','Al-Ittifaq','Al-Fayha','Al-Wehda','Abha Club','Al-Hazem','Al-Akhdoud','Al-Riyadh','Al-Shabab','Al-Tai','Al-Khaleej','Al-Okhdood']}
     },
     China:{
-      'Chinese Super League':{rep:68,tier:4,teams:['Shanghai Port','Beijing United','Shandong Athletic','Guangzhou FC','Tianjin City','Shenzhen Athletic','Wuhan United','Chengdu FC','Dalian Athletic','Qingdao FC','Chongqing Athletic','Henan FC','Hebei Athletic','Meizhou FC','Changchun Athletic','Nanjing City','Zhejiang FC','Sichuan Athletic']}
+      'Chinese Super League':{rep:68,tier:4,teams:['Shanghai Port','Beijing Guoan','Shandong Taishan','Guangzhou FC','Tianjin Jinmen Tiger','Shenzhen FC','Wuhan Three Towns','Chengdu Rongcheng','Dalian Pro','Qingdao FC','Chongqing Liangjiang','Henan FC','Hebei FC','Meizhou Hakka','Changchun Yatai','Nanjing City','Zhejiang FC','Sichuan Jiuniu']}
     }
   }
 };
 
-// International teams
+// International teams   comprehensive list covering all FIFA nations
 const INTL_TEAMS = {
-  'England':     {flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',conf:'UEFA',nats:['English']},
-  'Spain':       {flag:'🇪🇸',conf:'UEFA',nats:['Spanish']},
-  'Germany':     {flag:'🇩🇪',conf:'UEFA',nats:['German']},
-  'France':      {flag:'🇫🇷',conf:'UEFA',nats:['French']},
-  'Italy':       {flag:'🇮🇹',conf:'UEFA',nats:['Italian']},
-  'Portugal':    {flag:'🇵🇹',conf:'UEFA',nats:['Portuguese']},
-  'Netherlands': {flag:'🇳🇱',conf:'UEFA',nats:['Dutch']},
-  'Belgium':     {flag:'🇧🇪',conf:'UEFA',nats:['Belgian']},
-  'Croatia':     {flag:'🇭🇷',conf:'UEFA',nats:['Croatian']},
-  'Serbia':      {flag:'🇷🇸',conf:'UEFA',nats:['Serbian']},
-  'Brazil':      {flag:'🇧🇷',conf:'CONMEBOL',nats:['Brazilian']},
-  'Argentina':   {flag:'🇦🇷',conf:'CONMEBOL',nats:['Argentine']},
-  'Colombia':    {flag:'🇨🇴',conf:'CONMEBOL',nats:['Colombian']},
-  'Chile':       {flag:'🇨🇱',conf:'CONMEBOL',nats:['Chilean']},
-  'Uruguay':     {flag:'🇺🇾',conf:'CONMEBOL',nats:['Uruguayan']},
-  'USA':         {flag:'🇺🇸',conf:'CONCACAF',nats:['American']},
-  'Mexico':      {flag:'🇲🇽',conf:'CONCACAF',nats:['Mexican']},
-  'Japan':       {flag:'🇯🇵',conf:'AFC',nats:['Japanese']},
-  'South Korea': {flag:'🇰🇷',conf:'AFC',nats:['Korean']},
-  'Saudi Arabia':{flag:'🇸🇦',conf:'AFC',nats:['Saudi']},
-  'Morocco':     {flag:'🇲🇦',conf:'CAF',nats:['Moroccan']},
-  'Nigeria':     {flag:'🇳🇬',conf:'CAF',nats:['Nigerian']},
-  'Senegal':     {flag:'🇸🇳',conf:'CAF',nats:['Senegalese']},
+  'Afghanistan':     {flag:'https://flagcdn.com/w320/af.png',conf:'AFC',nats:['Afghan']},
+  'Albania':         {flag:'https://flagcdn.com/w320/al.png',conf:'UEFA',nats:['Albanian']},
+  'Algeria':         {flag:'https://flagcdn.com/w320/dz.png',conf:'CAF',nats:['Algerian']},
+  'Andorra':         {flag:'https://flagcdn.com/w320/ad.png',conf:'UEFA',nats:['Andorran']},
+  'Angola':          {flag:'https://flagcdn.com/w320/ao.png',conf:'CAF',nats:['Angolan']},
+  'Argentina':       {flag:'https://flagcdn.com/w320/ar.png',conf:'CONMEBOL',nats:['Argentine']},
+  'Armenia':         {flag:'https://flagcdn.com/w320/am.png',conf:'UEFA',nats:['Armenian']},
+  'Australia':       {flag:'https://flagcdn.com/w320/au.png',conf:'AFC',nats:['Australian']},
+  'Austria':         {flag:'https://flagcdn.com/w320/at.png',conf:'UEFA',nats:['Austrian']},
+  'Azerbaijan':      {flag:'https://flagcdn.com/w320/az.png',conf:'UEFA',nats:['Azerbaijani']},
+  'Bahrain':         {flag:'https://flagcdn.com/w320/bh.png',conf:'AFC',nats:['Bahraini']},
+  'Bangladesh':      {flag:'https://flagcdn.com/w320/bd.png',conf:'AFC',nats:['Bangladeshi']},
+  'Belarus':         {flag:'https://flagcdn.com/w320/by.png',conf:'UEFA',nats:['Belarusian']},
+  'Belgium':         {flag:'https://flagcdn.com/w320/be.png',conf:'UEFA',nats:['Belgian']},
+  'Bolivia':         {flag:'https://flagcdn.com/w320/bo.png',conf:'CONMEBOL',nats:['Bolivian']},
+  'Bosnia':          {flag:'https://flagcdn.com/w320/ba.png',conf:'UEFA',nats:['Bosnian']},
+  'Botswana':        {flag:'https://flagcdn.com/w320/bw.png',conf:'CAF',nats:['Batswana']},
+  'Brazil':          {flag:'https://flagcdn.com/w320/br.png',conf:'CONMEBOL',nats:['Brazilian']},
+  'Bulgaria':        {flag:'https://flagcdn.com/w320/bg.png',conf:'UEFA',nats:['Bulgarian']},
+  'Burkina Faso':    {flag:'https://flagcdn.com/w320/bf.png',conf:'CAF',nats:['Burkinabé']},
+  'Cameroon':        {flag:'https://flagcdn.com/w320/cm.png',conf:'CAF',nats:['Cameroonian']},
+  'Canada':          {flag:'https://flagcdn.com/w320/ca.png',conf:'CONCACAF',nats:['Canadian']},
+  'Chile':           {flag:'https://flagcdn.com/w320/cl.png',conf:'CONMEBOL',nats:['Chilean']},
+  'China':           {flag:'https://flagcdn.com/w320/cn.png',conf:'AFC',nats:['Chinese']},
+  'Colombia':        {flag:'https://flagcdn.com/w320/co.png',conf:'CONMEBOL',nats:['Colombian']},
+  'Congo':           {flag:'https://flagcdn.com/w320/cd.png',conf:'CAF',nats:['Congolese']},
+  'Costa Rica':      {flag:'https://flagcdn.com/w320/cr.png',conf:'CONCACAF',nats:['Costa Rican']},
+  'Croatia':         {flag:'https://flagcdn.com/w320/hr.png',conf:'UEFA',nats:['Croatian']},
+  'Cuba':            {flag:'https://flagcdn.com/w320/cu.png',conf:'CONCACAF',nats:['Cuban']},
+  'Czech Republic':  {flag:'https://flagcdn.com/w320/cz.png',conf:'UEFA',nats:['Czech']},
+  'Denmark':         {flag:'https://flagcdn.com/w320/dk.png',conf:'UEFA',nats:['Danish']},
+  'Ecuador':         {flag:'https://flagcdn.com/w320/ec.png',conf:'CONMEBOL',nats:['Ecuadorian']},
+  'Egypt':           {flag:'https://flagcdn.com/w320/eg.png',conf:'CAF',nats:['Egyptian']},
+  'England':         {flag:'https://flagcdn.com/w320/gb-eng.png',conf:'UEFA',nats:['English']},
+  'Ethiopia':        {flag:'https://flagcdn.com/w320/et.png',conf:'CAF',nats:['Ethiopian']},
+  'Finland':         {flag:'https://flagcdn.com/w320/fi.png',conf:'UEFA',nats:['Finnish']},
+  'France':          {flag:'https://flagcdn.com/w320/fr.png',conf:'UEFA',nats:['French']},
+  'Gabon':           {flag:'https://flagcdn.com/w320/ga.png',conf:'CAF',nats:['Gabonese']},
+  'Georgia':         {flag:'https://flagcdn.com/w320/ge.png',conf:'UEFA',nats:['Georgian']},
+  'Germany':         {flag:'https://flagcdn.com/w320/de.png',conf:'UEFA',nats:['German']},
+  'Ghana':           {flag:'https://flagcdn.com/w320/gh.png',conf:'CAF',nats:['Ghanaian']},
+  'Greece':          {flag:'https://flagcdn.com/w320/gr.png',conf:'UEFA',nats:['Greek']},
+  'Guatemala':       {flag:'https://flagcdn.com/w320/gt.png',conf:'CONCACAF',nats:['Guatemalan']},
+  'Guinea':          {flag:'https://flagcdn.com/w320/gn.png',conf:'CAF',nats:['Guinean']},
+  'Honduras':        {flag:'https://flagcdn.com/w320/hn.png',conf:'CONCACAF',nats:['Honduran']},
+  'Hungary':         {flag:'https://flagcdn.com/w320/hu.png',conf:'UEFA',nats:['Hungarian']},
+  'Iceland':         {flag:'https://flagcdn.com/w320/is.png',conf:'UEFA',nats:['Icelandic']},
+  'India':           {flag:'https://flagcdn.com/w320/in.png',conf:'AFC',nats:['Indian']},
+  'Indonesia':       {flag:'https://flagcdn.com/w320/id.png',conf:'AFC',nats:['Indonesian']},
+  'Iran':            {flag:'https://flagcdn.com/w320/ir.png',conf:'AFC',nats:['Iranian']},
+  'Iraq':            {flag:'https://flagcdn.com/w320/iq.png',conf:'AFC',nats:['Iraqi']},
+  'Ireland':         {flag:'https://flagcdn.com/w320/ie.png',conf:'UEFA',nats:['Irish']},
+  'Israel':          {flag:'https://flagcdn.com/w320/il.png',conf:'UEFA',nats:['Israeli']},
+  'Italy':           {flag:'https://flagcdn.com/w320/it.png',conf:'UEFA',nats:['Italian']},
+  'Ivory Coast':     {flag:'https://flagcdn.com/w320/ci.png',conf:'CAF',nats:['Ivorian']},
+  'Jamaica':         {flag:'https://flagcdn.com/w320/jm.png',conf:'CONCACAF',nats:['Jamaican']},
+  'Japan':           {flag:'https://flagcdn.com/w320/jp.png',conf:'AFC',nats:['Japanese']},
+  'Jordan':          {flag:'https://flagcdn.com/w320/jo.png',conf:'AFC',nats:['Jordanian']},
+  'Kazakhstan':      {flag:'https://flagcdn.com/w320/kz.png',conf:'UEFA',nats:['Kazakh']},
+  'Kenya':           {flag:'https://flagcdn.com/w320/ke.png',conf:'CAF',nats:['Kenyan']},
+  'Kosovo':          {flag:'https://flagcdn.com/w320/xk.png',conf:'UEFA',nats:['Kosovar']},
+  'Kuwait':          {flag:'https://flagcdn.com/w320/kw.png',conf:'AFC',nats:['Kuwaiti']},
+  'Lebanon':         {flag:'https://flagcdn.com/w320/lb.png',conf:'AFC',nats:['Lebanese']},
+  'Libya':           {flag:'https://flagcdn.com/w320/ly.png',conf:'CAF',nats:['Libyan']},
+  'Luxembourg':      {flag:'https://flagcdn.com/w320/lu.png',conf:'UEFA',nats:['Luxembourgish']},
+  'Malaysia':        {flag:'https://flagcdn.com/w320/my.png',conf:'AFC',nats:['Malaysian']},
+  'Mali':            {flag:'https://flagcdn.com/w320/ml.png',conf:'CAF',nats:['Malian']},
+  'Malta':           {flag:'https://flagcdn.com/w320/mt.png',conf:'UEFA',nats:['Maltese']},
+  'Mexico':          {flag:'https://flagcdn.com/w320/mx.png',conf:'CONCACAF',nats:['Mexican']},
+  'Moldova':         {flag:'https://flagcdn.com/w320/md.png',conf:'UEFA',nats:['Moldovan']},
+  'Montenegro':      {flag:'https://flagcdn.com/w320/me.png',conf:'UEFA',nats:['Montenegrin']},
+  'Morocco':         {flag:'https://flagcdn.com/w320/ma.png',conf:'CAF',nats:['Moroccan']},
+  'Mozambique':      {flag:'https://flagcdn.com/w320/mz.png',conf:'CAF',nats:['Mozambican']},
+  'Namibia':         {flag:'https://flagcdn.com/w320/na.png',conf:'CAF',nats:['Namibian']},
+  'Netherlands':     {flag:'https://flagcdn.com/w320/nl.png',conf:'UEFA',nats:['Dutch']},
+  'New Zealand':     {flag:'https://flagcdn.com/w320/nz.png',conf:'OFC',nats:['New Zealander']},
+  'Nigeria':         {flag:'https://flagcdn.com/w320/ng.png',conf:'CAF',nats:['Nigerian']},
+  'North Korea':     {flag:'https://flagcdn.com/w320/kp.png',conf:'AFC',nats:['North Korean']},
+  'North Macedonia': {flag:'https://flagcdn.com/w320/mk.png',conf:'UEFA',nats:['Macedonian']},
+  'Northern Ireland':{flag:'https://flagcdn.com/w320/gb-nir.png',conf:'UEFA',nats:['Northern Irish']},
+  'Norway':          {flag:'https://flagcdn.com/w320/no.png',conf:'UEFA',nats:['Norwegian']},
+  'Oman':            {flag:'https://flagcdn.com/w320/om.png',conf:'AFC',nats:['Omani']},
+  'Pakistan':        {flag:'https://flagcdn.com/w320/pk.png',conf:'AFC',nats:['Pakistani']},
+  'Panama':          {flag:'https://flagcdn.com/w320/pa.png',conf:'CONCACAF',nats:['Panamanian']},
+  'Paraguay':        {flag:'https://flagcdn.com/w320/py.png',conf:'CONMEBOL',nats:['Paraguayan']},
+  'Peru':            {flag:'https://flagcdn.com/w320/pe.png',conf:'CONMEBOL',nats:['Peruvian']},
+  'Philippines':     {flag:'https://flagcdn.com/w320/ph.png',conf:'AFC',nats:['Filipino']},
+  'Poland':          {flag:'https://flagcdn.com/w320/pl.png',conf:'UEFA',nats:['Polish']},
+  'Portugal':        {flag:'https://flagcdn.com/w320/pt.png',conf:'UEFA',nats:['Portuguese']},
+  'Qatar':           {flag:'https://flagcdn.com/w320/qa.png',conf:'AFC',nats:['Qatari']},
+  'Romania':         {flag:'https://flagcdn.com/w320/ro.png',conf:'UEFA',nats:['Romanian']},
+  'Russia':          {flag:'https://flagcdn.com/w320/ru.png',conf:'UEFA',nats:['Russian']},
+  'Rwanda':          {flag:'https://flagcdn.com/w320/rw.png',conf:'CAF',nats:['Rwandan']},
+  'Saudi Arabia':    {flag:'https://flagcdn.com/w320/sa.png',conf:'AFC',nats:['Saudi']},
+  'Scotland':        {flag:'https://flagcdn.com/w320/gb-sct.png',conf:'UEFA',nats:['Scottish']},
+  'Senegal':         {flag:'https://flagcdn.com/w320/sn.png',conf:'CAF',nats:['Senegalese']},
+  'Serbia':          {flag:'https://flagcdn.com/w320/rs.png',conf:'UEFA',nats:['Serbian']},
+  'Slovakia':        {flag:'https://flagcdn.com/w320/sk.png',conf:'UEFA',nats:['Slovak']},
+  'Slovenia':        {flag:'https://flagcdn.com/w320/si.png',conf:'UEFA',nats:['Slovenian']},
+  'South Africa':    {flag:'https://flagcdn.com/w320/za.png',conf:'CAF',nats:['South African']},
+  'South Korea':     {flag:'https://flagcdn.com/w320/kr.png',conf:'AFC',nats:['Korean']},
+  'Spain':           {flag:'https://flagcdn.com/w320/es.png',conf:'UEFA',nats:['Spanish']},
+  'Sri Lanka':       {flag:'https://flagcdn.com/w320/lk.png',conf:'AFC',nats:['Sri Lankan']},
+  'Sudan':           {flag:'https://flagcdn.com/w320/sd.png',conf:'CAF',nats:['Sudanese']},
+  'Sweden':          {flag:'https://flagcdn.com/w320/se.png',conf:'UEFA',nats:['Swedish']},
+  'Switzerland':     {flag:'https://flagcdn.com/w320/ch.png',conf:'UEFA',nats:['Swiss']},
+  'Syria':           {flag:'https://flagcdn.com/w320/sy.png',conf:'AFC',nats:['Syrian']},
+  'Tanzania':        {flag:'https://flagcdn.com/w320/tz.png',conf:'CAF',nats:['Tanzanian']},
+  'Thailand':        {flag:'https://flagcdn.com/w320/th.png',conf:'AFC',nats:['Thai']},
+  'Trinidad & Tobago':{flag:'https://flagcdn.com/w320/tt.png',conf:'CONCACAF',nats:['Trinidadian']},
+  'Tunisia':         {flag:'https://flagcdn.com/w320/tn.png',conf:'CAF',nats:['Tunisian']},
+  'Turkey':          {flag:'https://flagcdn.com/w320/tr.png',conf:'UEFA',nats:['Turkish']},
+  'Uganda':          {flag:'https://flagcdn.com/w320/ug.png',conf:'CAF',nats:['Ugandan']},
+  'Ukraine':         {flag:'https://flagcdn.com/w320/ua.png',conf:'UEFA',nats:['Ukrainian']},
+  'United Arab Emirates':{flag:'https://flagcdn.com/w320/ae.png',conf:'AFC',nats:['Emirati']},
+  'Uruguay':         {flag:'https://flagcdn.com/w320/uy.png',conf:'CONMEBOL',nats:['Uruguayan']},
+  'USA':             {flag:'https://flagcdn.com/w320/us.png',conf:'CONCACAF',nats:['American']},
+  'Uzbekistan':      {flag:'https://flagcdn.com/w320/uz.png',conf:'AFC',nats:['Uzbek']},
+  'Venezuela':       {flag:'https://flagcdn.com/w320/ve.png',conf:'CONMEBOL',nats:['Venezuelan']},
+  'Vietnam':         {flag:'https://flagcdn.com/w320/vn.png',conf:'AFC',nats:['Vietnamese']},
+  'Wales':           {flag:'https://flagcdn.com/w320/gb-wls.png',conf:'UEFA',nats:['Welsh']},
+  'Yemen':           {flag:'https://flagcdn.com/w320/ye.png',conf:'AFC',nats:['Yemeni']},
+  'Zambia':          {flag:'https://flagcdn.com/w320/zm.png',conf:'CAF',nats:['Zambian']},
+  'Zimbabwe':        {flag:'https://flagcdn.com/w320/zw.png',conf:'CAF',nats:['Zimbabwean']},
 };
 
 const CONTINENTAL = {
@@ -755,7 +987,7 @@ const CONTINENTAL = {
   acl: {name:'Asian Champions Elite',region:'Asia',         slots:2,color:'var(--green)', class:'comp-lib'},
 };
 
-// ── STATE ──────────────────────────────────────
+// -- STATE --------------------------------------
 let G = {
   mgr:'', mgrNat:'English', playerTeam:null, season:1,
   date: new Date(2024,7,1),
@@ -770,7 +1002,7 @@ let G = {
   intlResults:[],
 };
 
-// ── UTILS ──────────────────────────────────────
+// -- UTILS --------------------------------------
 const uid  = () => G.nextId++;
 const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const rf   = (a,b) => Math.random()*(b-a)+a;
@@ -802,7 +1034,7 @@ function toast(msg,type='s'){
 function openModal(){document.getElementById('moverlay').classList.add('open')}
 function closeModal(){document.getElementById('moverlay').classList.remove('open')}
 
-// ── MARKET VALUE CALCULATION (Transfermarkt-inspired) ─────────────
+// -- MARKET VALUE CALCULATION (Transfermarkt-inspired) -------------
 function valCalc(ovr, age, pot, leagueRep=75) {
   // Base value from OVR
   let base;
@@ -827,7 +1059,7 @@ function valCalc(ovr, age, pot, leagueRep=75) {
   return Math.round(base * ageMul * potMul * repMul);
 }
 
-// ── PLAYER GENERATION WITH TIER-AWARE QUALITY ──────────────────
+// -- PLAYER GENERATION WITH TIER-AWARE QUALITY ------------------
 function mkPlayer(opts={}) {
   const age   = opts.age  || rand(17,35);
   const pos   = opts.pos  || pick(Object.keys(POS_TYPE));
@@ -886,8 +1118,9 @@ function mkPlayer(opts={}) {
   const nat = opts.nationality || pick(NATS);
 
   return {
-    id:uid(), name:`${pick(FN)} ${pick(LN)}`,
+    id:uid(), name: getNameForNat(nat),
     nationality:nat, age, pos,
+    jerseyNum: opts.jerseyNum || rand(1,99),
     height:rand(165,198), weight:rand(63,96),
     foot:Math.random()>.15?'Right':'Left',
     role:pick(ROLES[pos]||['Player']),
@@ -921,7 +1154,7 @@ function wageCalc(ovr, leagueRep=75) {
   return Math.round(base * repMul);
 }
 
-// ── WORLD GENERATION ─────────────────────────
+// -- WORLD GENERATION -------------------------
 function generateWorld() {
   G.teams=[]; G.players=[]; G.leagues={}; G.fixtures=[]; G.results=[];
   G.leagueCoefficients={};
@@ -988,19 +1221,29 @@ function genFixtures(lid) {
   const ids=[...lg.teams];
   if(ids.length%2!==0)ids.push(-1);
   const n=ids.length, rounds=n-1;
+  // Start season on first Saturday after the stored start date
+  let seasonStart = new Date(G.date);
+  // Advance to Saturday (day 6)
+  while(seasonStart.getDay()!==6) seasonStart=new Date(seasonStart.getTime()+86400000);
+
   for(let r=0;r<rounds;r++){
     let md=r+1;
+    // Each matchday is 7 days apart (weekly schedule)
+    const mdDate = new Date(seasonStart.getTime() + r*7*86400000);
     for(let i=0;i<n/2;i++){
       const h=ids[i],a=ids[n-1-i];
       if(h!==-1&&a!==-1){
-        G.fixtures.push({id:uid(),homeId:h,awayId:a,leagueId:lid,played:false,result:null,matchday:md,date:new Date(G.date.getTime()+r*7*86400000)});
+        G.fixtures.push({id:uid(),homeId:h,awayId:a,leagueId:lid,played:false,result:null,matchday:md,date:new Date(mdDate)});
       }
     }
     ids.splice(1,0,ids.pop());
   }
+  // Return fixtures   second half of season (reverse fixtures), starting 2 weeks after first half
   const firstHalf=G.fixtures.filter(f=>f.leagueId===lid);
+  const gapWeeks = 2; // 2-week gap between halves
   firstHalf.forEach(f=>{
-    G.fixtures.push({id:uid(),homeId:f.awayId,awayId:f.homeId,leagueId:lid,played:false,result:null,matchday:f.matchday+rounds,date:new Date(f.date.getTime()+rounds*7*86400000)});
+    const secondDate = new Date(f.date.getTime()+(rounds+gapWeeks)*7*86400000);
+    G.fixtures.push({id:uid(),homeId:f.awayId,awayId:f.homeId,leagueId:lid,played:false,result:null,matchday:f.matchday+rounds,date:secondDate});
   });
 }
 
@@ -1036,7 +1279,7 @@ function setupContinental() {
   G.continental.acl=aclClubs.slice(0,16);
 }
 
-// ── TRANSFER RUMORS ───────────────────────────
+// -- TRANSFER RUMORS ---------------------------
 function generateTransferRumors() {
   G.transferRumors=[];
   const rumors=['interested in','close to signing','in talks for','monitoring','has bid for','rejected offer for'];
@@ -1054,7 +1297,7 @@ function generateTransferRumors() {
   }
 }
 
-// ── MATCH ENGINE (v4 — realistic possession + stats) ─────────
+// -- MATCH ENGINE (v4   realistic possession + stats) ---------
 function calcTeamPower(squad, isHome=false) {
   const s=[...squad].sort((a,b)=>b.overall-a.overall).slice(0,11);
   if(!s.length) return {overall:60,passing:65,defending:65,pressing:65,midfield:65};
@@ -1086,7 +1329,7 @@ function calcPossession(hPow, aPow, myTactic=null) {
     if(myTactic.style==='counter')    rawPoss = clamp(rawPoss-0.03, 0.28, 0.7);
   }
 
-  // Apply small random noise (±4%) — keeps it realistic, avoids extremes
+  // Apply small random noise ( 4%)   keeps it realistic, avoids extremes
   rawPoss = clamp(rawPoss + rf(-0.04, 0.04), 0.30, 0.70);
 
   // Squash toward 50 for similar teams
@@ -1198,13 +1441,15 @@ function simMatch(fixture) {
 
 function mkEvents(home,away,hp,ap,hg,ag) {
   const evs=[]; const usedMins=new Set();
-  const pickMin=()=>{let m;do{m=rand(1,90);}while(usedMins.has(m));usedMins.add(m);return m;};
-  const scorer=players=>{const fwd=players.filter(p=>posType(p.pos)==='fwd'),mid=players.filter(p=>posType(p.pos)==='mid'),pool=[...fwd,...fwd,...mid,...players];return pick(pool)||players[0];};
-  const assister=(players,sc)=>{const pool=players.filter(p=>p.id!==sc?.id);return Math.random()>.12&&pool.length?pick(pool):null;};
+  const pickMin=()=>{let m,t=0;do{m=rand(1,90);t++;}while(usedMins.has(m)&&t<40);usedMins.add(m);return m;};
+  // GKs CANNOT score or get assists   outfield only
+  const outfield=pl=>pl.filter(p=>p.pos!=='GK');
+  const scorer=players=>{const pl=outfield(players);const fwd=pl.filter(p=>posType(p.pos)==='fwd'),mid=pl.filter(p=>posType(p.pos)==='mid'),pool=[...fwd,...fwd,...fwd,...mid,...mid,...pl];return pick(pool)||pl[0];};
+  const assister=(players,sc)=>{const pl=outfield(players).filter(p=>p.id!==sc?.id);return Math.random()>.12&&pl.length?pick(pl):null;};
   for(let i=0;i<hg;i++){const sc=scorer(hp);const as=assister(hp,sc);if(sc)evs.push({type:'goal',team:'home',min:pickMin(),pid:sc.id,pname:sc.name,aid:as?.id,aname:as?.name});}
   for(let i=0;i<ag;i++){const sc=scorer(ap);const as=assister(ap,sc);if(sc)evs.push({type:'goal',team:'away',min:pickMin(),pid:sc.id,pname:sc.name,aid:as?.id,aname:as?.name});}
-  for(let i=0;i<rand(1,6);i++){const team=Math.random()>.5?'home':'away';const pool=team==='home'?hp:ap;const p=pick(pool);if(p)evs.push({type:'yellow',team,min:pickMin(),pid:p.id,pname:p.name});}
-  if(Math.random()<.04){const team=Math.random()>.5?'home':'away';const p=pick(team==='home'?hp:ap);if(p)evs.push({type:'red',team,min:pickMin(),pid:p.id,pname:p.name});}
+  for(let i=0;i<rand(1,5);i++){const team=Math.random()>.5?'home':'away';const pool=team==='home'?hp:ap;const p=pick(pool);if(p)evs.push({type:'yellow',team,min:pickMin(),pid:p.id,pname:p.name});}
+  if(Math.random()<.04){const team=Math.random()>.5?'home':'away';const p=pick(team==='home'?hp:ap);if(p)evs.push({type:'red',team,min:pickMin(30,90),pid:p.id,pname:p.name});}
   if(Math.random()<.12){const team=Math.random()>.5?'home':'away';const p=pick(team==='home'?hp:ap);if(p){p.injured=true;p.injuryGames=rand(2,15);evs.push({type:'injury',team,min:pickMin(),pid:p.id,pname:p.name});}}
   for(let i=0;i<rand(2,4);i++){const team=Math.random()>.5?'home':'away';const pool=team==='home'?hp:ap;const p=pick(pool),p2=pick(pool.filter(x=>x.id!==p?.id));if(p&&p2)evs.push({type:'sub',team,min:rand(55,85),pid:p.id,pname:p.name,p2id:p2.id,p2name:p2.name});}
   return evs.sort((a,b)=>a.min-b.min);
@@ -1233,10 +1478,65 @@ function calcPRating(p, evs, ptype) {
   if(ptype==='gk'  && isClean) r+=0.9;
   if(ptype==='def' && isClean) r+=0.4;
 
-  // Random variance ±0.4 (no perfect scores without contribution)
+  // Random variance  0.4 (no perfect scores without contribution)
   r += rf(-0.4, 0.4);
 
   return parseFloat(clamp(r, 4.0, 10.0).toFixed(1));
+}
+
+// -- Formation-aware Starting XI selector -----
+// Returns exactly 11 players, one per formation slot, best fit per position
+function selectXI(team, formationKey) {
+  const fKey = formationKey || team.formation || '4-3-3';
+  const fdata = FORMATIONS[fKey] || FORMATIONS['4-3-3'];
+  const posSlots = fdata.pos; // e.g. ['GK','LB','CB','CB','RB','CM','CM','CM','LW','ST','RW']
+  const available = team.squad
+    .map(id=>G.players.find(p=>p.id===id))
+    .filter(p=>p && !p.injured);
+
+  const used = new Set();
+  const xi = [];
+
+  // First pass: exact position matches
+  posSlots.forEach(slot=>{
+    const candidates = available
+      .filter(p=>!used.has(p.id) && p.pos===slot)
+      .sort((a,b)=>b.overall-a.overall);
+    if(candidates.length){
+      used.add(candidates[0].id);
+      xi.push(candidates[0]);
+    } else {
+      xi.push(null); // placeholder
+    }
+  });
+
+  // Second pass: fill nulls with positional type matches
+  const posTypeMap = {GK:'gk',LB:'def',CB:'def',RB:'def',LWB:'def',RWB:'def',CDM:'mid',CM:'mid',CAM:'mid',LM:'mid',RM:'mid',LW:'fwd',RW:'fwd',ST:'fwd',CF:'fwd'};
+  xi.forEach((p,i)=>{
+    if(p) return;
+    const slotType = posTypeMap[posSlots[i]] || 'mid';
+    const candidates = available
+      .filter(p=>!used.has(p.id) && posType(p.pos)===slotType)
+      .sort((a,b)=>b.overall-a.overall);
+    if(candidates.length){
+      used.add(candidates[0].id);
+      xi[i] = candidates[0];
+    }
+  });
+
+  // Third pass: fill remaining with any available player by OVR
+  xi.forEach((p,i)=>{
+    if(p) return;
+    const candidates = available
+      .filter(p=>!used.has(p.id))
+      .sort((a,b)=>b.overall-a.overall);
+    if(candidates.length){
+      used.add(candidates[0].id);
+      xi[i] = candidates[0];
+    }
+  });
+
+  return xi.filter(Boolean);
 }
 
 function updTable(lid,hid,aid,hg,ag) {
@@ -1259,7 +1559,7 @@ function updTable(lid,hid,aid,hg,ag) {
   lg.table.sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);
 }
 
-// ── DAY-BASED SIMULATION CONTROLS (v4) ──────────
+// -- DAY-BASED SIMULATION CONTROLS (v4) ----------
 // All fixtures are tied to dates. We advance by day.
 
 function getAllUnplayedByDate() {
@@ -1290,7 +1590,7 @@ function simDay() {
     return;
   }
 
-  // No player match today — sim all matches on this day silently
+  // No player match today   sim all matches on this day silently
   toSim.forEach(f=>{
     const r=simMatch(f); if(r){G.results.push(r);f.played=true;}
   });
@@ -1307,7 +1607,7 @@ function simToNextMyMatch() {
     if(!next) break;
     const myMatch = G.fixtures.find(f=>!f.played&&f.date.toDateString()===next.toDateString()&&(f.homeId===G.playerTeam||f.awayId===G.playerTeam));
     if(myMatch){ nav('prematch', myMatch.id); return; }
-    // No player match on this day — sim all and advance
+    // No player match on this day   sim all and advance
     const toSim = G.fixtures.filter(f=>!f.played && f.date.toDateString()===next.toDateString());
     toSim.forEach(f=>{ const r=simMatch(f); if(r){G.results.push(r);f.played=true;} });
     G.date = new Date(next.getTime()+86400000);
@@ -1316,7 +1616,18 @@ function simToNextMyMatch() {
   nav(G.currentPage);
 }
 
-function simNext(){ simDay(); }
+function simNext(){
+  // Advance exactly one calendar day   do NOT jump to prematch screen
+  const next = getNextMatchDay();
+  if(!next){ checkSeasonEnd(); nav(G.currentPage); return; }
+
+  const dayStr = next.toDateString();
+  const toSim = G.fixtures.filter(f=>!f.played && f.date.toDateString()===dayStr);
+  toSim.forEach(f=>{ const r=simMatch(f); if(r){G.results.push(r);f.played=true;} });
+  G.date = new Date(next.getTime()+86400000);
+  checkSeasonEnd(); updateTopbar(); nav(G.currentPage);
+  if(toSim.length) toast(`Simmed ${toSim.length} match${toSim.length>1?'es':''} on ${fmtDate(next)}`,'i');
+}
 
 function simWeek(){
   // Sim 7 days worth of dates (stops at own match as usual)
@@ -1429,7 +1740,7 @@ function runAI(){
   });
 }
 
-// ── TRANSFERS ────────────────────────────────
+// -- TRANSFERS --------------------------------
 function makeOffer(pid){
   const p=G.players.find(x=>x.id===pid);
   const team=G.teams.find(t=>t.id===G.playerTeam);
@@ -1465,7 +1776,7 @@ function renewContract(pid){
   nav('finances');
 }
 
-// ── SCOUTING ─────────────────────────────────
+// -- SCOUTING ---------------------------------
 function scoutPlayer(pid){
   const p=G.players.find(x=>x.id===pid);if(!p)return;
   p.scoutRating={
@@ -1479,8 +1790,56 @@ function scoutPlayer(pid){
   toast(`📋 Scout report filed for ${p.name}`,'i');
 }
 
-// ── NAVIGATION ───────────────────────────────
+// -- NAVIGATION -------------------------------
+// Shift+click on nav-items opens a snapshot in a new tab
+document.addEventListener('click', function(e) {
+  if(!e.shiftKey) return;
+  const navItem = e.target.closest('.nav-item');
+  const tname = e.target.closest('[onclick*="showPlayerModal"]');
+  if(navItem) {
+    e.preventDefault(); e.stopPropagation();
+    const page = navItem.getAttribute('onclick')?.match(/nav\('([^']+)'\)/)?.[1];
+    if(page) openPageInNewTab(page);
+    return;
+  }
+  if(tname) {
+    e.preventDefault(); e.stopPropagation();
+    const pid = tname.getAttribute('onclick')?.match(/showPlayerModal\((\d+)\)/)?.[1];
+    if(pid) openPageInNewTab('player', parseInt(pid));
+    return;
+  }
+  const trEl = e.target.closest('tr[onclick]');
+  if(trEl) {
+    const m = trEl.getAttribute('onclick')?.match(/showPlayerModal\((\d+)\)/);
+    if(m) { e.preventDefault(); e.stopPropagation(); openPageInNewTab('player', parseInt(m[1])); }
+  }
+}, true);
+
+function openPageInNewTab(page, param) {
+  // Snapshot current state to a new window
+  const win = window.open('', '_blank');
+  if(!win) { toast('Allow popups to open in new tab','e'); return; }
+  // Collect the current rendered HTML of the page
+  let html = '';
+  const savedPage = G.currentPage;
+  const savedParam = G._currentParam;
+  if(page==='player') html = renderPlayerPage(param);
+  else {
+    const pages={dashboard:renderDashboard,squad:renderSquad,tactics:renderTactics,
+      fixtures:renderFixtures,matches:renderMatches,table:renderTable,transfers:renderTransfers,
+      players:renderPlayers,history:renderHistory,finances:renderFinances,continental:renderContinental,
+      international:renderInternational,scouting:renderScouting};
+    html = (pages[page]||renderDashboard)();
+  }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PITCH — ${page}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>${document.querySelector('style').textContent}</style></head>
+    <body style="background:var(--bg);color:var(--text);padding:20px;max-width:1200px;margin:0 auto">${html}</body></html>`);
+  win.document.close();
+}
+
 function nav(page, param){
+  try {
   G.currentPage=page;
   document.querySelectorAll('.nav-item').forEach(el=>{
     const txt=el.textContent.trim().toLowerCase();
@@ -1504,12 +1863,24 @@ function nav(page, param){
   const c=document.getElementById('content');
   if(page==='prematch'){c.innerHTML=renderPreMatch(param);updateTopbar();return;}
   if(page==='postmatch'){c.innerHTML=renderPostMatch(param);updateTopbar();return;}
+  if(page==='player'){
+    const pid=param;
+    document.getElementById('page-title').textContent='Player Profile';
+    c.innerHTML=renderPlayerPage(pid);
+    updateTopbar();
+    return;
+  }
   const pages={dashboard:renderDashboard,squad:renderSquad,tactics:renderTactics,
     fixtures:renderFixtures,matches:renderMatches,table:renderTable,transfers:renderTransfers,
     players:renderPlayers,history:renderHistory,finances:renderFinances,continental:renderContinental,
     international:renderInternational,dbedit:renderDbEditor,mods:renderMods,scouting:renderScouting};
   c.innerHTML=(pages[page]||renderDashboard)();
   updateTopbar();
+  } catch(e) {
+    console.error('Nav error ['+page+']:', e);
+    const c=document.getElementById('content');
+    if(c) c.innerHTML='<div class="card" style="border-color:var(--red)"><div class="ch"><span class="ct" style="color:var(--red)">Page Error: '+page+'</span></div><pre style="color:var(--text2);font-size:11px;white-space:pre-wrap">'+e.message+'\n\n'+e.stack+'</pre></div>';
+  }
 }
 
 function updateTopbar(){
@@ -1529,7 +1900,7 @@ function updateTopbar(){
   rep.innerHTML=Array.from({length:5},(_,i)=>`<div class="rep-pip${i<Math.round(team.rep/20)?' on':''}"></div>`).join('');
 }
 
-// ═══════ RENDER: DASHBOARD ════════════════════
+// ======= RENDER: DASHBOARD ====================
 function renderDashboard(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const lg=G.leagues[team.leagueId];
@@ -1604,7 +1975,7 @@ function renderDashboard(){
 </div>`;
 }
 
-// ═══════ RENDER: SQUAD ═══════════════════════
+// ======= RENDER: SQUAD =======================
 function renderSquad(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const players=team.squad.map(id=>G.players.find(p=>p.id===id)).filter(Boolean)
@@ -1623,13 +1994,38 @@ function renderSquad(){
   <div class="tw" id="sq-tbl">${sqTable(players)}</div>
 </div>`;
 }
+let _sqSortState = { col: 'overall', dir: -1 };
+
+function sqSort(col) {
+  if(_sqSortState.col===col) _sqSortState.dir*=-1;
+  else { _sqSortState.col=col; _sqSortState.dir=-1; }
+  sqFilter();
+}
+function sqSortIcon(col) {
+  if(_sqSortState.col!==col) return '<span style="opacity:.3;font-size:9px">⇅</span>';
+  return _sqSortState.dir===-1?'<span style="color:var(--accent);font-size:9px">↓</span>':'<span style="color:var(--accent);font-size:9px">↑</span>';
+}
+
 function sqTable(players){
+  const sqSortFns = {
+    name:p=>p.name, age:p=>p.age, overall:p=>p.overall, potential:p=>p.potential,
+    pac:p=>avg([p.attrs.pace,p.attrs.acceleration]),
+    sho:p=>avg([p.attrs.finishing,p.attrs.longShots]),
+    pas:p=>avg([p.attrs.passing,p.attrs.vision]),
+    dri:p=>avg([p.attrs.dribbling,p.attrs.agility]),
+    def:p=>avg([p.attrs.tackling,p.attrs.positioning]),
+    phy:p=>avg([p.attrs.strength,p.attrs.stamina]),
+    form:p=>p.form, morale:p=>p.morale, value:p=>p.value, salary:p=>p.contract.salary
+  };
+  const fn=sqSortFns[_sqSortState.col];
+  const sorted=fn?[...players].sort((a,b)=>{const av=fn(a),bv=fn(b);return typeof av==='string'?av.localeCompare(bv)*_sqSortState.dir:(av-bv)*_sqSortState.dir;}):players;
+  const th=(col,label)=>`<th onclick="sqSort('${col}')" style="cursor:pointer">${label} ${sqSortIcon(col)}</th>`;
   return `<table><thead><tr>
-    <th>Name</th><th>Nat</th><th>Age</th><th>Pos</th><th>Role</th><th>OVR</th><th>POT</th>
-    <th>PAC</th><th>SHO</th><th>PAS</th><th>DRI</th><th>DEF</th><th>PHY</th>
-    <th>Form</th><th>Morale</th><th>Value</th><th>Wage</th><th>Exp</th>
+    ${th('name','Name')}<th>Nat</th>${th('age','Age')}<th>Pos</th><th>Role</th>${th('overall','OVR')}${th('potential','POT')}
+    ${th('pac','PAC')}${th('sho','SHO')}${th('pas','PAS')}${th('dri','DRI')}${th('def','DEF')}${th('phy','PHY')}
+    ${th('form','Form')}${th('morale','Morale')}${th('value','Value')}${th('salary','Wage')}<th>Exp</th>
   </tr></thead><tbody>
-  ${players.map(p=>{
+  ${sorted.map(p=>{
     const pac=Math.round(avg([p.attrs.pace,p.attrs.acceleration]));
     const sho=Math.round(avg([p.attrs.finishing,p.attrs.longShots]));
     const pas=Math.round(avg([p.attrs.passing,p.attrs.vision]));
@@ -1665,16 +2061,22 @@ function sqFilter(){
   const tbl=document.getElementById('sq-tbl');if(tbl)tbl.innerHTML=sqTable(players);
 }
 
-// ═══════ RENDER: TACTICS ═════════════════════
+// ======= RENDER: TACTICS =====================
 function renderTactics(){
-  const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
+  const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '<div class="card"><p style="color:var(--text3)">Team not found</p></div>';
   const fdata=FORMATIONS[G.formation]||FORMATIONS['4-3-3'];
   const positions=fdata.pos,coords=fdata.coords;
   const players=team.squad.map(id=>G.players.find(p=>p.id===id)).filter(Boolean).sort((a,b)=>b.overall-a.overall);
+
+  // Build assigned array without self-reference bug
+  const used=new Set();
   const assigned=positions.map((pos,i)=>{
-    const ideal=players.filter(p=>!assigned?.includes(p)&&(p.pos===pos||(pos==='CM'&&['CM','CAM','CDM'].includes(p.pos))||(pos==='CB'&&p.pos==='CB')));
-    return ideal[0]||players[i]||null;
+    const ideal=players.filter(p=>!used.has(p.id)&&(p.pos===pos||(pos==='CM'&&['CM','CAM','CDM'].includes(p.pos))||(pos==='CB'&&p.pos==='CB')));
+    const pick=ideal[0]||players.filter(p=>!used.has(p.id))[i]||null;
+    if(pick)used.add(pick.id);
+    return pick;
   });
+
   return `
 <div class="g2">
   <div class="card">
@@ -1699,8 +2101,8 @@ function renderTactics(){
         ${coords.map((c,i)=>{
           const p=assigned[i];
           if(!p)return `<div class="pp" style="left:${c[0]}%;top:${c[1]}%"><div class="pp-dot" style="background:var(--bg4);color:var(--text3);border-color:var(--border)">${positions[i]}</div></div>`;
-          return `<div class="pp" style="left:${c[0]}%;top:${c[1]}%" onclick="showPlayerModal(${p.id})">
-            <div class="pp-dot dot-a">${p.overall}</div>
+          return `<div class="pp" style="left:${c[0]}%;top:${c[1]}%" onclick="nav('player',${p.id})">
+            <div class="pp-dot dot-a" style="overflow:hidden;padding:0;width:30px;height:30px">${genFaceSvg(p.id,p.nationality)}</div>
             <div class="pp-name">${p.name.split(' ').pop()}</div>
           </div>`;
         }).join('')}
@@ -1748,35 +2150,9 @@ function renderSlider(label,key,val){
   </div>`;
 }
 
-// ═══════ RENDER: FIXTURES ════════════════════
-function renderFixtures(){
-  const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
-  const myFix=G.fixtures.filter(f=>f.homeId===G.playerTeam||f.awayId===G.playerTeam);
-  const myRes=G.results.filter(r=>r.homeId===G.playerTeam||r.awayId===G.playerTeam);
-  return `<div class="card">
-    <div class="ch"><span class="ct">Fixtures & Results</span></div>
-    <div class="tw"><table><thead><tr><th>MD</th><th>Date</th><th>Home</th><th>Score</th><th>Away</th><th>xG</th></tr></thead><tbody>
-    ${myFix.map(f=>{
-      const res=myRes.find(r=>r.id===f.id);
-      const hn=G.teams.find(t=>t.id===f.homeId)?.name||'?';
-      const an=G.teams.find(t=>t.id===f.awayId)?.name||'?';
-      const isH=f.homeId===G.playerTeam;
-      let badge='';
-      if(res){const won=isH?res.hg>res.ag:res.ag>res.hg,draw=res.hg===res.ag;badge=`<span class="badge badge-${draw?'y':won?'g':'r'}">${draw?'D':won?'W':'L'}</span>`;}
-      return `<tr ${res?`onclick="showMatchModal(${f.id})" style="cursor:pointer"`:''}">
-        <td class="tr">${f.matchday}</td>
-        <td><span class="tsub">${fmtDate(f.date)}</span></td>
-        <td><span class="tname" style="${f.homeId===G.playerTeam?'color:var(--accent)':''}">${hn}</span></td>
-        <td style="text-align:center;font-family:var(--fm);font-weight:700">${res?`${res.hg}–${res.ag}`:badge||'<span style="color:var(--text3)">vs</span>'}</td>
-        <td><span class="tname" style="${f.awayId===G.playerTeam?'color:var(--accent)':''}">${an}</span></td>
-        <td class="tn" style="color:var(--text3)">${res?`${res.stats.hXg}–${res.stats.aXg}`:'—'}</td>
-      </tr>`;
-    }).join('')}
-    </tbody></table></div>
-  </div>`;
-}
+// ======= RENDER: FIXTURES ====================
 
-// ═══════ RENDER: MATCHES (Match Centre) ══════
+// ======= RENDER: MATCHES (Match Centre) ======
 function renderMatches(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const myFix=G.fixtures.filter(f=>!f.played&&(f.homeId===G.playerTeam||f.awayId===G.playerTeam));
@@ -1847,16 +2223,16 @@ function renderMatches(){
     const an=G.teams.find(t=>t.id===f.awayId)?.name||'?';
     const lg=G.leagues[f.leagueId];
     const isMyMatch=f.homeId===G.playerTeam||f.awayId===G.playerTeam;
-    return `<tr style="${isMyMatch?'background:rgba(0,212,255,.04)':''}">
-      <td><span class="tsub">${lg?.name||'?'}</span></td>
-      <td><span class="tname" style="${f.homeId===G.playerTeam?'color:var(--accent)':''}">${hn}</span></td>
-      <td style="text-align:center;color:var(--text3);font-size:11px">vs</td>
-      <td><span class="tname" style="${f.awayId===G.playerTeam?'color:var(--accent)':''}">${an}</span></td>
-      <td>${isMyMatch
-        ?`<button class="btn btn-primary" style="padding:2px 10px;font-size:10px;background:var(--green);color:#000;border:none" onclick="nav('prematch',${f.id})">⚽ Pre-Match</button>`
-        :`<button class="btn btn-secondary" style="padding:2px 8px;font-size:10px" onclick="simSingleMatch(${f.id})">Sim</button>`
-      }</td>
-    </tr>`;
+    const matchBtn=isMyMatch
+      ?'<button class="btn btn-primary" style="padding:2px 10px;font-size:10px;background:var(--green);color:#000;border:none" onclick="nav(\'prematch\','+f.id+')">Pre-Match</button>'
+      :'<button class="btn btn-secondary" style="padding:2px 8px;font-size:10px" onclick="simSingleMatch('+f.id+')">Sim</button>';
+    return '<tr style="'+(isMyMatch?'background:rgba(0,212,255,.04)':'')+'">'+
+      '<td><span class="tsub">'+(lg?.name||'?')+'</span></td>'+
+      '<td><span class="tname" style="'+(f.homeId===G.playerTeam?'color:var(--accent)':'')+'">'+hn+'</span></td>'+
+      '<td style="text-align:center;color:var(--text3);font-size:11px">vs</td>'+
+      '<td><span class="tname" style="'+(f.awayId===G.playerTeam?'color:var(--accent)':'')+'">'+an+'</span></td>'+
+      '<td>'+matchBtn+'</td>'+
+      '</tr>';
   }).join('')}
   </tbody></table></div>
 </div>`;
@@ -1905,7 +2281,7 @@ function renderTable(){
   </div>`;
 }
 
-// ═══════ RENDER: CONTINENTAL ═════════════════
+// ======= RENDER: CONTINENTAL =================
 function renderContinental(){
   return `
 <div class="cont-header">
@@ -1932,24 +2308,24 @@ ${Object.entries(CONTINENTAL).map(([key,comp])=>{
 </div>`;
 }
 
-// ═══════ RENDER: INTERNATIONAL ═══════════════
+// ======= RENDER: INTERNATIONAL ===============
 function renderInternational(){
-  const tabs=['World Cup','Euro Champ','Copa América','Asian Cup','Gold Cup','African Cup'];
-  const confs={UEFA:['England','Spain','Germany','France','Italy','Portugal','Netherlands','Belgium','Croatia','Serbia'],CONMEBOL:['Brazil','Argentina','Colombia','Chile','Uruguay'],CONCACAF:['USA','Mexico'],AFC:['Japan','South Korea','Saudi Arabia'],CAF:['Morocco','Nigeria','Senegal']};
-
-  // Build international squads from player nationalities
-  const getSquad = (natNames) => {
-    const allNats = natNames.flatMap(n=>INTL_TEAMS[n]?.nats||[]);
-    return G.players.filter(p=>allNats.includes(p.nationality)).sort((a,b)=>b.overall-a.overall).slice(0,23);
+  const confs={
+    UEFA: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='UEFA').map(([k])=>k),
+    CONMEBOL: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='CONMEBOL').map(([k])=>k),
+    CONCACAF: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='CONCACAF').map(([k])=>k),
+    AFC: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='AFC').map(([k])=>k),
+    CAF: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='CAF').map(([k])=>k),
+    OFC: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='OFC').map(([k])=>k),
   };
 
   return `
 <div class="cont-header">
   <div style="font-family:var(--fd);font-size:24px;font-weight:700;margin-bottom:4px">🌐 International Football</div>
-  <div style="font-size:11px;color:var(--text2)">National teams assembled from players across the world</div>
+  <div style="font-size:11px;color:var(--text2)">${Object.keys(INTL_TEAMS).length} national teams assembled from players across the world</div>
 </div>
 <div class="tabs">
-  ${Object.entries(confs).map(([conf],i)=>`<div class="tab${i===0?' active':''}" onclick="switchIntlTab('${conf}',this)">${conf}</div>`).join('')}
+  ${Object.keys(confs).map((conf,i)=>`<div class="tab${i===0?' active':''}" onclick="switchIntlTab('${conf}',this)">${conf} (${confs[conf].length})</div>`).join('')}
 </div>
 <div id="intl-content">
 ${renderIntlConf('UEFA',confs.UEFA)}
@@ -1964,18 +2340,24 @@ function renderIntlConf(conf, teams){
     const squad=G.players.filter(p=>nats.includes(p.nationality)).sort((a,b)=>b.overall-a.overall).slice(0,23);
     const avgOvr=squad.length?Math.round(avg(squad.map(p=>p.overall))):0;
     const topPlayers=squad.slice(0,5);
+    const flagHtml = intl.flag.startsWith('http')
+      ? `<img src="${intl.flag}" style="width:28px;height:18px;object-fit:cover;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`
+      : `<span style="font-size:22px">${intl.flag}</span>`;
     return `<div class="card">
-      <div class="ch">
-        <span style="font-size:22px">${intl.flag}</span>
-        <span class="ct" style="font-size:15px">${nation}</span>
-        <span class="ovr ${ovrCls(avgOvr)}">${avgOvr}</span>
+      <div class="ch" style="align-items:flex-start">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${flagHtml}
+          <span class="ct" style="font-size:14px">${nation}</span>
+        </div>
+        <span class="ovr ${ovrCls(avgOvr)}">${avgOvr||'—'}</span>
       </div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:10px">${squad.length} players available · ${conf}</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:10px">${squad.length} players · ${conf}</div>
       ${topPlayers.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11px">
         <span class="pbadge ${posCls(p.pos)}">${p.pos}</span>
         <span class="tname" onclick="showPlayerModal(${p.id})" style="cursor:pointer;flex:1">${p.name}</span>
         <span class="ovr ${ovrCls(p.overall)}" style="width:28px;height:28px;font-size:11px">${p.overall}</span>
       </div>`).join('')}
+      ${squad.length===0?`<div style="font-size:10px;color:var(--text3)">No players registered</div>`:''}
       ${squad.length>5?`<div style="font-size:10px;color:var(--text3);margin-top:6px">+${squad.length-5} more players</div>`:''}
     </div>`;
   }).join('')}
@@ -1983,19 +2365,21 @@ function renderIntlConf(conf, teams){
 }
 
 function switchIntlTab(conf, el){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#intl-content').forEach(()=>{});
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   const confs={
-    UEFA:['England','Spain','Germany','France','Italy','Portugal','Netherlands','Belgium','Croatia','Serbia'],
-    CONMEBOL:['Brazil','Argentina','Colombia','Chile','Uruguay'],
-    CONCACAF:['USA','Mexico'],
-    AFC:['Japan','South Korea','Saudi Arabia'],
-    CAF:['Morocco','Nigeria','Senegal']
+    UEFA: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='UEFA').map(([k])=>k),
+    CONMEBOL: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='CONMEBOL').map(([k])=>k),
+    CONCACAF: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='CONCACAF').map(([k])=>k),
+    AFC: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='AFC').map(([k])=>k),
+    CAF: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='CAF').map(([k])=>k),
+    OFC: Object.entries(INTL_TEAMS).filter(([,v])=>v.conf==='OFC').map(([k])=>k),
   };
   document.getElementById('intl-content').innerHTML=renderIntlConf(conf,confs[conf]||[]);
 }
 
-// ═══════ RENDER: TRANSFERS ═══════════════════
+// ======= RENDER: TRANSFERS ===================
 function renderTransfers(){
   return `
 <div class="tabs">
@@ -2027,11 +2411,44 @@ function tMarket(){
   </div>
   <div class="card"><div class="tw" id="tm-tbl">${tmTable(G.players.filter(p=>p.teamId!==G.playerTeam).sort((a,b)=>b.overall-a.overall).slice(0,80))}</div></div>`;
 }
+let _sortState = { col: 'overall', dir: -1 }; // -1=desc, 1=asc
+
+function sortTable(col) {
+  if(_sortState.col === col) _sortState.dir *= -1;
+  else { _sortState.col = col; _sortState.dir = -1; }
+  // Re-render the active table
+  tmFilter();
+}
+
+function sortIcon(col) {
+  if(_sortState.col !== col) return '<span style="opacity:.3;font-size:9px">⇅</span>';
+  return _sortState.dir === -1 ? '<span style="color:var(--accent);font-size:9px">↓</span>' : '<span style="color:var(--accent);font-size:9px">↑</span>';
+}
+
 function tmTable(players){
-  return `<table><thead><tr><th>Name</th><th>Nat</th><th>Age</th><th>Pos</th><th>OVR</th><th>POT</th><th>Club</th><th>Tier</th><th>Value</th><th>Wage/wk</th><th>Action</th></tr></thead><tbody>
-  ${players.map(p=>{
-    const club=G.teams.find(t=>t.id===p.teamId)?.name||'Free Agent';
-    const tierLg=G.teams.find(t=>t.id===p.teamId)?.tier||'—';
+  const cols = [
+    {key:'name',label:'Name',fn:p=>p.name},
+    {key:'nat',label:'Nat',fn:null},
+    {key:'age',label:'Age',fn:p=>p.age},
+    {key:'pos',label:'Pos',fn:p=>p.pos},
+    {key:'overall',label:'OVR',fn:p=>p.overall},
+    {key:'potential',label:'POT',fn:p=>p.potential},
+    {key:'club',label:'Club',fn:null},
+    {key:'tier',label:'Tier',fn:p=>G.teams.find(t=>t.id===p.teamId)?.tier||5},
+    {key:'value',label:'Value',fn:p=>p.value},
+    {key:'salary',label:'Wage/wk',fn:p=>p.contract.salary},
+  ];
+  const sortFn = cols.find(c=>c.key===_sortState.col)?.fn;
+  const sorted = sortFn ? [...players].sort((a,b)=>(sortFn(a)-sortFn(b))*_sortState.dir) : players;
+
+  return `<table><thead><tr>
+    ${cols.map(c=>c.fn?`<th onclick="sortTable('${c.key}')" style="cursor:pointer;user-select:none">${c.label} ${sortIcon(c.key)}</th>`:`<th>${c.label}</th>`).join('')}
+    <th>Action</th>
+  </tr></thead><tbody>
+  ${sorted.map(p=>{
+    const club=G.teams.find(t=>t.id===p.teamId);
+    const clubName=club?.name||'Free Agent';
+    const tierLg=club?.tier||'—';
     const tierColor=tierLg===1?'var(--accent)':tierLg===2?'var(--green)':tierLg===3?'var(--gold)':'var(--text3)';
     return `<tr onclick="showPlayerModal(${p.id})" style="cursor:pointer">
       <td><span class="tname">${p.name}</span><br><span class="tsub">${p.personality}</span></td>
@@ -2040,7 +2457,7 @@ function tmTable(players){
       <td><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></td>
       <td><span class="ovr ${ovrCls(p.overall)}">${p.overall}</span></td>
       <td class="tn" style="color:var(--accent)">${p.potential}</td>
-      <td><span class="tsub">${club}</span></td>
+      <td><span class="tsub">${clubName}</span></td>
       <td class="tn" style="color:${tierColor}">T${tierLg}</td>
       <td class="tn">${money(p.value)}</td>
       <td class="tn" style="color:var(--text3)">£${p.contract.salary.toLocaleString()}</td>
@@ -2101,7 +2518,7 @@ function tLog(){
   </tbody></table></div>`;
 }
 
-// ═══════ RENDER: PLAYERS (Advanced Search) ═══
+// ======= RENDER: PLAYERS (Advanced Search) ===
 function renderPlayers(){
   return `<div class="card">
     <div class="ch"><span class="ct">Global Player Search</span></div>
@@ -2171,7 +2588,7 @@ function gpFilter(){
   const tbl=document.getElementById('gp-tbl');if(tbl)tbl.innerHTML=gpTable(players.slice(0,100));
 }
 
-// ═══════ RENDER: HISTORY ═════════════════════
+// ======= RENDER: HISTORY =====================
 function renderHistory(){
   return `
 <div class="tabs">
@@ -2204,7 +2621,7 @@ function switchHTab(i){
   } else c.innerHTML=tLog();
 }
 
-// ═══════ RENDER: FINANCES ════════════════════
+// ======= RENDER: FINANCES ====================
 function renderFinances(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const players=team.squad.map(id=>G.players.find(p=>p.id===id)).filter(Boolean);
@@ -2235,7 +2652,7 @@ function renderFinances(){
 </div>`;
 }
 
-// ═══════ RENDER: SCOUTING ════════════════════
+// ======= RENDER: SCOUTING ====================
 function renderScouting(){
   return `
 <div class="card" style="margin-bottom:14px">
@@ -2300,111 +2717,92 @@ function scFilter(){
   const tbl=document.getElementById('sc-tbl');if(tbl)tbl.innerHTML=scTable(players);
 }
 
-// ═══════ PLAYER MODAL ════════════════════════
-function showPlayerModal(pid){
-  const p=G.players.find(x=>x.id===pid);if(!p)return;
+// ======= PLAYER MODAL ========================
+// showPlayerModal   navigate to full player page
+function showPlayerModal(pid){ nav('player', pid); }
+
+// === RENDER: PLAYER PAGE ===
+function renderPlayerPage(pid) {
+  const p=G.players.find(x=>x.id===pid);
+  if(!p) return '<div class="card"><p style="color:var(--text3)">Player not found</p></div>';
   const club=G.teams.find(t=>t.id===p.teamId);
   const clubName=club?.name||'Free Agent';
   const isMine=p.teamId===G.playerTeam;
-  const flag=NAT_FLAGS[p.nationality]||'🏳️';
-  const photo=G.playerImages[pid];
-  const atBar=(v)=>{const col=v>=82?'var(--accent)':v>=70?'var(--green)':v>=55?'var(--gold)':'var(--red)';return `<div class="abr"><div class="abr-fill" style="width:${v}%;background:${col}"></div></div>`;};
-  const ar=(label,val)=>`<div class="arow"><span class="aname">${label}</span><span class="aval">${val}</span>${atBar(val)}</div>`;
+  const flag=NAT_FLAGS[p.nationality]||'\u{1F3F3}\uFE0F';
+  const atBar=(v)=>{const col=v>=82?'var(--accent)':v>=70?'var(--green)':v>=55?'var(--gold)':'var(--red)';return '<div class="abr"><div class="abr-fill" style="width:'+v+'%;background:'+col+'"></div></div>';};
+  const ar=(label,val)=>'<div class="arow"><span class="aname">'+label+'</span><span class="aval">'+val+'</span>'+atBar(val)+'</div>';
   const potGap=p.potential-p.overall;
   const potLabel=potGap>20?'Elite Prospect':potGap>12?'High Potential':potGap>5?'Room to Grow':'Peaked';
-  const tierLg=club?.tier||'—';
+  const tierLg=club?.tier||'\u2014';
+  const tierColor=tierLg===1?'0,212,255':tierLg===2?'0,232,120':tierLg===3?'245,200,66':'120,154,184';
+  const tierTxtColor=tierLg===1?'var(--accent)':tierLg===2?'var(--green)':tierLg===3?'var(--gold)':'var(--text3)';
 
-  document.getElementById('mtitle').textContent=p.name;
-  document.getElementById('mcontent').innerHTML=`
-  <div style="display:flex;gap:16px;margin-bottom:18px">
-    <div class="avatar avatar-lg" id="pm-av">
-      ${photo?`<img src="${photo}" alt="Photo">`:`<span class="avatar-placeholder">${p.name.split(' ').map(w=>w[0]).join('')}</span>`}
-    </div>
-    <div style="flex:1">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-        <span class="ovr ${ovrCls(p.overall)}" style="width:40px;height:40px;font-size:18px">${p.overall}</span>
-        <span class="pbadge ${posCls(p.pos)}" style="font-size:12px;padding:3px 8px">${p.pos}</span>
+  return `
+<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+  <button class="btn btn-secondary" onclick="nav('squad')" style="padding:4px 12px;font-size:11px">← Back</button>
+  <span style="font-size:11px;color:var(--text3)">${clubName} · ${p.pos} · #${p.jerseyNum||'—'}</span>
+</div>
+<div class="card" style="margin-bottom:14px">
+  <div style="display:flex;gap:20px;flex-wrap:wrap">
+    <div style="width:120px;height:120px;border-radius:12px;overflow:hidden;flex-shrink:0;border:2px solid var(--border);background:var(--bg4)">${genFaceSvg(p.id,p.nationality)}</div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-family:var(--fd);font-size:32px;font-weight:800;color:var(--text);margin-bottom:6px">${p.name}</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <span class="ovr ${ovrCls(p.overall)}" style="width:44px;height:44px;font-size:20px">${p.overall}</span>
+        <span class="pbadge ${posCls(p.pos)}" style="font-size:13px;padding:4px 10px">${p.pos}</span>
         <span class="badge badge-b">POT ${p.potential}</span>
-        <span class="badge" style="background:rgba(${tierLg===1?'0,212,255':tierLg===2?'0,232,120':tierLg===3?'245,200,66':'120,154,184'},.15);color:${tierLg===1?'var(--accent)':tierLg===2?'var(--green)':tierLg===3?'var(--gold)':'var(--text3)'};border:1px solid rgba(${tierLg===1?'0,212,255':tierLg===2?'0,232,120':tierLg===3?'245,200,66':'120,154,184'},.3)">T${tierLg}</span>
+        <span class="badge" style="background:rgba(${tierColor},.12);color:${tierTxtColor}">Tier ${tierLg}</span>
         ${p.injured?'<span class="badge badge-r">🤕 INJURED</span>':''}
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">${flag} ${p.nationality} · ${p.age} yrs · ${p.height}cm / ${p.weight}kg · ${p.foot}-footed</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">${p.role} · ${p.personality}</div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${clubName} · ${money(p.value)} · £${p.contract.salary.toLocaleString()}pw · Exp S${p.contract.expires}</div>
-      
-      <!-- Potential bar -->
-      <div style="margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px">
-          <span>Potential: ${potLabel}</span><span>${p.overall} → ${p.potential}</span>
-        </div>
-        <div style="height:5px;background:var(--bg4);border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${(p.overall/99)*100}%;background:var(--accent);border-radius:3px;position:relative">
-            <div style="position:absolute;right:-2px;top:0;bottom:0;width:${(potGap/99)*100}vw;max-width:${Math.max(0,(p.potential-p.overall)/99*100)}%;background:rgba(0,232,120,.4)"></div>
-          </div>
-        </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;font-size:12px;color:var(--text2);margin-bottom:10px">
+        <span>${flag} ${p.nationality}</span><span>📅 Age ${p.age}</span>
+        <span>📏 ${p.height}cm · ${p.weight}kg</span><span>👟 ${p.foot}-footed</span>
+        <span>🏟️ ${clubName}</span><span>#${p.jerseyNum||'—'} · ${p.role}</span>
+        <span>💰 ${money(p.value)}</span><span>📝 Contract to S${p.contract.expires}</span>
+        <span>💸 £${p.contract.salary.toLocaleString()}pw</span><span>${p.personality}</span>
       </div>
-
+      <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:4px">
+        <div style="height:100%;width:${p.overall}%;background:var(--accent);border-radius:3px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:10px"><span>${potLabel}</span><span>${p.overall} → ${p.potential}</span></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${!isMine?`<button class="btn btn-success" style="font-size:10px;padding:4px 10px" onclick="makeOffer(${pid})">💰 Make Bid</button>`:'<span class="badge badge-g">In Your Squad</span>'}
-        ${isMine?`<button class="btn btn-danger" style="font-size:10px;padding:4px 10px" onclick="sellPlayer(${pid})">📤 Sell</button>`:''}
-        <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="scoutPlayer(${pid});toast('Scout report filed','i')">🔍 Scout</button>
-        <label class="btn btn-secondary" style="font-size:10px;padding:4px 10px;cursor:pointer">📷 Photo<input type="file" accept="image/*" style="display:none" onchange="uploadPlayerPhoto(event,${pid})"></label>
+        ${!isMine?`<button class="btn btn-success" onclick="makeOffer(${pid})">💰 Bid ${money(p.value)}</button>`:'<span class="badge badge-g" style="padding:5px 10px">✓ Your Squad</span>'}
+        ${isMine?`<button class="btn btn-danger" onclick="sellPlayer(${pid})">📤 Sell</button>`:''}
+        <button class="btn btn-secondary" onclick="scoutPlayer(${pid});toast('Scout report filed','i')">🔍 Scout</button>
+        <label class="btn btn-secondary" style="cursor:pointer">📷 Photo<input type="file" accept="image/*" style="display:none" onchange="uploadPlayerPhoto(event,${pid})"></label>
       </div>
     </div>
   </div>
-
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;text-align:center">
-    ${[['GOALS',p.stats.goals,'var(--green)'],['ASSISTS',p.stats.assists,'var(--accent)'],['APPS',p.stats.apps,'var(--gold)'],['RATING',p.stats.apps>0?p.stats.rating.toFixed(1):'—','var(--text)']].map(([l,v,c])=>`
-    <div style="background:var(--bg3);border-radius:6px;padding:10px">
-      <div style="font-family:var(--fd);font-size:26px;font-weight:700;color:${c}">${v}</div>
-      <div style="font-size:9px;color:var(--text3);letter-spacing:2px">${l}</div>
-    </div>`).join('')}
+</div>
+<div class="g4" style="margin-bottom:14px">
+  ${[['GOALS',p.stats.goals,'var(--green)'],['ASSISTS',p.stats.assists,'var(--accent)'],['APPS',p.stats.apps,'var(--gold)'],['AVG RATING',p.stats.apps>0?p.stats.rating.toFixed(1):'—','var(--text)'],['YELLOW',p.stats.yellowCards,'var(--gold)'],['CLEAN SHEETS',p.stats.cleanSheets,'var(--green)'],['CAREER G',p.careerStats.goals,'var(--green)'],['CAREER A',p.careerStats.assists,'var(--accent)']].map(([l,v,c])=>`<div class="sbox" style="text-align:center"><div style="font-family:var(--fd);font-size:28px;font-weight:700;color:${c}">${v}</div><div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:3px">${l}</div></div>`).join('')}
+</div>
+<div class="g2">
+  <div class="card">
+    <div class="ct-sm" style="margin-bottom:10px">Technical</div>
+    ${ar('Finishing',p.attrs.finishing)}${ar('Passing',p.attrs.passing)}${ar('Dribbling',p.attrs.dribbling)}${ar('First Touch',p.attrs.firstTouch)}${ar('Crossing',p.attrs.crossing)}${ar('Long Shots',p.attrs.longShots)}${ar('Tackling',p.attrs.tackling)}${ar('Heading',p.attrs.heading)}
+    <div class="ct-sm" style="margin:12px 0 8px">Mental</div>
+    ${ar('Vision',p.attrs.vision)}${ar('Composure',p.attrs.composure)}${ar('Decisions',p.attrs.decisions)}${ar('Positioning',p.attrs.positioning)}${ar('Work Rate',p.attrs.workRate)}${ar('Leadership',p.attrs.leadership)}
   </div>
-
-  <div class="g2" style="margin-bottom:16px">
-    <div>
-      <div class="ct-sm" style="margin-bottom:8px">Technical</div>
-      ${ar('Finishing',p.attrs.finishing)}${ar('Passing',p.attrs.passing)}${ar('Dribbling',p.attrs.dribbling)}
-      ${ar('First Touch',p.attrs.firstTouch)}${ar('Crossing',p.attrs.crossing)}${ar('Long Shots',p.attrs.longShots)}
-      ${ar('Tackling',p.attrs.tackling)}${ar('Heading',p.attrs.heading)}${ar('Free Kick',p.attrs.freeKick)}
-      <div class="ct-sm" style="margin:10px 0 8px">Mental</div>
-      ${ar('Vision',p.attrs.vision)}${ar('Composure',p.attrs.composure)}${ar('Decisions',p.attrs.decisions)}
-      ${ar('Positioning',p.attrs.positioning)}${ar('Work Rate',p.attrs.workRate)}${ar('Leadership',p.attrs.leadership)}
+  <div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="ct-sm" style="margin-bottom:10px">Physical</div>
+      ${ar('Pace',p.attrs.pace)}${ar('Acceleration',p.attrs.acceleration)}${ar('Strength',p.attrs.strength)}${ar('Stamina',p.attrs.stamina)}${ar('Jumping',p.attrs.jumping)}${ar('Agility',p.attrs.agility)}
+      ${posType(p.pos)==='gk'?'<div class="ct-sm" style="margin:12px 0 8px">Goalkeeper</div>'+ar('Reflexes',p.attrs.reflexes)+ar('Handling',p.attrs.handling)+ar('Diving',p.attrs.diving)+ar('Kicking',p.attrs.kicking):''}
     </div>
-    <div>
-      <div class="ct-sm" style="margin-bottom:8px">Physical</div>
-      ${ar('Pace',p.attrs.pace)}${ar('Acceleration',p.attrs.acceleration)}${ar('Strength',p.attrs.strength)}
-      ${ar('Stamina',p.attrs.stamina)}${ar('Jumping',p.attrs.jumping)}${ar('Agility',p.attrs.agility)}
-      ${posType(p.pos)==='gk'?`<div class="ct-sm" style="margin:10px 0 8px">Goalkeeper</div>
-      ${ar('Reflexes',p.attrs.reflexes)}${ar('Handling',p.attrs.handling)}${ar('GK Pos.',p.attrs.gkPos)}
-      ${ar('Diving',p.attrs.diving)}${ar('Kicking',p.attrs.kicking)}${ar('Communication',p.attrs.communication)}`:''}
-      
-      ${G.scoutReports.find(r=>r.pid===pid)?`<div class="ct-sm" style="margin:10px 0 8px">Scout Report</div>
-      <div style="background:var(--bg3);border-radius:6px;padding:12px">
-        ${(()=>{const sr=G.scoutReports.find(r=>r.pid===pid);
-          return `<div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px">
-            <div style="text-align:center"><div style="font-family:var(--fd);font-size:22px;color:var(--green)">${sr.technical}</div><div style="font-size:9px;color:var(--text3)">TECHNICAL</div></div>
-            <div style="text-align:center"><div style="font-family:var(--fd);font-size:22px;color:var(--orange)">${sr.physical}</div><div style="font-size:9px;color:var(--text3)">PHYSICAL</div></div>
-            <div style="text-align:center"><div style="font-family:var(--fd);font-size:22px;color:var(--purple)">${sr.mental}</div><div style="font-size:9px;color:var(--text3)">MENTAL</div></div>
-          </div>
-          <span class="badge badge-${sr.recommendation.includes('Sign')?'g':sr.recommendation.includes('Strong')?'b':sr.recommendation.includes('Monitor')?'y':'r'}">${sr.recommendation}</span>`;
-        })()}</div>`:``}
+    <div class="card">
+      <div class="ct-sm" style="margin-bottom:10px">Profile</div>
+      <div style="font-size:12px;display:grid;gap:8px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Morale</span><strong style="color:${p.morale>=70?'var(--green)':p.morale>=50?'var(--gold)':'var(--red)'}">${p.morale}%</strong></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Form</span><strong style="color:${p.form>=72?'var(--green)':p.form>=55?'var(--gold)':'var(--red)'}">${p.form}%</strong></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Injury Risk</span><strong style="color:${p.injuryRisk>20?'var(--red)':p.injuryRisk>12?'var(--gold)':'var(--green)'}">${p.injuryRisk>20?'High':p.injuryRisk>12?'Medium':'Low'}</strong></div>
+      </div>
     </div>
   </div>
-
-  <div style="background:var(--bg3);border-radius:6px;padding:12px">
-    <div class="ct-sm" style="margin-bottom:8px">Career Stats</div>
-    <div style="display:flex;gap:20px;font-size:12px">
-      <span>Goals: <strong style="color:var(--green)">${p.careerStats.goals}</strong></span>
-      <span>Assists: <strong style="color:var(--accent)">${p.careerStats.assists}</strong></span>
-      <span>Apps: <strong>${p.careerStats.apps}</strong></span>
-      <span>Club: <strong>${clubName}</strong></span>
-      <span>Morale: <strong style="color:${p.morale>=70?'var(--green)':p.morale>=50?'var(--gold)':'var(--red)'}">${p.morale}%</strong></span>
-    </div>
-  </div>`;
-
-  openModal();
+</div>`;
 }
+
+
 
 function showMatchModal(rid){
   const r=G.results.find(x=>x.id===rid);if(!r)return;
@@ -2472,7 +2870,7 @@ function uploadPlayerPhoto(event,pid){
   reader.readAsDataURL(file);
 }
 
-// ═══════ RENDER: DB EDITOR ═══════════════════
+// ======= RENDER: DB EDITOR ===================
 function renderDbEditor(){
   return `
 <div class="g3" style="margin-bottom:16px">
@@ -2644,12 +3042,12 @@ function importDb(input){
       if(data.history)G.history=data.history;
       if(data.season)G.season=data.season;
       toast('✅ Database imported!','s');nav('dashboard');
-    }catch{toast('❌ Invalid JSON','e');}
+    }catch(e){toast('❌ Invalid JSON','e');}
   };
   reader.readAsText(file);
 }
 
-// ═══════ RENDER: MODS ════════════════════════
+// ======= RENDER: MODS ========================
 function renderMods(){
   return `
 <div class="card" style="margin-bottom:14px">
@@ -2683,7 +3081,7 @@ function importPlayerPack(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
-    try{const data=JSON.parse(e.target.result);if(data.players){data.players.forEach(p=>{p.id=uid();G.players.push(p);});toast(`✅ ${data.players.length} players imported`,'s');}}catch{toast('❌ Invalid player pack','e');}
+    try{const data=JSON.parse(e.target.result);if(data.players){data.players.forEach(p=>{p.id=uid();G.players.push(p);});toast(`✅ ${data.players.length} players imported`,'s');}}catch(e){toast('❌ Invalid player pack','e');}
   };
   reader.readAsText(file);
 }
@@ -2695,24 +3093,11 @@ function importPlayerPhoto(input){
   reader.readAsDataURL(file);
 }
 
-// ═══════ SETUP WIZARD ════════════════════════
+// ======= SETUP WIZARD ========================
 let setupStep=1;
 let selLeagueKey='';
 let selTeamIdx=0;
 
-function goStep(n){
-  if(n>setupStep+1&&n>1){toast('Complete previous steps first','i');return;}
-  setupStep=n;
-  [1,2,3,4].forEach(i=>{
-    const el=document.getElementById(`step-${i}`);
-    if(el)el.style.display=i===n?'block':'none';
-  });
-  document.querySelectorAll('.step-pill').forEach((el,i)=>{
-    el.classList.toggle('active',i===n-1);
-    if(i<n-1)el.classList.add('done');
-  });
-  if(n===3)renderLeagueChips();
-}
 
 function renderLeagueChips(){
   const filter=document.getElementById('tier-filter')?.value||'';
@@ -2769,11 +3154,10 @@ function selectDb(mode){
 
 function loadCustomDb(input){
   const file=input.files[0];if(!file)return;
-  document.getElementById('db-file-status').textContent=`Loading ${file.name}...`;
+  document.getElementById('db-file-status').textContent='Loading '+file.name+'...';
   const reader=new FileReader();
   reader.onload=e=>{
-    try{JSON.parse(e.target.result);document.getElementById('db-file-status').textContent=`✅ ${file.name} loaded`;toast('Custom database ready','s');}
-    catch{document.getElementById('db-file-status').textContent='❌ Invalid JSON';toast('Invalid file','e');}
+    try{JSON.parse(e.target.result);document.getElementById('db-file-status').textContent='Loaded: '+file.name;toast('Custom database ready','s');}catch(e){document.getElementById('db-file-status').textContent='Invalid JSON';toast('Invalid file','e');}
   };
   reader.readAsText(file);
 }
@@ -2813,52 +3197,56 @@ async function startGame(){
   saveGame();
 }
 
-// ── PERSISTENCE ───────────────────────────────
+// -- PERSISTENCE -------------------------------
 function saveGame(){
   try{
     const save={version:'3.0',date:Date.now(),G:{mgr:G.mgr,mgrNat:G.mgrNat,playerTeam:G.playerTeam,season:G.season,date:G.date,formation:G.formation,tactic:G.tactic,nextId:G.nextId,history:G.history,transfers:G.transfers,scoutReports:G.scoutReports,playerImages:G.playerImages,leagueCoefficients:G.leagueCoefficients,transferRumors:G.transferRumors}};
-    localStorage.setItem('pitch4_meta',JSON.stringify(save));
-    localStorage.setItem('pitch4_teams',JSON.stringify(G.teams));
-    localStorage.setItem('pitch4_leagues',JSON.stringify(G.leagues));
+    localStorage.setItem('pitch5_meta',JSON.stringify(save));
+    localStorage.setItem('pitch5_teams',JSON.stringify(G.teams));
+    localStorage.setItem('pitch5_leagues',JSON.stringify(G.leagues));
     const chunkSize=500;
     const chunks=Math.ceil(G.players.length/chunkSize);
-    localStorage.setItem('pitch4_players_chunks',chunks.toString());
-    for(let i=0;i<chunks;i++){localStorage.setItem(`pitch4_players_${i}`,JSON.stringify(G.players.slice(i*chunkSize,(i+1)*chunkSize)));}
-    localStorage.setItem('pitch4_fixtures',JSON.stringify(G.fixtures.slice(-500)));
-    localStorage.setItem('pitch4_results',JSON.stringify(G.results.slice(-200)));
+    localStorage.setItem('pitch5_players_chunks',chunks.toString());
+    for(let i=0;i<chunks;i++){localStorage.setItem(`pitch5_players_${i}`,JSON.stringify(G.players.slice(i*chunkSize,(i+1)*chunkSize)));}
+    localStorage.setItem('pitch5_fixtures',JSON.stringify(G.fixtures.slice(-500)));
+    localStorage.setItem('pitch5_results',JSON.stringify(G.results.slice(-200)));
     toast('💾 Saved','s');
   }catch(e){console.warn('Save failed:',e);}
 }
 
 function loadGame(){
   try{
-    const meta=localStorage.getItem('pitch4_meta');if(!meta)return false;
+    const meta=localStorage.getItem('pitch5_meta');if(!meta)return false;
     const save=JSON.parse(meta);
     Object.assign(G,save.G);G.date=new Date(G.date);
-    G.teams=JSON.parse(localStorage.getItem('pitch4_teams')||'[]');
-    G.leagues=JSON.parse(localStorage.getItem('pitch4_leagues')||'{}');
-    const chunks=parseInt(localStorage.getItem('pitch4_players_chunks')||'0');
+    G.teams=JSON.parse(localStorage.getItem('pitch5_teams')||'[]');
+    G.leagues=JSON.parse(localStorage.getItem('pitch5_leagues')||'{}');
+    const chunks=parseInt(localStorage.getItem('pitch5_players_chunks')||'0');
     G.players=[];
-    for(let i=0;i<chunks;i++){const c=localStorage.getItem(`pitch4_players_${i}`);if(c)G.players.push(...JSON.parse(c));}
-    G.fixtures=JSON.parse(localStorage.getItem('pitch4_fixtures')||'[]');
-    G.results=JSON.parse(localStorage.getItem('pitch4_results')||'[]');
+    for(let i=0;i<chunks;i++){const c=localStorage.getItem(`pitch5_players_${i}`);if(c)G.players.push(...JSON.parse(c));}
+    G.fixtures=JSON.parse(localStorage.getItem('pitch5_fixtures')||'[]');
+    G.results=JSON.parse(localStorage.getItem('pitch5_results')||'[]');
     return true;
-  }catch{return false;}
+  }catch(e){return false;}
 }
 
-// ── INIT ─────────────────────────────────────
-setInterval(()=>{if(G.playerTeam!==null)saveGame();},120000);
+// -- INIT -------------------------------------
+setInterval(()=>{try{if(G.playerTeam!==null)saveGame();}catch(e){}},120000);
 
-document.getElementById('moverlay').addEventListener('click',e=>{if(e.target===document.getElementById('moverlay'))closeModal();});
+try{document.getElementById('moverlay').addEventListener('click',e=>{if(e.target===document.getElementById('moverlay'))closeModal();});}catch(e){}
 
 window.addEventListener('load',()=>{
-  // Try load existing save
-  if(loadGame()&&G.playerTeam!==null){
-    document.getElementById('setup').style.display='none';
-    document.getElementById('app').style.display='flex';
-    nav('dashboard');
-    toast(`Welcome back, ${G.mgr}!`,'s');
-  } else {
+  try{
+    if(loadGame()&&G.playerTeam!==null){
+      document.getElementById('setup').style.display='none';
+      document.getElementById('app').style.display='flex';
+      nav('dashboard');
+      toast('Welcome back, '+G.mgr+'!','s');
+    } else {
+      populateSetupLeagues();
+    }
+  }catch(e){
+    console.error('Init error:',e);
     populateSetupLeagues();
   }
 });
@@ -2868,7 +3256,6 @@ function populateSetupLeagues(){
 }
 
 // Setup step 4: render team picker when reaching step 4
-const origGoStep=goStep;
 function goStep(n){
   if(n>setupStep+1&&n>1){toast('Complete previous steps first','i');return;}
   setupStep=n;
@@ -2893,7 +3280,7 @@ function goStep(n){
   });
 });
 
-// ── simMatchday — quick-sim a single fixture (used by pre-match skip) ──
+// -- simMatchday   quick-sim a single fixture (used by pre-match skip) --
 function simMatchday(fixId) {
   const fix=G.fixtures.find(x=>x.id===fixId);if(!fix)return;
   const r=simMatch(fix);if(r){G.results.push(r);fix.played=true;}
@@ -2908,7 +3295,7 @@ function simMatchday(fixId) {
   nav('postmatch', fixId);
 }
 
-// ═══════ RENDER: PRE-MATCH SCREEN ════════════
+// ======= RENDER: PRE-MATCH SCREEN ============
 function renderPreMatch(fixId) {
   const fix=G.fixtures.find(f=>f.id===fixId);
   if(!fix) return '<div class="card"><p style="color:var(--text3)">No match data</p></div>';
@@ -2956,7 +3343,7 @@ function renderPreMatch(fixId) {
   </tr>`;
 
   return `
-<!-- Hero scoreboard -->
+
 <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:16px;text-align:center">
   <div style="font-size:10px;color:var(--text3);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">
     ${lg?lg.name+' · ':''} Matchday ${fix.matchday} · ${fmtDate(fix.date)}
@@ -2975,7 +3362,7 @@ function renderPreMatch(fixId) {
       <div style="font-size:11px;color:var(--text3);margin-top:4px">${away.country} · ${oppPos===1?'1st':oppPos===2?'2nd':oppPos+'th'} in league · OVR ${oppAvgOvr}</div>
     </div>
   </div>
-  <!-- Strength comparison bar -->
+  
   <div style="margin-top:16px;max-width:400px;margin-left:auto;margin-right:auto">
     <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:5px">
       <span style="color:var(--accent)">${myAvgOvr} OVR</span>
@@ -2988,7 +3375,7 @@ function renderPreMatch(fixId) {
   </div>
 </div>
 
-<!-- Action buttons -->
+
 <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
   <button class="btn btn-primary" style="padding:12px 28px;font-size:14px;letter-spacing:1px" onclick="watchMatch(${fixId})">
     ▶ Watch Live
@@ -3004,7 +3391,7 @@ function renderPreMatch(fixId) {
   </button>
 </div>
 
-<!-- Lineups side by side -->
+
 <div class="g2">
   <div class="card">
     <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:12px">
@@ -3057,7 +3444,7 @@ function quickSimMatch(fixId) {
   nav('postmatch',fixId);
 }
 
-// ═══════ RENDER: POST-MATCH REPORT ═══════════
+// ======= RENDER: POST-MATCH REPORT ===========
 function renderPostMatch(fixId) {
   const r=G.results.find(x=>x.id===fixId);
   if(!r){ nav('fixtures'); return ''; }
@@ -3120,7 +3507,7 @@ function renderPostMatch(fixId) {
   const lg=G.leagues[r.leagueId];
 
   return `
-<!-- Result banner -->
+
 <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:16px;text-align:center">
   <div style="font-size:10px;color:var(--text3);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">${lg?lg.name+' · ':''} Matchday ${G.fixtures.find(f=>f.id===fixId)?.matchday||''}</div>
   <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:10px">
@@ -3135,7 +3522,7 @@ function renderPostMatch(fixId) {
   </div>
 </div>
 
-<!-- Goalscorers timeline -->
+
 ${r.events.filter(e=>e.type==='goal').length?`
 <div class="card" style="margin-bottom:14px">
   <div class="ch"><span class="ct">Goals</span></div>
@@ -3149,7 +3536,7 @@ ${r.events.filter(e=>e.type==='goal').length?`
     </div>`).join('')}
 </div>`:''}
 
-<!-- Stats + Ratings -->
+
 <div class="g2">
   <div class="card">
     <div class="ch"><span class="ct">Match Stats</span></div>
@@ -3178,9 +3565,9 @@ ${r.events.filter(e=>e.type==='goal').length?`
 </div>`;
 }
 
-// ══════════════════════════════════════════════════════
+// ======================================================
 //  Animated minute-by-minute match simulation
-// ══════════════════════════════════════════════════════
+// ======================================================
 
 const LM = {
   fixture: null,      // current fixture object
@@ -3206,7 +3593,7 @@ const LM = {
   momentum: 50,       // 0-100, 50=even, >50=home dominant
 };
 
-// ── Rich event generation ──────────────────────────────
+// -- Rich event generation ------------------------------
 function generateLiveEvents(home, away, hp, ap, hPow, aPow) {
   const evs = [];
   const usedMins = new Set();
@@ -3229,21 +3616,31 @@ function generateLiveEvents(home, away, hp, ap, hPow, aPow) {
   let hg = clamp(Math.round(hXg * rf(.6,1.5)), 0, 9);
   let ag = clamp(Math.round(aXg * rf(.6,1.5)), 0, 9);
 
-  // Store in LM stats
-  LM.matchStats = { hShots,aShots,hSot,aSot,hPoss:Math.round(hDom*60+rand(-8,8)),
-    aPoss:0,hCorners:rand(2,12),aCorners:rand(2,10),hFouls:rand(4,18),aFouls:rand(4,18),
-    hOffsides:rand(0,5),aOffsides:rand(0,4),hXg,aXg };
+  // Store in LM stats   start with totals but track "revealed" counts separately
+  LM.matchStats = { hShots:0,aShots:0,hSot:0,aSot:0,
+    hPoss:Math.round(hDom*60+rand(-8,8)),aPoss:0,
+    hCorners:0,aCorners:0,hFouls:0,aFouls:0,
+    hOffsides:rand(0,5),aOffsides:rand(0,4),hXg:0,aXg:0,
+    // Total targets for gradual reveal
+    _hShotsTotal:hShots,_aShotsTotal:aShots,_hSotTotal:hSot,_aSotTotal:aSot,
+    _hCornersTotal:rand(2,12),_aCornersTotal:rand(2,10),
+    _hFoulsTotal:rand(4,18),_aFoulsTotal:rand(4,18),
+    _hXgTotal:hXg,_aXgTotal:aXg };
   LM.matchStats.aPoss = 100 - LM.matchStats.hPoss;
+  LM.matchStats._hPossBase = LM.matchStats.hPoss; // base for fluctuation
 
+  // GKs CANNOT score or assist
+  const outfield = pl => pl.filter(p=>p.pos!=='GK');
   const scorer = players => {
-    const fwd=players.filter(p=>posType(p.pos)==='fwd');
-    const mid=players.filter(p=>posType(p.pos)==='mid');
-    const pool=[...fwd,...fwd,...fwd,...mid,...mid,...players];
-    return pick(pool)||players[0];
+    const pl = outfield(players);
+    const fwd=pl.filter(p=>posType(p.pos)==='fwd');
+    const mid=pl.filter(p=>posType(p.pos)==='mid');
+    const pool=[...fwd,...fwd,...fwd,...mid,...mid,...pl];
+    return pick(pool)||pl[0];
   };
   const assister = (players,sc) => {
-    const pool=players.filter(p=>p.id!==sc?.id);
-    return Math.random()>.15&&pool.length?pick(pool):null;
+    const pl=outfield(players).filter(p=>p.id!==sc?.id);
+    return Math.random()>.15&&pl.length?pick(pl):null;
   };
 
   // Goals
@@ -3344,7 +3741,7 @@ function generateLiveEvents(home, away, hp, ap, hPow, aPow) {
     }
   }
 
-  // Substitutions (45–85')
+  // Substitutions (45 85')
   for(let i=0;i<rand(2,5);i++){
     const team=Math.random()>.5?'home':'away';
     const pool=team==='home'?hp:ap;
@@ -3378,15 +3775,24 @@ function generateLiveEvents(home, away, hp, ap, hPow, aPow) {
   return { events: evs.sort((a,b)=>a.min-b.min), hg, ag, hShots, aShots, hSot, aSot, hXg, aXg };
 }
 
-// ── FotMob-style player ratings ────────────────────────
+// -- FotMob-style player ratings ------------------------
 function initPlayerRatings(players) {
   const ratings = {};
   const stats   = {};
   players.forEach(p => {
-    ratings[p.id] = 6.0 + (p.overall - 70) * 0.025; // baseline by quality
+    ratings[p.id] = parseFloat((6.0 + (p.overall - 70) * 0.025 + rf(-0.2, 0.2)).toFixed(2)); // baseline by quality + small variance
     stats[p.id]   = { goals:0, assists:0, keyPasses:0, tackles:0, shots:0, saves:0, yellows:0, reds:0, bigChances:0 };
   });
   return { ratings, stats };
+}
+
+// Apply small random drift to all player ratings each tick (live performance fluctuation)
+function driftPlayerRatings() {
+  const r = LM.playerRatings;
+  if(!r) return;
+  Object.keys(r).forEach(pid => {
+    r[pid] = parseFloat(clamp(r[pid] + rf(-0.07, 0.07), 4.0, 10.0).toFixed(2));
+  });
 }
 
 function applyEventToRatings(ev) {
@@ -3423,14 +3829,14 @@ function applyEventToRatings(ev) {
   }
 }
 
-// ── Rating chip HTML helper ─────────────────────────────
+// -- Rating chip HTML helper -----------------------------
 function ratingChip(val) {
   const v = parseFloat(val.toFixed(1));
   const cls = v>=9?'rating-10':v>=8?'rating-8':v>=7?'rating-7':v>=6?'rating-6':'rating-5';
   return `<span class="rating-chip ${cls}">${v.toFixed(1)}</span>`;
 }
 
-// ── Build bench list HTML ───────────────────────────────
+// -- Build bench list HTML -------------------------------
 function buildBenchHtml(team) {
   if(!team) return '<p style="color:var(--text3);font-size:11px">No bench data</p>';
   const bench = team.squad
@@ -3446,7 +3852,7 @@ function buildBenchHtml(team) {
   </div>`).join('');
 }
 
-// ── XI/Bench tab toggle ─────────────────────────────────
+// -- XI/Bench tab toggle ---------------------------------
 function lmSetTab(side, tab) {
   const xiTab   = document.getElementById(`lm-${side[0]}-xi-tab`);
   const bTab    = document.getElementById(`lm-${side[0]}-bench-tab`);
@@ -3460,59 +3866,65 @@ function lmSetTab(side, tab) {
   if(tab==='bench') bDiv.innerHTML = buildBenchHtml(side==='home'?LM.homeTeam:LM.awayTeam);
 }
 
-// ── Build lineup HTML ───────────────────────────────────
+// -- Build lineup HTML with player faces -----------------
 function buildLineupHtml(players, side) {
   if(!players.length) return '<p style="color:var(--text3);font-size:11px">No data</p>';
   return players.map(p=>{
-    const rating = LM.playerRatings[p.id] ?? 6.0;
+    const rating = LM.playerRatings[p.id] ?? (6.0 + (p.overall-70)*0.025);
+    const rVal = parseFloat(rating.toFixed(1));
+    const rCls = rVal>=9?'rating-10':rVal>=8?'rating-8':rVal>=7?'rating-7':rVal>=6?'rating-6':'rating-5';
     const st = LM.playerStats[p.id] || {};
-    const scoredClass = st.goals>0?'scorer':'';
-    const bookedClass = st.yellows>0?'booked':'';
-    const sentOffClass = st.reds>0?'sent-off':'';
     const extras = [
-      st.goals>0?`⚽×${st.goals}`:'',
-      st.assists>0?`🎯×${st.assists}`:'',
+      st.goals>0?`⚽${st.goals>1?st.goals:''}`:'' ,
+      st.assists>0?`🎯`:'' ,
       st.yellows>0?'🟡':'',
       st.reds>0?'🟥':'',
-    ].filter(Boolean).join(' ');
-    return `<div class="lm-player-row">
-      <span class="lm-player-pos"><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></span>
-      <span class="lm-player-name ${scoredClass||bookedClass||sentOffClass}" title="${p.name}">${p.name.split(' ').pop()}</span>
-      ${extras?`<span style="font-size:9px;color:var(--text2)">${extras}</span>`:''}
-      ${ratingChip(rating)}
+    ].filter(Boolean).join('');
+    const nameCls = st.goals>0?'scorer':st.yellows>0?'booked':st.reds>0?'sent-off':'';
+    return `<div class="lm-player-row" onclick="nav('player',${p.id})" style="cursor:pointer">
+      <div style="width:32px;height:32px;border-radius:4px;overflow:hidden;flex-shrink:0;border:1px solid var(--border)">${genFaceSvg(p.id,p.nationality)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:4px">
+          <span class="pbadge ${posCls(p.pos)}" style="font-size:8px">${p.pos}</span>
+          <span class="lm-player-name ${nameCls}" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name.split(' ').pop()}</span>
+          ${extras?`<span style="font-size:9px">${extras}</span>`:''}
+        </div>
+        <div style="font-size:9px;color:var(--text3)">#${p.jerseyNum||'—'} · ${p.overall} OVR</div>
+      </div>
+      <span class="rating-chip ${rCls}">${rVal.toFixed(1)}</span>
     </div>`;
   }).join('');
 }
 
-// ── Build mini pitch with player dots ─────────────────────
+// -- Build mini pitch with player face dots -------------
 function buildLivePitch(hPlayers, aPlayers) {
-  const hForm = LM.homeTeam?.formation || '4-3-3';
+  const hForm = LM.homeTeam?.formation || G.formation || '4-3-3';
   const aForm = LM.awayTeam?.formation || '4-3-3';
   const hFdata = FORMATIONS[hForm]||FORMATIONS['4-3-3'];
   const aFdata = FORMATIONS[aForm]||FORMATIONS['4-3-3'];
-
   let html = '';
-  // Home team (bottom half, coords already go 50-92% from top)
+  // Home team occupies BOTTOM half (coords are already bottom-oriented since GK is near 90%+)
   hFdata.coords.slice(0,Math.min(11,hPlayers.length)).forEach((c,i)=>{
     const p=hPlayers[i]; if(!p)return;
-    html+=`<div class="pp" style="left:${c[0]}%;top:${c[1]}%" onclick="showPlayerModal(${p.id})">
-      <div class="pp-dot dot-a" style="width:28px;height:28px;font-size:9px">${p.overall}</div>
+    html+=`<div class="pp" style="left:${c[0]}%;top:${c[1]}%" onclick="nav('player',${p.id})">
+      <div class="pp-dot dot-a" style="width:30px;height:30px;overflow:hidden;padding:0;border:2px solid rgba(0,212,255,.6)">${genFaceSvg(p.id,p.nationality)}</div>
       <div class="pp-name">${p.name.split(' ').pop()}</div>
     </div>`;
   });
-  // Away team (top half, flip vertically)
+  // Away team occupies TOP half   flip Y AND mirror X so they face opposite direction
   aFdata.coords.slice(0,Math.min(11,aPlayers.length)).forEach((c,i)=>{
     const p=aPlayers[i]; if(!p)return;
     const flipY = 100 - c[1];
-    html+=`<div class="pp" style="left:${c[0]}%;top:${flipY}%" onclick="showPlayerModal(${p.id})">
-      <div class="pp-dot dot-b" style="width:28px;height:28px;font-size:9px">${p.overall}</div>
+    const flipX = 100 - c[0];
+    html+=`<div class="pp" style="left:${flipX}%;top:${flipY}%" onclick="nav('player',${p.id})">
+      <div class="pp-dot dot-b" style="width:30px;height:30px;overflow:hidden;padding:0;border:2px solid rgba(255,61,90,.6)">${genFaceSvg(p.id,p.nationality)}</div>
       <div class="pp-name">${p.name.split(' ').pop()}</div>
     </div>`;
   });
   return html;
 }
 
-// ── Live stats bars HTML ────────────────────────────────
+// -- Live stats bars HTML --------------------------------
 function buildStatsHtml() {
   const s = LM.matchStats;
   const statLine = (label, hv, av, maxv) => {
@@ -3536,7 +3948,7 @@ function buildStatsHtml() {
   </div>`;
 }
 
-// ── Event → display object ───────────────────────────────
+// -- Event   display object -------------------------------
 const EV_ICONS = {
   goal:'⚽',bigchance:'🔥',miss:'💨',keypas:'🎯',tackle:'💪',
   yellow:'🟡',red:'🟥',injury:'🤕',sub:'🔄',offside:'🚩',var:'📺',
@@ -3594,7 +4006,7 @@ function evToHtml(ev) {
   </div>`;
 }
 
-// ── Update momentum bar ─────────────────────────────────
+// -- Update momentum bar ---------------------------------
 function updateMomentum() {
   // Momentum drifts based on recent events + random
   const recentEvs = LM.events.slice(Math.max(0,LM.cursor-8), LM.cursor);
@@ -3612,16 +4024,10 @@ function updateMomentum() {
   document.getElementById('lm-a-poss').textContent = LM.matchStats.aPoss+'%';
 }
 
-// ── DOM update tick ─────────────────────────────────────
+// -- DOM update tick -------------------------------------
 function lmTick() {
   if(LM.paused) return;
-
-  // Find the next event
-  if(LM.cursor >= LM.events.length) {
-    // Match over
-    lmFinish();
-    return;
-  }
+  if(LM.cursor >= LM.events.length) { lmFinish(); return; }
 
   const ev = LM.events[LM.cursor];
   LM.cursor++;
@@ -3633,53 +4039,79 @@ function lmTick() {
     else LM.ag++;
     document.getElementById('lm-hscore').textContent = LM.hg;
     document.getElementById('lm-ascore').textContent = LM.ag;
-    // Flash score
     const scEl = document.getElementById(ev.team==='home'?'lm-hscore':'lm-ascore');
     scEl.style.color = 'var(--green)';
     setTimeout(()=>scEl.style.color='',800);
   }
 
-  // Update clock
-  document.getElementById('lm-clock').textContent = ev.type==='halftime'?'HT':ev.type==='fulltime'?'FT':`${LM.minute}'`;
-
-  // Apply to player ratings
-  applyEventToRatings(ev);
-
-  // Add event to timeline (prepend so newest is at top)
-  const timeline = document.getElementById('lm-timeline');
-  if(timeline){
-    const html = evToHtml(ev);
-    // Clear placeholder on first event
-    if(LM.cursor===1) timeline.innerHTML='';
-    timeline.insertAdjacentHTML('afterbegin', html);
-    // Keep at most 60 events visible
-    while(timeline.children.length>60) timeline.removeChild(timeline.lastChild);
+  // Incrementally reveal stats as events pass (so bars actually move during match)
+  const pct = LM.minute / 90;
+  const s = LM.matchStats;
+  s.hShots  = Math.round(s._hShotsTotal  * pct * rf(0.85,1.0));
+  s.aShots  = Math.round(s._aShotsTotal  * pct * rf(0.85,1.0));
+  s.hSot    = Math.min(s.hShots, Math.round(s._hSotTotal * pct * rf(0.85,1.0)));
+  s.aSot    = Math.min(s.aShots, Math.round(s._aSotTotal * pct * rf(0.85,1.0)));
+  s.hCorners= Math.round(s._hCornersTotal * pct);
+  s.aCorners= Math.round(s._aCornersTotal * pct);
+  s.hFouls  = Math.round(s._hFoulsTotal  * pct);
+  s.aFouls  = Math.round(s._aFoulsTotal  * pct);
+  s.hXg     = parseFloat((s._hXgTotal * pct * rf(0.9,1.05)).toFixed(2));
+  s.aXg     = parseFloat((s._aXgTotal * pct * rf(0.9,1.05)).toFixed(2));
+  // Possession fluctuates each tick  3% around the base value, drift toward target
+  const basePoss = s._hPossBase || 50;
+  const possNoise = rf(-3, 3);
+  s.hPoss = clamp(Math.round(basePoss + possNoise + (LM.momentum - 50) * 0.12), 28, 72);
+  s.aPoss = 100 - s.hPoss;
+  // Goals add xG bump
+  if(ev.type==='goal') {
+    if(ev.team==='home') s.hXg = parseFloat((s.hXg + 0.3).toFixed(2));
+    else s.aXg = parseFloat((s.aXg + 0.3).toFixed(2));
+    if(ev.team==='home') s.hSot++;
+    else s.aSot++;
+  }
+  if(ev.type==='bigchance') {
+    if(ev.team==='home'){s.hShots++;s.hSot++;}
+    else{s.aShots++;s.aSot++;}
+  }
+  if(ev.type==='miss'){
+    if(ev.team==='home') s.hShots++;
+    else s.aShots++;
   }
 
-  // Halftime break — pause briefly
+  // Update clock   fulltime event is handled ONLY by lmFinish, not here
+  if(ev.type==='halftime') {
+    document.getElementById('lm-clock').textContent = 'HT';
+    document.getElementById('lm-status-txt').textContent = 'Half Time';
+  } else if(ev.type!=='fulltime') {
+    document.getElementById('lm-clock').textContent = `${LM.minute}'`;
+    document.getElementById('lm-status-txt').textContent = `${LM.minute}' in progress`;
+  }
+
+  applyEventToRatings(ev);
+  driftPlayerRatings();
+
+  // Add event to timeline (newest at top)   skip fulltime here, lmFinish handles it
+  if(ev.type!=='fulltime'){
+    const timeline = document.getElementById('lm-timeline');
+    if(timeline){
+      if(LM.cursor===1) timeline.innerHTML='';
+      timeline.insertAdjacentHTML('afterbegin', evToHtml(ev));
+      while(timeline.children.length>60) timeline.removeChild(timeline.lastChild);
+    }
+  }
+
+  // Halftime break
   if(ev.type==='halftime'){
     clearInterval(LM.interval);
-    setTimeout(()=>{
-      if(!LM.paused) LM.interval=setInterval(lmTick, LM.speed);
-    }, 1200);
+    setTimeout(()=>{ if(!LM.paused) LM.interval=setInterval(lmTick, LM.speed); }, 1200);
   }
 
-  // Update lineup ratings panels
   updateLineupPanels();
   updateMomentum();
 
-  document.getElementById('lm-status-txt').textContent =
-    ev.type==='halftime'?'Half Time':ev.type==='fulltime'?'Full Time':`${LM.minute}' in progress`;
-
-  // Inject injury to player data
   if(ev.type==='injury'){
     const p=G.players.find(x=>x.id===ev.pid);
-    if(p&&!p.injured){
-      p.injured=true;
-      p.injuryGames=rand(3,14);
-      const injuryTypes=['Muscle Strain','Hamstring','Ankle Twist','Bruised Knee','Concussion'];
-      p.injuryType=pick(injuryTypes);
-    }
+    if(p&&!p.injured){ p.injured=true; p.injuryGames=rand(3,14); p.injuryType=pick(['Muscle Strain','Hamstring','Ankle Twist','Bruised Knee','Concussion']); }
   }
 }
 
@@ -3693,8 +4125,10 @@ function updateLineupPanels() {
   if(statsEl) statsEl.innerHTML = buildStatsHtml();
 }
 
-// ── Finish match ────────────────────────────────────────
+// -- Finish match ----------------------------------------
 function lmFinish() {
+  if(LM.finished) return; // guard against double call
+  LM.finished = true;
   clearInterval(LM.interval);
   LM.interval = null;
   document.getElementById('lm-clock').textContent = 'FT';
@@ -3702,75 +4136,67 @@ function lmFinish() {
   document.getElementById('lm-live-label').style.display = 'none';
   document.getElementById('lm-status-txt').textContent = 'Full Time';
 
-  // Add full-time event to timeline
+  // Final stat values (100%)
+  const s = LM.matchStats;
+  s.hShots = s._hShotsTotal; s.aShots = s._aShotsTotal;
+  s.hSot = s._hSotTotal; s.aSot = s._aSotTotal;
+  s.hCorners = s._hCornersTotal; s.aCorners = s._aCornersTotal;
+  s.hFouls = s._hFoulsTotal; s.aFouls = s._aFoulsTotal;
+  s.hXg = s._hXgTotal; s.aXg = s._aXgTotal;
+  updateLineupPanels();
+
+  // Add full-time to timeline ONCE
   const timeline = document.getElementById('lm-timeline');
   if(timeline) timeline.insertAdjacentHTML('afterbegin', evToHtml({type:'fulltime',min:90,team:''}));
 
-  // Now apply result to game state (same as simMatch but using LM results)
+  // Apply result to game state
   const fix = LM.fixture;
   if(fix && !fix.played){
-    // Build result object
-    const s = LM.matchStats;
     const result = {
       id: fix.id, homeId: fix.homeId, awayId: fix.awayId, leagueId: fix.leagueId,
       hg: LM.hg, ag: LM.ag, date: fix.date,
-      stats: {
-        homePoss: s.hPoss, awayPoss: s.aPoss,
-        hShots: s.hShots, aShots: s.aShots,
-        hSot: s.hSot, aSot: s.aSot,
-        hXg: s.hXg.toFixed(2), aXg: s.aXg.toFixed(2),
-        hCorners: s.hCorners, aCorners: s.aCorners,
-        hFouls: s.hFouls, aFouls: s.aFouls,
-      },
+      stats: { homePoss:s.hPoss, awayPoss:s.aPoss, hShots:s.hShots, aShots:s.aShots,
+        hSot:s.hSot, aSot:s.aSot, hXg:s.hXg.toFixed ? s.hXg.toFixed(2) : s.hXg,
+        aXg:s.aXg.toFixed ? s.aXg.toFixed(2) : s.aXg,
+        hCorners:s.hCorners, aCorners:s.aCorners, hFouls:s.hFouls, aFouls:s.aFouls },
       events: LM.events,
     };
-    G.results.push(result);
-    fix.played = true;
+    G.results.push(result); fix.played = true;
 
-    // Update player season stats
     const allPlayers = [...LM.homePlayers, ...LM.awayPlayers];
     allPlayers.forEach(p=>{
       const st = LM.playerStats[p.id]||{};
-      p.stats.apps++;
-      p.careerStats.apps++;
-      p.stats.goals += st.goals||0;
-      p.careerStats.goals += st.goals||0;
-      p.stats.assists += st.assists||0;
-      p.careerStats.assists += st.assists||0;
+      p.stats.apps++; p.careerStats.apps++;
+      p.stats.goals += st.goals||0; p.careerStats.goals += st.goals||0;
+      p.stats.assists += st.assists||0; p.careerStats.assists += st.assists||0;
       p.stats.yellowCards += st.yellows||0;
-      const finalRating = parseFloat((LM.playerRatings[p.id]||6.0).toFixed(1));
-      p.stats.rating = p.stats.apps>1
-        ? parseFloat(((p.stats.rating*(p.stats.apps-1)+finalRating)/p.stats.apps).toFixed(2))
-        : finalRating;
+      const fr = parseFloat((LM.playerRatings[p.id]||6.0).toFixed(1));
+      p.stats.rating = p.stats.apps>1 ? parseFloat(((p.stats.rating*(p.stats.apps-1)+fr)/p.stats.apps).toFixed(2)) : fr;
     });
 
-    // GK clean sheet
     if(LM.hg===0){const gk=LM.awayPlayers.find(p=>p.pos==='GK');if(gk)gk.stats.cleanSheets++;}
     if(LM.ag===0){const gk=LM.homePlayers.find(p=>p.pos==='GK');if(gk)gk.stats.cleanSheets++;}
-
     updTable(fix.leagueId, fix.homeId, fix.awayId, LM.hg, LM.ag);
 
-    // Also sim the rest of that matchday quickly in background
     const md = fix.matchday, lid = fix.leagueId;
     G.fixtures.filter(f=>f.matchday===md&&f.leagueId===lid&&!f.played&&f.id!==fix.id).forEach(fx=>{
       const r=simMatch(fx); if(r){G.results.push(r);fx.played=true;}
     });
     G.date = new Date(fix.date.getTime()+86400000);
-    checkSeasonEnd();
-    updateTopbar();
+    checkSeasonEnd(); updateTopbar();
 
-    toast(`FT: ${LM.homeTeam?.name} ${LM.hg}–${LM.ag} ${LM.awayTeam?.name}`,
-      LM.hg>LM.ag?(fix.homeId===G.playerTeam?'s':'e'):LM.ag>LM.hg?(fix.awayId===G.playerTeam?'s':'e'):'i');
-
-    // After a short delay, offer to show post-match
-    setTimeout(()=>{
-      const goPost = confirm(`Full Time!\n${LM.homeTeam?.name} ${LM.hg}–${LM.ag} ${LM.awayTeam?.name}\n\nView match report?`);
-      if(goPost){ closeLiveMatch(); nav('postmatch', fix.id); }
-    }, 900);
+    // Show result banner IN the controls bar rather than a confirm dialog
+    const ctrl = document.querySelector('.lm-controls');
+    if(ctrl){
+      ctrl.innerHTML = `<span style="font-family:var(--fd);font-size:18px;font-weight:700;color:${LM.hg>LM.ag?(fix.homeId===G.playerTeam?'var(--green)':'var(--red)'):LM.ag>LM.hg?(fix.awayId===G.playerTeam?'var(--green)':'var(--red)'):'var(--gold)'}">&nbsp;FT: ${LM.homeTeam?.name} ${LM.hg}–${LM.ag} ${LM.awayTeam?.name}</span>
+      <span style="flex:1"></span>
+      <button class="btn btn-primary" onclick="closeLiveMatch();nav('postmatch',${fix.id})">📊 Match Report</button>
+      <button class="btn btn-secondary" onclick="closeLiveMatch();simNext()">▶ Next Day</button>`;
+    }
   }
 }
 
-// ── Open live match ─────────────────────────────────────
+// -- Open live match -------------------------------------
 function watchMatch(fixId) {
   const fix = G.fixtures.find(f=>f.id===fixId);
   if(!fix){ toast('Fixture not found','e'); return; }
@@ -3780,16 +4206,9 @@ function watchMatch(fixId) {
   const away = G.teams.find(t=>t.id===fix.awayId);
   if(!home||!away){ toast('Teams not found','e'); return; }
 
-  // Build squads — best 11 available, not injured
-  const getXI = team => team.squad
-    .map(id=>G.players.find(p=>p.id===id))
-    .filter(Boolean)
-    .filter(p=>!p.injured)
-    .sort((a,b)=>b.overall-a.overall)
-    .slice(0,11);
-
-  const hPlayers = getXI(home);
-  const aPlayers = getXI(away);
+  // Build squads   formation-aware XI, not just top 11 by OVR
+  const hPlayers = selectXI(home, G.playerTeam===fix.homeId ? G.formation : home.formation);
+  const aPlayers = selectXI(away, G.playerTeam===fix.awayId ? G.formation : away.formation);
 
   // Power ratings using new engine
   const hPowFull = calcTeamPower(hPlayers, true);
@@ -3812,6 +4231,7 @@ function watchMatch(fixId) {
   LM.minute      = 0;
   LM.momentum    = 50;
   LM.paused      = false;
+  LM.finished    = false;
   if(LM.interval) clearInterval(LM.interval);
 
   // Generate ALL events upfront (we just reveal them tick by tick)
@@ -3887,10 +4307,9 @@ function closeLiveMatch() {
 
 function setLiveSpeed(ms) {
   LM.speed = ms;
-  document.querySelectorAll('.lm-speed-btn').forEach(btn=>{
-    btn.classList.toggle('active', btn.textContent.includes(
-      ms===800?'1×':ms===300?'2×':ms===80?'5×':'Max'
-    ));
+  var lbl = ms===800?'1x':ms===300?'2x':ms===80?'5x':'Max';
+  document.querySelectorAll('.lm-speed-btn').forEach(function(btn){
+    btn.classList.toggle('active', btn.textContent.includes(lbl));
   });
   if(LM.interval){ clearInterval(LM.interval); LM.interval=setInterval(lmTick,ms); }
 }
@@ -3901,7 +4320,7 @@ function toggleLivePause() {
   if(btn) btn.textContent = LM.paused ? '▶ Resume' : '⏸ Pause';
 }
 
-// ── Override renderFixtures to add "Watch" button ───────
+// -- Override renderFixtures to add "Watch" button -------
 function renderFixtures(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const myFix=G.fixtures.filter(f=>f.homeId===G.playerTeam||f.awayId===G.playerTeam);
@@ -3925,13 +4344,15 @@ function renderFixtures(){
       action=`<button class="btn btn-primary" style="padding:3px 10px;font-size:10px;background:var(--green);color:#000;border:none" onclick="nav('prematch',${f.id})">▶ Pre-Match</button>
               <button class="btn btn-secondary" style="padding:3px 8px;font-size:10px" onclick="quickSimMatch(${f.id})">⚡ Quick</button>`;
     }
+    const scoreCell = res ? badge+' '+res.hg+'\u2013'+res.ag : '<span style="color:var(--text3)">vs</span>';
+    const xgCell = res ? res.stats.hXg+'\u2013'+res.stats.aXg : '\u2014';
     return `<tr>
       <td class="tr">${f.matchday}</td>
       <td><span class="tsub">${fmtDate(f.date)}</span></td>
       <td><span class="tname" style="${f.homeId===G.playerTeam?'color:var(--accent)':''}">${hn}</span></td>
-      <td style="text-align:center;font-family:var(--fm);font-weight:700">${res?`${badge} ${res.hg}–${res.ag}`:'<span style="color:var(--text3)">vs</span>'}</td>
+      <td style="text-align:center;font-family:var(--fm);font-weight:700">${scoreCell}</td>
       <td><span class="tname" style="${f.awayId===G.playerTeam?'color:var(--accent)':''}">${an}</span></td>
-      <td class="tn" style="color:var(--text3)">${res?`${res.stats.hXg}–${res.stats.aXg}`:'—'}</td>
+      <td class="tn" style="color:var(--text3)">${xgCell}</td>
       <td>${action}</td>
     </tr>`;
   };
