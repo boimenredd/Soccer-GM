@@ -3,42 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PITCH — Global Football Simulation</title>
+<title>PITCH — Global Football Simulation v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:    #080b10;
-  --bg2:   #0d1117;
-  --bg3:   #131920;
-  --bg4:   #1a2230;
-  --bg5:   #212c3a;
-  --border:#1e2d3d;
-  --bdr2:  #2a3f52;
-  --text:  #dce8f5;
-  --text2: #7a9ab8;
-  --text3: #3d5a72;
-  --accent:#00d4ff;
-  --acct2: #0099cc;
-  --gold:  #f5c842;
-  --green: #00e878;
-  --red:   #ff3d5a;
-  --orange:#ff8c42;
-  --purple:#b06aff;
-  --fd: 'Barlow Condensed', sans-serif;
-  --fb: 'Barlow', sans-serif;
-  --fm: 'JetBrains Mono', monospace;
+  --bg:#080b10;--bg2:#0d1117;--bg3:#131920;--bg4:#1a2230;--bg5:#212c3a;
+  --border:#1e2d3d;--bdr2:#2a3f52;
+  --text:#dce8f5;--text2:#7a9ab8;--text3:#3d5a72;
+  --accent:#00d4ff;--acct2:#0099cc;
+  --gold:#f5c842;--green:#00e878;--red:#ff3d5a;--orange:#ff8c42;--purple:#b06aff;
+  --fd:'Barlow Condensed',sans-serif;--fb:'Barlow',sans-serif;--fm:'JetBrains Mono',monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--fb);font-size:13px;overflow:hidden}
-
-/* ── LAYOUT ── */
 #app{display:flex;height:100vh}
 #sidebar{width:210px;min-width:210px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 #topbar{height:48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
 #content{flex:1;overflow-y:auto;padding:20px;scroll-behavior:smooth}
-
-/* ── SIDEBAR ── */
 .sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
 .sb-logo h1{font-family:var(--fd);font-size:34px;font-weight:800;letter-spacing:3px;color:var(--accent);line-height:1}
 .sb-logo p{font-size:9px;letter-spacing:4px;color:var(--text3);text-transform:uppercase;margin-top:1px}
@@ -69,15 +51,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .btn-gold{background:rgba(245,200,66,.15);color:var(--gold);border:1px solid rgba(245,200,66,.3)}
 .btn-block{display:block;width:100%;text-align:center}
 .sim-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
-
-/* ── TOPBAR ── */
 .tb-title{font-family:var(--fd);font-size:20px;font-weight:700;letter-spacing:.5px}
 .tb-spacer{flex:1}
 .tb-chip{padding:3px 10px;border-radius:12px;font-size:10px;font-family:var(--fm);border:1px solid var(--border);color:var(--text2);background:var(--bg3)}
 .tb-chip.hi{color:var(--accent);border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.07)}
 .tb-chip.gold{color:var(--gold);border-color:rgba(245,200,66,.3);background:rgba(245,200,66,.07)}
-
-/* ── CARDS ── */
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px}
 .card-sm{padding:12px 14px}
 .ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
@@ -86,17 +64,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-
-/* ── STAT BOXES ── */
 .sbox{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:14px}
 .sv{font-family:var(--fd);font-size:38px;font-weight:700;letter-spacing:1px;line-height:1}
 .sl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:2.5px;margin-top:3px}
 .ss{font-size:11px;color:var(--text2);margin-top:3px}
 .sc-up{font-size:10px;color:var(--green);margin-top:4px}
 .sc-dn{font-size:10px;color:var(--red);margin-top:4px}
-
-/* ── TABLES ── */
-.tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{padding:7px 10px;text-align:left;font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
 th:hover{color:var(--text2)}
@@ -107,8 +80,6 @@ tr:last-child td{border-bottom:none}
 .tr{font-family:var(--fm);font-size:10px;color:var(--text3);width:28px}
 .tname{font-weight:600;color:var(--text)}
 .tsub{font-size:10px;color:var(--text3)}
-
-/* ── RATINGS ── */
 .ovr{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:5px;font-family:var(--fm);font-weight:500;font-size:13px;flex-shrink:0}
 .ovr-s{background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.35)}
 .ovr-a{background:rgba(0,232,120,.15);color:var(--green);border:1px solid rgba(0,232,120,.35)}
@@ -120,26 +91,32 @@ tr:last-child td{border-bottom:none}
 .pd{background:rgba(0,212,255,.2);color:var(--accent)}
 .pm{background:rgba(245,200,66,.2);color:var(--gold)}
 .pf{background:rgba(255,61,90,.2);color:var(--red)}
-
-/* ── INPUTS ── */
 .finput{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:8px 12px;color:var(--text);font-family:var(--fb);font-size:12px;outline:none;transition:border-color .12s}
 .finput:focus{border-color:var(--accent)}
 .fselect{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:8px 12px;color:var(--text);font-family:var(--fb);font-size:12px;outline:none;cursor:pointer}
 .fgroup{margin-bottom:13px}
 .flabel{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;display:block}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-/* ── SETUP ── */
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 #setup{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;overflow-y:auto}
-.setup-wrap{width:640px;max-width:96vw;padding:40px 0}
+.setup-wrap{width:680px;max-width:96vw;padding:40px 0}
 .setup-logo{font-family:var(--fd);font-size:88px;font-weight:800;letter-spacing:6px;color:var(--accent);line-height:1;text-shadow:0 0 60px rgba(0,212,255,.3)}
 .setup-tag{font-size:10px;letter-spacing:5px;color:var(--text3);text-transform:uppercase;margin-bottom:36px}
+.setup-steps{display:flex;gap:6px;margin-bottom:24px}
+.step-pill{padding:5px 14px;border-radius:14px;font-size:10px;font-weight:600;letter-spacing:1px;border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:all .12s}
+.step-pill.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.step-pill.done{border-color:var(--green);color:var(--green)}
 .db-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .db-opt{padding:16px;background:var(--bg3);border:2px solid var(--border);border-radius:7px;cursor:pointer;transition:all .15s}
 .db-opt:hover{border-color:var(--bdr2)}
 .db-opt.sel{border-color:var(--accent);background:rgba(0,212,255,.06)}
 .db-opt-title{font-family:var(--fd);font-size:18px;font-weight:700;letter-spacing:.5px}
 .db-opt-desc{font-size:10px;color:var(--text3);margin-top:4px}
+.league-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;max-height:180px;overflow-y:auto}
+.league-chip{padding:5px 11px;border-radius:4px;font-size:10px;font-weight:600;border:1px solid var(--border);color:var(--text3);cursor:pointer;background:var(--bg3);transition:all .12s;display:flex;align-items:center;gap:5px}
+.league-chip:hover{border-color:var(--bdr2);color:var(--text2)}
+.league-chip.sel{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.07)}
+.league-chip .tier-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .team-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;max-height:220px;overflow-y:auto;padding-right:4px;margin-bottom:16px}
 .tpick{padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;cursor:pointer;transition:all .12s}
 .tpick:hover{border-color:var(--bdr2)}
@@ -148,8 +125,6 @@ tr:last-child td{border-bottom:none}
 .tpick-meta{font-size:10px;color:var(--text3);margin-top:1px}
 .load-bar{height:2px;background:var(--bg3);border-radius:1px;overflow:hidden;margin-top:12px}
 .load-fill{height:100%;background:var(--accent);width:0%;transition:width .3s}
-
-/* ── PITCH ── */
 .pitch{background:linear-gradient(180deg,#0f2e12 0%,#133518 40%,#0f2e12 100%);border-radius:8px;position:relative;border:1px solid #1a4020;overflow:hidden}
 .pitch-inner{position:relative;width:100%;aspect-ratio:2/3}
 .pitch-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.2}
@@ -160,8 +135,6 @@ tr:last-child td{border-bottom:none}
 .pp-name{font-size:8px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9);white-space:nowrap;font-weight:600;max-width:56px;overflow:hidden;text-overflow:ellipsis}
 .dot-a{background:rgba(0,212,255,.82);color:#000}
 .dot-b{background:rgba(255,61,90,.82);color:#fff}
-
-/* ── MATCH FEED ── */
 .mfeed{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
 .mev{display:flex;gap:8px;align-items:flex-start;padding:5px 8px;border-radius:5px;background:var(--bg3);font-size:11px}
 .mev-min{font-family:var(--fm);color:var(--text3);font-size:10px;width:28px;flex-shrink:0;padding-top:1px}
@@ -173,157 +146,179 @@ tr:last-child td{border-bottom:none}
 .ev-red{background:rgba(255,61,90,.07);border-left:2px solid var(--red)}
 .ev-inj{background:rgba(255,140,66,.05);border-left:2px solid var(--orange)}
 .ev-sub{background:rgba(176,106,255,.05);border-left:2px solid var(--purple)}
-
-/* ── BADGE ── */
 .badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.3px}
 .badge-g{background:rgba(0,232,120,.15);color:var(--green)}
 .badge-r{background:rgba(255,61,90,.15);color:var(--red)}
 .badge-y{background:rgba(245,200,66,.15);color:var(--gold)}
 .badge-b{background:rgba(0,212,255,.15);color:var(--accent)}
 .badge-p{background:rgba(176,106,255,.15);color:var(--purple)}
-
-/* ── ATTR BARS ── */
 .abr{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;flex:1}
 .abr-fill{height:100%;border-radius:2px}
 .arow{display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.aname{width:100px;font-size:11px;color:var(--text2);flex-shrink:0}
+.aname{width:110px;font-size:11px;color:var(--text2);flex-shrink:0}
 .aval{font-family:var(--fm);font-size:11px;width:26px;text-align:right;flex-shrink:0}
-
-/* ── FORM DOTS ── */
 .form-w{width:12px;height:12px;border-radius:2px;background:var(--green);display:inline-block}
 .form-d{width:12px;height:12px;border-radius:2px;background:var(--gold);display:inline-block}
 .form-l{width:12px;height:12px;border-radius:2px;background:var(--red);display:inline-block}
-
-/* ── PLAYER AVATAR ── */
 .avatar{width:64px;height:64px;border-radius:8px;background:var(--bg4);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:1px solid var(--border)}
 .avatar img{width:100%;height:100%;object-fit:cover}
 .avatar-lg{width:90px;height:90px;border-radius:10px}
 .avatar-placeholder{font-family:var(--fd);font-size:28px;color:var(--text3);font-weight:700}
-
-/* ── TOAST ── */
 #toast{position:fixed;bottom:20px;right:20px;z-index:500;display:flex;flex-direction:column;gap:6px;pointer-events:none}
 .ti{padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;animation:tslide .25s ease;max-width:280px}
 .ti-s{background:var(--green);color:#000}
 .ti-e{background:var(--red);color:#fff}
 .ti-i{background:var(--gold);color:#000}
 @keyframes tslide{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
-
-/* ── MODAL ── */
 #moverlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:none;align-items:center;justify-content:center}
 #moverlay.open{display:flex}
-.mbox{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px;width:580px;max-width:95vw;max-height:88vh;overflow-y:auto}
+.mbox{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px;width:600px;max-width:95vw;max-height:88vh;overflow-y:auto}
 .mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .mclose{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;transition:color .12s}
 .mclose:hover{color:var(--text)}
-
-/* ── TABS ── */
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
 .tab{padding:7px 14px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;transition:all .12s;margin-bottom:-1px;letter-spacing:.3px}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .tab:hover{color:var(--text2)}
-
-/* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
-
-/* ── COMPETITION BADGE ── */
 .comp-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600}
 .comp-cl{background:rgba(0,212,255,.12);color:var(--accent);border:1px solid rgba(0,212,255,.25)}
 .comp-el{background:rgba(255,140,66,.12);color:var(--orange);border:1px solid rgba(255,140,66,.25)}
 .comp-ec{background:rgba(176,106,255,.12);color:var(--purple);border:1px solid rgba(176,106,255,.25)}
 .comp-lib{background:rgba(0,232,120,.12);color:var(--green);border:1px solid rgba(0,232,120,.25)}
 .comp-dom{background:rgba(245,200,66,.12);color:var(--gold);border:1px solid rgba(245,200,66,.25)}
-
-/* ── DRAG DROP ── */
 .drop-zone{border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;color:var(--text3);font-size:12px;cursor:pointer;transition:all .15s}
 .drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.04)}
-
-/* ── COUNTRY FLAG ── */
-.cflag{display:inline-block;font-size:14px;margin-right:2px}
-
-/* ── RESPONSIVE ── */
-@media(max-width:1100px){.g4{grid-template-columns:1fr 1fr}}
-@media(max-width:800px){#sidebar{width:180px;min-width:180px}}
-
-/* ── SCAN LINES OVERLAY ── */
-#app::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000}
-
-/* ── WORLD DB BROWSER ── */
+.tw{overflow-x:auto}
+.cont-header{background:linear-gradient(135deg,rgba(0,212,255,.1),rgba(0,212,255,.02));border:1px solid rgba(0,212,255,.2);border-radius:8px;padding:16px;margin-bottom:14px}
 .league-group{margin-bottom:14px}
 .league-group-hdr{padding:8px 12px;background:var(--bg3);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:var(--fd);font-size:15px;font-weight:700;letter-spacing:.5px;border:1px solid var(--border)}
 .league-group-body{padding:8px 0 0 0;display:none}
 .league-group-body.open{display:block}
-
-/* ── NUMBER INPUT ── */
 input[type=range]{accent-color:var(--accent);width:100%}
 input[type=number]{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:6px 10px;color:var(--text);font-family:var(--fm);font-size:12px;outline:none;width:70px;text-align:center}
 input[type=number]:focus{border-color:var(--accent)}
-
-/* ── CONTINENTAL ── */
-.cont-header{background:linear-gradient(135deg,rgba(0,212,255,.1),rgba(0,212,255,.02));border:1px solid rgba(0,212,255,.2);border-radius:8px;padding:16px;margin-bottom:14px}
+#app::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000}
+.tier-1{color:#00d4ff}.tier-2{color:#00e878}.tier-3{color:#f5c842}.tier-4{color:#7a9ab8}
+.value-badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;font-family:var(--fm)}
+.intl-flag{font-size:20px}
+.rumor-card{padding:10px 14px;background:var(--bg3);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:8px;font-size:12px}
+.potential-bar{height:4px;border-radius:2px;background:var(--bg4);overflow:hidden;margin-top:4px}
+.potential-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--green))}
+@media(max-width:1100px){.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){#sidebar{width:180px;min-width:180px}}
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════ SETUP SCREEN ══════════════════════ -->
+<!-- ══════════════════════ SETUP ══════════════════════ -->
 <div id="setup">
 <div class="setup-wrap">
   <div class="setup-logo">PITCH</div>
-  <div class="setup-tag">Global Football Simulation Engine v2.0</div>
+  <div class="setup-tag">Global Football Simulation Engine v3.0</div>
 
-  <div class="card" style="margin-bottom:14px">
+  <!-- Step indicator -->
+  <div class="setup-steps" id="setup-steps">
+    <div class="step-pill active" onclick="goStep(1)">1 · Manager</div>
+    <div class="step-pill" onclick="goStep(2)">2 · World</div>
+    <div class="step-pill" onclick="goStep(3)">3 · League</div>
+    <div class="step-pill" onclick="goStep(4)">4 · Team</div>
+  </div>
+
+  <!-- Step 1: Manager -->
+  <div id="step-1" class="card" style="margin-bottom:14px">
     <div class="ch"><span class="ct">New Manager</span></div>
     <div class="frow">
-      <div class="fgroup"><label class="flabel">Manager Name</label><input class="finput" id="s-mgr" value="Alex Ferguson Jr" placeholder="Your name..."></div>
+      <div class="fgroup"><label class="flabel">Manager Name</label><input class="finput" id="s-mgr" value="Alex Ferguson Jr"></div>
       <div class="fgroup"><label class="flabel">Nationality</label>
         <select class="fselect" id="s-nat">
-          <option>English</option><option>Spanish</option><option>German</option><option>French</option><option>Brazilian</option><option>Argentine</option><option>Italian</option><option>Portuguese</option>
+          <option>English</option><option>Spanish</option><option>German</option><option>French</option>
+          <option>Brazilian</option><option>Argentine</option><option>Italian</option><option>Portuguese</option>
         </select>
       </div>
     </div>
+    <button class="btn btn-primary" onclick="goStep(2)" style="margin-top:4px">Next →</button>
   </div>
 
-  <div class="card" style="margin-bottom:14px">
+  <!-- Step 2: World DB -->
+  <div id="step-2" class="card" style="margin-bottom:14px;display:none">
     <div class="ch"><span class="ct">World Database</span></div>
     <div class="db-opts">
       <div class="db-opt sel" id="db-default" onclick="selectDb('default')">
         <div class="db-opt-title">🌍 Default World</div>
-        <div class="db-opt-desc">30+ leagues, 500+ clubs, 10,000+ players across Europe, Americas & Asia</div>
+        <div class="db-opt-desc">30+ leagues across 4 tiers, 500+ clubs, 10,000+ players with tiered quality</div>
       </div>
       <div class="db-opt" id="db-custom" onclick="selectDb('custom')">
-        <div class="db-opt-title">📂 Import Custom DB</div>
-        <div class="db-opt-desc">Load a JSON database file from disk or community</div>
+        <div class="db-opt-title">📂 Custom Database</div>
+        <div class="db-opt-desc">Import a community JSON database</div>
       </div>
     </div>
-    <div id="custom-db-upload" style="display:none">
+    <div id="custom-db-upload" style="display:none;margin-bottom:12px">
       <div class="drop-zone" onclick="document.getElementById('db-file').click()" id="db-dropzone">
-        Drop JSON database file here or click to browse
+        Drop JSON here or click to browse
         <input type="file" id="db-file" accept=".json" style="display:none" onchange="loadCustomDb(this)">
       </div>
-      <p id="db-file-status" style="font-size:11px;color:var(--text3);margin-top:6px;"></p>
+      <p id="db-file-status" style="font-size:11px;color:var(--text3);margin-top:6px"></p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Next →</button>
     </div>
   </div>
 
-  <div class="card" style="margin-bottom:14px" id="league-selector">
-    <div class="ch"><span class="ct">Select League</span>
-      <select class="fselect" id="s-league" style="width:200px" onchange="renderTeamPicker()"></select>
+  <!-- Step 3: League Selection -->
+  <div id="step-3" class="card" style="margin-bottom:14px;display:none">
+    <div class="ch">
+      <span class="ct">Select Your League</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:10px;color:var(--text3)">Filter:</span>
+        <select class="fselect" id="tier-filter" style="width:100px" onchange="renderLeagueChips()">
+          <option value="">All Tiers</option>
+          <option value="1">Tier 1</option>
+          <option value="2">Tier 2</option>
+          <option value="3">Tier 3</option>
+          <option value="4">Tier 4</option>
+        </select>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:10px;display:flex;gap:14px">
+      <span><span style="color:var(--accent)">●</span> Tier 1 · Elite</span>
+      <span><span style="color:var(--green)">●</span> Tier 2 · Strong</span>
+      <span><span style="color:var(--gold)">●</span> Tier 3 · Mid</span>
+      <span><span style="color:var(--text3)">●</span> Tier 4 · Lower</span>
+    </div>
+    <div class="league-chips" id="league-chips"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(4)">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Team Selection -->
+  <div id="step-4" class="card" style="margin-bottom:14px;display:none">
+    <div class="ch">
+      <span class="ct">Pick Your Club</span>
+      <span id="sel-league-name" style="font-size:12px;color:var(--text3)"></span>
     </div>
     <div class="team-grid" id="team-picker"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
+      <button class="btn btn-primary btn-block" style="font-size:14px;padding:12px;letter-spacing:1px" onclick="startGame()">▶ KICK OFF</button>
+    </div>
+    <div id="s-loading" style="display:none;margin-top:12px">
+      <div class="load-bar"><div class="load-fill" id="lf"></div></div>
+      <p style="font-size:10px;color:var(--text3);margin-top:8px;text-align:center;letter-spacing:2px">GENERATING WORLD...</p>
+    </div>
   </div>
-
-  <div id="s-loading" style="display:none">
-    <div class="load-bar"><div class="load-fill" id="lf"></div></div>
-    <p style="font-size:10px;color:var(--text3);margin-top:8px;text-align:center;letter-spacing:2px">GENERATING WORLD...</p>
-  </div>
-  <button class="btn btn-primary btn-block" style="font-size:16px;padding:14px;margin-top:14px;letter-spacing:2px" onclick="startGame()">▶ KICK OFF</button>
 </div>
 </div>
 
 <!-- ══════════════════════ MAIN APP ══════════════════════ -->
 <div id="app" style="display:none">
   <div id="sidebar">
-    <div class="sb-logo"><h1>PITCH</h1><p>Football Engine</p></div>
+    <div class="sb-logo"><h1>PITCH</h1><p>Football Engine v3</p></div>
     <div class="sb-club">
       <div class="sb-club-name" id="sb-name">—</div>
       <div class="sb-club-meta" id="sb-meta">—</div>
@@ -338,14 +333,16 @@ input[type=number]:focus{border-color:var(--accent)}
     <div class="nav-item" onclick="nav('fixtures')"><span class="nav-icon">📅</span>Fixtures</div>
     <div class="nav-item" onclick="nav('table')"><span class="nav-icon">📊</span>League Table</div>
     <div class="nav-item" onclick="nav('continental')"><span class="nav-icon">🏆</span>Continental</div>
+    <div class="nav-item" onclick="nav('international')"><span class="nav-icon">🌍</span>International</div>
+    <div class="nav-sec">Market</div>
     <div class="nav-item" onclick="nav('transfers')"><span class="nav-icon">🔄</span>Transfers</div>
+    <div class="nav-item" onclick="nav('scouting')"><span class="nav-icon">🔍</span>Scouting</div>
     <div class="nav-sec">World</div>
-    <div class="nav-item" onclick="nav('players')"><span class="nav-icon">🌍</span>Player Search</div>
+    <div class="nav-item" onclick="nav('players')"><span class="nav-icon">🔎</span>Player Search</div>
     <div class="nav-item" onclick="nav('history')"><span class="nav-icon">📜</span>History</div>
     <div class="nav-sec">Tools</div>
     <div class="nav-item" onclick="nav('dbedit')"><span class="nav-icon">🗄️</span>DB Editor</div>
     <div class="nav-item" onclick="nav('mods')"><span class="nav-icon">🔧</span>Mods</div>
-    <div class="nav-item" onclick="nav('scouting')"><span class="nav-icon">🔍</span>Scouting</div>
     <div class="sb-bottom">
       <div class="sim-date" id="sim-date">—</div>
       <div class="sim-row">
@@ -361,86 +358,256 @@ input[type=number]:focus{border-color:var(--accent)}
       <span class="tb-title" id="page-title">Dashboard</span>
       <span class="tb-spacer"></span>
       <span class="tb-chip hi" id="tb-season">S1</span>
-      <span class="tb-chip gold" id="tb-pos">Pos —</span>
+      <span class="tb-chip gold" id="tb-pos">— </span>
       <span class="tb-chip" id="tb-budget">£0M</span>
       <span class="tb-chip" id="tb-morale">Morale —</span>
+      <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="saveGame()">💾 Save</button>
     </div>
     <div id="content"></div>
   </div>
 </div>
 
-<!-- MODAL -->
 <div id="moverlay"><div class="mbox" id="mbox">
   <div class="mhdr"><span class="ct" id="mtitle">—</span><button class="mclose" onclick="closeModal()">✕</button></div>
   <div id="mcontent"></div>
 </div></div>
 
-<!-- TOAST -->
 <div id="toast"></div>
 
 <script>
 'use strict';
-// ══════════════════════════════════════════════════════════════
-//  PITCH v2 — Global Football Simulation Engine
-//  All logic in one file for GitHub Pages compatibility
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//  PITCH v3 — Global Football Simulation Engine
+// ═══════════════════════════════════════════════
 
-// ── CONSTANTS ──────────────────────────────────────────────────
+// ── CONSTANTS ──────────────────────────────────
 const FORMATIONS = {
-  '4-3-3':  {pos:['GK','LB','CB','CB','RB','CM','CM','CM','LW','ST','RW'],       coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[25,52],[50,52],[75,52],[18,28],[50,16],[82,28]]},
-  '4-2-3-1':{pos:['GK','LB','CB','CB','RB','CDM','CDM','CAM','LW','RW','ST'],    coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[33,62],[67,62],[50,44],[18,30],[82,30],[50,14]]},
-  '4-4-2':  {pos:['GK','LB','CB','CB','RB','LM','CM','CM','RM','ST','ST'],        coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[12,52],[36,52],[64,52],[88,52],[36,16],[64,16]]},
-  '3-5-2':  {pos:['GK','CB','CB','CB','LWB','CDM','CM','CM','RWB','ST','ST'],     coords:[[50,92],[24,72],[50,72],[76,72],[12,52],[34,52],[50,46],[66,52],[88,52],[36,16],[64,16]]},
-  '5-3-2':  {pos:['GK','LWB','CB','CB','CB','RWB','CM','CM','CM','ST','ST'],      coords:[[50,92],[10,68],[28,72],[50,72],[72,72],[90,68],[25,50],[50,46],[75,50],[36,16],[64,16]]},
-  '4-1-4-1':{pos:['GK','LB','CB','CB','RB','CDM','LM','CM','CM','RM','ST'],       coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[50,60],[10,44],[32,44],[68,44],[90,44],[50,14]]},
-  '3-4-3':  {pos:['GK','CB','CB','CB','LM','CM','CM','RM','LW','ST','RW'],        coords:[[50,92],[24,72],[50,72],[76,72],[12,50],[36,50],[64,50],[88,50],[18,24],[50,14],[82,24]]},
+  '4-3-3':  {pos:['GK','LB','CB','CB','RB','CM','CM','CM','LW','ST','RW'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[25,52],[50,52],[75,52],[18,28],[50,16],[82,28]]},
+  '4-2-3-1':{pos:['GK','LB','CB','CB','RB','CDM','CDM','CAM','LW','RW','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[33,62],[67,62],[50,44],[18,30],[82,30],[50,14]]},
+  '4-4-2':  {pos:['GK','LB','CB','CB','RB','LM','CM','CM','RM','ST','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[12,52],[36,52],[64,52],[88,52],[36,16],[64,16]]},
+  '3-5-2':  {pos:['GK','CB','CB','CB','LWB','CDM','CM','CM','RWB','ST','ST'],coords:[[50,92],[24,72],[50,72],[76,72],[12,52],[34,52],[50,46],[66,52],[88,52],[36,16],[64,16]]},
+  '5-3-2':  {pos:['GK','LWB','CB','CB','CB','RWB','CM','CM','CM','ST','ST'],coords:[[50,92],[10,68],[28,72],[50,72],[72,72],[90,68],[25,50],[50,46],[75,50],[36,16],[64,16]]},
+  '4-1-4-1':{pos:['GK','LB','CB','CB','RB','CDM','LM','CM','CM','RM','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[50,60],[10,44],[32,44],[68,44],[90,44],[50,14]]},
+  '3-4-3':  {pos:['GK','CB','CB','CB','LM','CM','CM','RM','LW','ST','RW'],coords:[[50,92],[24,72],[50,72],[76,72],[12,50],[36,50],[64,50],[88,50],[18,24],[50,14],[82,24]]},
 };
-const POS_TYPE = {GK:'gk',CB:'def',LB:'def',RB:'def',LWB:'def',RWB:'def',CDM:'mid',CM:'mid',CAM:'mid',LM:'mid',RM:'mid',LW:'fwd',RW:'fwd',ST:'fwd',CF:'fwd'};
-const NAT_FLAGS = {English:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',Spanish:'🇪🇸',German:'🇩🇪',French:'🇫🇷',Brazilian:'🇧🇷',Argentine:'🇦🇷',Italian:'🇮🇹',Portuguese:'🇵🇹',Dutch:'🇳🇱',Belgian:'🇧🇪',Uruguayan:'🇺🇾',Colombian:'🇨🇴',Chilean:'🇨🇱',American:'🇺🇸',Mexican:'🇲🇽',Japanese:'🇯🇵',Korean:'🇰🇷',Chinese:'🇨🇳',Saudi:'🇸🇦',Moroccan:'🇲🇦',Senegalese:'🇸🇳',Nigerian:'🇳🇬',Ghanaian:'🇬🇭',Croatian:'🇭🇷',Serbian:'🇷🇸',Polish:'🇵🇱',Turkish:'🇹🇷',Swedish:'🇸🇪',Danish:'🇩🇰',Norwegian:'🇳🇴',Scottish:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',Russian:'🇷🇺',Greek:'🇬🇷',Swiss:'🇨🇭',Austrian:'🇦🇹',Czech:'🇨🇿',Romanian:'🇷🇴',Ukrainian:'🇺🇦',Hungarian:'🇭🇺'};
-const NATS = Object.keys(NAT_FLAGS);
-const FN = ['James','Carlos','Marco','Luca','Andre','Sven','Diego','Kai','Lucas','Alexis','Thiago','Raheem','Ivan','Toni','Kylian','Vinicius','Phil','Jude','Erling','Harry','Mo','Sadio','Romelu','Christian','Patrick','Kevin','Bruno','Paul','Antoine','Riyad','Karim','Robert','Lautaro','Victor','Bukayo','Pedri','Gavi','Federico','Ousmane','Leandro','Rafael','Trent','Mason','Jack','Ben','Jordan','Curtis','Daniel','Emile','Harvey','Cody','Xavi','Frenkie','Memphis','Stefan','Dusan','Aleksandar','Przemyslaw','Piotr'];
-const LN = ['Smith','Müller','Silva','Rossi','Santos','García','Fernández','Weber','Dubois','Martínez','Brown','Johnson','Williams','Taylor','Anderson','Thomas','Jackson','Wilson','Harris','Martin','Thompson','White','Walker','Hall','Allen','Young','Hernández','López','González','Pérez','Sánchez','Ramírez','Torres','Flores','Rivera','Gómez','Díaz','Reyes','Cruz','Morales','Nguyen','Tanaka','Park','Kim','Zhang','Liu','Wang','Chen','Ibrahim','Okafor','Diallo'];
-const ROLES = {
-  GK:['Traditional Keeper','Sweeper Keeper'],
-  CB:['Ball-Playing Defender','Stopper','Sweeper','No-Nonsense CB'],
-  LB:['Wing Back','Full Back','Inverted Full Back'],
-  RB:['Wing Back','Full Back','Inverted Full Back'],
-  LWB:['Wing Back','Wide Midfielder'],
-  RWB:['Wing Back','Wide Midfielder'],
-  CDM:['Anchor Man','Deep-Lying Playmaker','Ball-Winning Midfielder','Regista'],
-  CM:['Box-to-Box','Advanced Playmaker','Mezzala','Central Midfielder'],
-  CAM:['Advanced Playmaker','Enganche','Shadow Striker','Trequartista'],
-  LM:['Wide Midfielder','Inside Forward','Winger'],
-  RM:['Wide Midfielder','Inside Forward','Winger'],
-  LW:['Winger','Inside Forward','Wide Playmaker','Inverted Winger'],
-  RW:['Winger','Inside Forward','Wide Playmaker','Inverted Winger'],
-  ST:['Advanced Forward','Target Man','False Nine','Poacher','Deep-Lying Forward'],
-  CF:['Shadow Striker','Advanced Forward','Target Man'],
-};
-const PERSONALITIES = ['Leader','Professional','Temperamental','Model Citizen','Light-Hearted','Determined','Ambitious','Spirited','Driven','Influential'];
 
-// ── STATE ──────────────────────────────────────────────────────
+const POS_TYPE = {GK:'gk',CB:'def',LB:'def',RB:'def',LWB:'def',RWB:'def',CDM:'mid',CM:'mid',CAM:'mid',LM:'mid',RM:'mid',LW:'fwd',RW:'fwd',ST:'fwd',CF:'fwd'};
+
+const NAT_FLAGS = {
+  English:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',Spanish:'🇪🇸',German:'🇩🇪',French:'🇫🇷',Brazilian:'🇧🇷',Argentine:'🇦🇷',
+  Italian:'🇮🇹',Portuguese:'🇵🇹',Dutch:'🇳🇱',Belgian:'🇧🇪',Uruguayan:'🇺🇾',Colombian:'🇨🇴',
+  Chilean:'🇨🇱',American:'🇺🇸',Mexican:'🇲🇽',Japanese:'🇯🇵',Korean:'🇰🇷',Chinese:'🇨🇳',
+  Saudi:'🇸🇦',Moroccan:'🇲🇦',Senegalese:'🇸🇳',Nigerian:'🇳🇬',Ghanaian:'🇬🇭',Croatian:'🇭🇷',
+  Serbian:'🇷🇸',Polish:'🇵🇱',Turkish:'🇹🇷',Swedish:'🇸🇪',Danish:'🇩🇰',Norwegian:'🇳🇴',
+  Scottish:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',Russian:'🇷🇺',Greek:'🇬🇷',Swiss:'🇨🇭',Austrian:'🇦🇹',Czech:'🇨🇿',
+  Romanian:'🇷🇴',Ukrainian:'🇺🇦',Hungarian:'🇭🇺',Ivorian:'🇨🇮',Cameroonian:'🇨🇲',
+  Algerian:'🇩🇿',Egyptian:'🇪🇬',Israeli:'🇮🇱',Paraguayan:'🇵🇾',Ecuadorian:'🇪🇨',
+  Bolivian:'🇧🇴',Peruvian:'🇵🇪',Venezuelan:'🇻🇪',Jamaican:'🇯🇲',Trinidadian:'🇹🇹',
+};
+const NATS = Object.keys(NAT_FLAGS);
+
+// Country → nationality mapping
+const COUNTRY_NAT = {
+  England:'English',Spain:'Spanish',Germany:'German',France:'French',Italy:'Italian',
+  Portugal:'Portuguese',Netherlands:'Dutch',Belgium:'Belgian',Turkey:'Turkish',Scotland:'Scottish',
+  Brazil:'Brazilian',Argentina:'Argentine',Colombia:'Colombian',Chile:'Chilean',Uruguay:'Uruguayan',
+  USA:'American',Mexico:'Mexican',Japan:'Japanese','South Korea':'Korean',
+  'Saudi Arabia':'Saudi',China:'Chinese',Russia:'Russian',Israel:'Israeli',
+};
+
+const FN=['James','Carlos','Marco','Luca','Andre','Sven','Diego','Kai','Lucas','Alexis','Thiago','Raheem','Ivan','Toni','Kylian','Vinicius','Phil','Jude','Erling','Harry','Mo','Sadio','Romelu','Christian','Patrick','Kevin','Bruno','Paul','Antoine','Riyad','Karim','Robert','Lautaro','Victor','Bukayo','Pedri','Gavi','Federico','Ousmane','Leandro','Rafael','Trent','Mason','Jack','Ben','Jordan','Curtis','Daniel','Emile','Harvey','Cody','Xavi','Frenkie','Memphis','Stefan','Dusan','Aleksandar','Piotr','Omar','Yusuf','Ahmed','Nnamdi','Kwame','Ibrahim','Moussa'];
+const LN=['Smith','Müller','Silva','Rossi','Santos','García','Fernández','Weber','Dubois','Martínez','Brown','Johnson','Williams','Taylor','Anderson','Thomas','Jackson','Wilson','Harris','Martin','Thompson','White','Walker','Hall','Allen','Young','Hernández','López','González','Pérez','Sánchez','Ramírez','Torres','Flores','Rivera','Gómez','Díaz','Reyes','Cruz','Morales','Nguyen','Tanaka','Park','Kim','Zhang','Liu','Wang','Chen','Ibrahim','Okafor','Diallo','Mané','Touré','Mbappé','Kane','Salah','Benzema','Lewandowski','Álvarez'];
+const ROLES={GK:['Traditional Keeper','Sweeper Keeper'],CB:['Ball-Playing Defender','Stopper','Sweeper','No-Nonsense CB'],LB:['Wing Back','Full Back','Inverted Full Back'],RB:['Wing Back','Full Back','Inverted Full Back'],LWB:['Wing Back','Wide Midfielder'],RWB:['Wing Back','Wide Midfielder'],CDM:['Anchor Man','Deep-Lying Playmaker','Ball-Winning Midfielder','Regista'],CM:['Box-to-Box','Advanced Playmaker','Mezzala','Central Midfielder'],CAM:['Advanced Playmaker','Enganche','Shadow Striker','Trequartista'],LM:['Wide Midfielder','Inside Forward','Winger'],RM:['Wide Midfielder','Inside Forward','Winger'],LW:['Winger','Inside Forward','Wide Playmaker','Inverted Winger'],RW:['Winger','Inside Forward','Wide Playmaker','Inverted Winger'],ST:['Advanced Forward','Target Man','False Nine','Poacher','Deep-Lying Forward'],CF:['Shadow Striker','Advanced Forward','Target Man']};
+const PERSONALITIES=['Leader','Professional','Temperamental','Model Citizen','Light-Hearted','Determined','Ambitious','Spirited','Driven','Influential'];
+
+// ── LEAGUE TIER SYSTEM (Transfermarkt-inspired) ─────────────────
+const LEAGUE_TIERS = {
+  // Tier 1 – Elite
+  'England_Premier_Division': 1,
+  'Spain_Primera_Liga': 1,
+  'Germany_Bundesliga': 1,
+  'Italy_Serie_Uno': 1,
+  'France_Ligue_Premiere': 1,
+  // Tier 2 – Strong
+  'Portugal_Primeira_Liga': 2,
+  'Netherlands_Eredivisie': 2,
+  'Brazil_Serie_A': 2,
+  'Argentina_Primera_Division': 2,
+  // Tier 3 – Mid
+  'USA_MLS': 3,
+  'Mexico_Liga_MX': 3,
+  'Belgium_Pro_League': 3,
+  'Turkey_Super_Lig': 3,
+  'Saudi_Arabia_Saudi_Pro_League': 3,
+  'Scotland_Scottish_Premier': 3,
+  'England_Championship': 3,
+  // Tier 4 – Lower
+  'China_Chinese_Super_League': 4,
+  'Japan_J-League': 4,
+  'South_Korea_K-League': 4,
+  'Colombia_Liga_BetPlay': 4,
+  'Chile_Primera_Division': 4,
+};
+
+// OVR ranges by tier and player category
+const TIER_OVR = {
+  1: { star:[85,95], starter:[75,85], bench:[65,75], youth:[58,72] },
+  2: { star:[80,88], starter:[70,80], bench:[60,70], youth:[55,68] },
+  3: { star:[75,83], starter:[65,75], bench:[55,65], youth:[52,65] },
+  4: { star:[68,78], starter:[58,68], bench:[50,60], youth:[48,62] },
+};
+
+// Potential ranges by tier
+const TIER_POT = {
+  1: { high:[85,97], mid:[75,88], low:[65,78] },
+  2: { high:[80,93], mid:[70,83], low:[60,75] },
+  3: { high:[75,88], mid:[65,78], low:[55,70] },
+  4: { high:[68,82], mid:[58,72], low:[50,65] },
+};
+
+// ── WORLD DATABASE ──────────────────────────────
+const WORLD_DB = {
+  Europe:{
+    England:{
+      'Premier Division':{rep:90,tier:1,teams:['London United','Mersey Rovers','Manchester Blues','Manchester Reds','North London Athletic','South London FC','West London City','Midlands Villa','Yorkshire United','Newcastle Eagles','Leicester City','Southampton FC','Crystal Palace','Wolves Athletic','Brighton Albion','Brentford United','Fulham Athletic','Bournemouth FC','Burnley Town','Sheffield Eagles']},
+      'Championship':{rep:72,tier:3,teams:['Leeds Athletic','Sunderland City','Derby County','Norwich City','Coventry Athletic','Watford FC','Bristol City','Preston North','Millwall FC','Blackburn Rovers','West Brom Athletic','Hull City','Stoke Athletic','Birmingham City','Middlesbrough FC','Swansea City','Cardiff Athletic','QPR Athletic','Reading FC','Ipswich Town']}
+    },
+    Spain:{
+      'Primera Liga':{rep:88,tier:1,teams:['Madrid Royals','Catalonia FC','Atletico de Madrid','Basque Athletic','Seville United','Valencia Athletic','Real Betis','Villarreal FC','Sociedad Real','Osasuna Athletic','Celta Atlantic','Granada FC','Getafe Athletic','Rayo United','Mallorca FC','Cadiz Athletic','Las Palmas','Girona Athletic','Almeria FC','Alaves Athletic']}
+    },
+    Germany:{
+      'Bundesliga':{rep:86,tier:1,teams:['Munich Titans','Rhine United','Leipzig Athletic','Frankfurt Eagles','Dortmund FC','Leverkusen Athletic','Hamburg United','Bremen Athletic','Cologne FC','Freiburg Athletic','Stuttgart United','Wolfsburg Athletic','Mainz FC','Gladbach United','Hoffenheim FC','Augsburg Athletic','Bochum FC','Heidenheim Athletic']}
+    },
+    Italy:{
+      'Serie Uno':{rep:85,tier:1,teams:['Milan Rosso','Milan Azzurro','Turin Vecchia','Naples United','Rome Capital','Rome Giallorossi','Atalanta Athletic','Florence FC','Lazio Athletic','Bologna United','Torino FC','Genoa Athletic','Sassuolo United','Udinese FC','Monza Athletic','Lecce United','Verona Athletic','Cagliari FC','Frosinone Athletic','Salernitana United']}
+    },
+    France:{
+      'Ligue Premiere':{rep:82,tier:1,teams:['Paris Capital FC','Marseille Athletic','Monaco Royale','Lyon United','Lille FC','Nice Athletic','Rennes FC','Lens Athletic','Reims United','Toulouse FC','Montpellier Athletic','Nantes FC','Metz Athletic','Strasbourg United','Brest FC','Le Havre Athletic','Clermont FC','Lorient Athletic','Auxerre FC','Rodez Athletic']}
+    },
+    Netherlands:{
+      'Eredivisie':{rep:78,tier:2,teams:['Amsterdam Ajax','Rotterdam Eagles','Eindhoven United','Alkmaar Athletic','Utrecht FC','Feyenoord Athletic','Twente United','Arnhem Eagles','Groningen FC','Heerenveen Athletic','NEC Nijmegen','Fortuna Sittard','Cambuur','Waalwijk Athletic','Volendam FC','Excelsior Rotterdam','Almere Athletic','Emmen FC']}
+    },
+    Portugal:{
+      'Primeira Liga':{rep:80,tier:2,teams:['Lisbon Eagles','Porto United','Sporting Lisbon','Braga Athletic','Benfica FC','Vitoria Guimaraes','Gil Vicente','Moreirense FC','Famalicao Athletic','Boavista FC','Arouca United','Santa Clara','Estoril Athletic','Casa Pia FC','Portimonense Athletic','Vizela FC','Rio Ave Athletic','Pacos Ferreira']}
+    },
+    Belgium:{
+      'Pro League':{rep:76,tier:3,teams:['Brussels United','Brugge Athletic','Anderlecht FC','Gent United','Standard Athletic','Antwerp FC','Genk Athletic','Westerlo United','Cercle Brugge','Mechelen FC','Charleroi Athletic','Kortrijk FC','Eupen United','Sint-Truiden Athletic','Zulte-Waregem FC']}
+    },
+    Turkey:{
+      'Super Lig':{rep:78,tier:3,teams:['Istanbul United','Istanbul Blues','Istanbul Athletic','Ankara FC','Trabzon Athletic','Besiktas FC','Basaksehir United','Konyaspor Athletic','Kayserispor FC','Sivasspor Athletic','Antalyaspor United','Adana City','Fenerbahce FC','Galatasaray Athletic','Alanyaspor FC','Gaziantep Athletic','Hatayspor FC','Giresunspor Athletic']}
+    },
+    Scotland:{
+      'Scottish Premier':{rep:72,tier:3,teams:['Glasgow United','Glasgow Athletic','Edinburgh FC','Aberdeen Athletic','Hearts FC','Hibernian Athletic','Dundee United','Livingston FC','St Mirren Athletic','Motherwell FC','Kilmarnock Athletic','Ross County FC','St Johnstone Athletic','Dundee FC','Inverness Athletic']}
+    }
+  },
+  SouthAmerica:{
+    Brazil:{
+      'Serie A':{rep:84,tier:2,teams:['Flamengo Rio','São Paulo Athletic','Corinthians United','Palmeiras FC','Santos Athletic','Vasco da Gama','Botafogo United','Fluminense FC','Atletico Mineiro','Cruzeiro Athletic','Internacional FC','Gremio Athletic','Bragantino United','Fortaleza FC','Cuiaba Athletic','Coritiba United','Goias FC','Ceara Athletic','Bahia United','Juventude FC']}
+    },
+    Argentina:{
+      'Primera Division':{rep:83,tier:2,teams:['Buenos Aires United','Buenos Aires Juniors','Buenos Aires Racing','Buenos Aires Independent','Buenos Aires Athletic','Velez Sarsfield','San Lorenzo FC','Huracan Athletic','Lanus United','Banfield FC','Defensa United','Talleres Athletic','Atletico Tucuman','Newells Athletic','Rosario Central','Colon Athletic','Godoy Cruz FC','River Plate','Boca Juniors','Racing Club']}
+    },
+    Colombia:{
+      'Liga BetPlay':{rep:72,tier:4,teams:['Bogota United','Medellin Athletic','Cali FC','Junior Atlantic','Nacional Athletic','America Cali','Deportivo Pereira','Once Caldas','Tolima United','Millonarios FC','Santa Fe Athletic','Envigado FC','Pasto Athletic','Alianza United','Jaguares FC']}
+    },
+    Chile:{
+      'Primera Division':{rep:70,tier:4,teams:['Colo Colo','Universidad de Chile','Universidad Catolica','Antofagasta FC','Iquique Athletic','OHiggins United','Huachipato FC','Cobresal Athletic','Everton Chile','Audax Italiano','La Serena FC','Curico United','Deportes Temuco','Palestino FC','Union La Calera']}
+    }
+  },
+  NorthAmerica:{
+    USA:{
+      'MLS':{rep:74,tier:3,teams:['New York City FC','Los Angeles Galaxy','Atlanta United','Inter Miami FC','Seattle Sounders','Portland Timbers','Colorado Rapids','Philadelphia Union','New York Red Bulls','Chicago Fire','Toronto FC','Montreal Impact','Columbus Crew','Orlando City','DC United','Vancouver Whitecaps','San Jose Earthquakes','FC Dallas','Houston Dynamo','Real Salt Lake']}
+    },
+    Mexico:{
+      'Liga MX':{rep:80,tier:3,teams:['Club America','Guadalajara Chivas','Tigres UANL','Monterrey Athletic','Cruz Azul','UNAM Pumas','Atlas FC','Toluca Athletic','Santos Laguna','Leon FC','Pachuca Athletic','Tijuana FC','Queretaro United','Juarez Athletic','Necaxa FC','Atletico San Luis','Puebla FC','Mazatlan Athletic','Bravos FC','Xolos Athletic']}
+    }
+  },
+  Asia:{
+    Japan:{
+      'J-League':{rep:72,tier:4,teams:['Tokyo FC','Yokohama United','Osaka Athletic','Nagoya Grampus','Kobe Athletic','Urawa Reds','Gamba Osaka','Kashima Athletic','Kawasaki FC','Sapporo United','Sendai Athletic','Hiroshima FC','Vissel Kobe','Cerezo Osaka','Sanfrecce Athletic','Shonan Bellmare','FC Tokyo II','Jubilo Iwata','Albirex Niigata','Kyoto Sanga']}
+    },
+    'South Korea':{
+      'K-League':{rep:70,tier:4,teams:['Seoul United','Jeonbuk Athletic','Ulsan City','Suwon Samsung','Pohang Athletic','Jeju United','Daegu Athletic','Incheon United','Seongnam FC','Daejeon Athletic','Gimcheon Athletic','Gangwon FC','Seoul E-Land','Gyeongnam FC','Busan IPark']}
+    },
+    'Saudi Arabia':{
+      'Saudi Pro League':{rep:82,tier:3,teams:['Riyadh Victory','Riyadh City FC','Jeddah Athletic','Jeddah United','Al-Noor FC','Eastern Athletic','Al-Qadsiah FC','Al-Ittifaq Athletic','Al-Fayha FC','Al-Wehda Athletic','Abha FC','Al-Hazem Athletic','Al-Akhdoud FC','Al-Riyadh Athletic','Al-Shabab FC','Al-Hilal Athletic']}
+    },
+    China:{
+      'Chinese Super League':{rep:68,tier:4,teams:['Shanghai Port','Beijing United','Shandong Athletic','Guangzhou FC','Tianjin City','Shenzhen Athletic','Wuhan United','Chengdu FC','Dalian Athletic','Qingdao FC','Chongqing Athletic','Henan FC','Hebei Athletic','Meizhou FC','Changchun Athletic','Nanjing City','Zhejiang FC','Sichuan Athletic']}
+    }
+  }
+};
+
+// International teams
+const INTL_TEAMS = {
+  'England':     {flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',conf:'UEFA',nats:['English']},
+  'Spain':       {flag:'🇪🇸',conf:'UEFA',nats:['Spanish']},
+  'Germany':     {flag:'🇩🇪',conf:'UEFA',nats:['German']},
+  'France':      {flag:'🇫🇷',conf:'UEFA',nats:['French']},
+  'Italy':       {flag:'🇮🇹',conf:'UEFA',nats:['Italian']},
+  'Portugal':    {flag:'🇵🇹',conf:'UEFA',nats:['Portuguese']},
+  'Netherlands': {flag:'🇳🇱',conf:'UEFA',nats:['Dutch']},
+  'Belgium':     {flag:'🇧🇪',conf:'UEFA',nats:['Belgian']},
+  'Croatia':     {flag:'🇭🇷',conf:'UEFA',nats:['Croatian']},
+  'Serbia':      {flag:'🇷🇸',conf:'UEFA',nats:['Serbian']},
+  'Brazil':      {flag:'🇧🇷',conf:'CONMEBOL',nats:['Brazilian']},
+  'Argentina':   {flag:'🇦🇷',conf:'CONMEBOL',nats:['Argentine']},
+  'Colombia':    {flag:'🇨🇴',conf:'CONMEBOL',nats:['Colombian']},
+  'Chile':       {flag:'🇨🇱',conf:'CONMEBOL',nats:['Chilean']},
+  'Uruguay':     {flag:'🇺🇾',conf:'CONMEBOL',nats:['Uruguayan']},
+  'USA':         {flag:'🇺🇸',conf:'CONCACAF',nats:['American']},
+  'Mexico':      {flag:'🇲🇽',conf:'CONCACAF',nats:['Mexican']},
+  'Japan':       {flag:'🇯🇵',conf:'AFC',nats:['Japanese']},
+  'South Korea': {flag:'🇰🇷',conf:'AFC',nats:['Korean']},
+  'Saudi Arabia':{flag:'🇸🇦',conf:'AFC',nats:['Saudi']},
+  'Morocco':     {flag:'🇲🇦',conf:'CAF',nats:['Moroccan']},
+  'Nigeria':     {flag:'🇳🇬',conf:'CAF',nats:['Nigerian']},
+  'Senegal':     {flag:'🇸🇳',conf:'CAF',nats:['Senegalese']},
+};
+
+const CONTINENTAL = {
+  cl:  {name:'Champions League',     region:'Europe',       slots:4,color:'var(--accent)',class:'comp-cl'},
+  el:  {name:'Europa League',        region:'Europe',       slots:3,color:'var(--orange)',class:'comp-el'},
+  ec:  {name:'Conference League',    region:'Europe',       slots:2,color:'var(--purple)',class:'comp-ec'},
+  lib: {name:'Copa Libertadores',    region:'SouthAmerica', slots:4,color:'var(--green)', class:'comp-lib'},
+  suda:{name:'Copa Sudamericana',    region:'SouthAmerica', slots:3,color:'var(--gold)',  class:'comp-dom'},
+  acl: {name:'Asian Champions Elite',region:'Asia',         slots:2,color:'var(--green)', class:'comp-lib'},
+};
+
+// ── STATE ──────────────────────────────────────
 let G = {
   mgr:'', mgrNat:'English', playerTeam:null, season:1,
   date: new Date(2024,7,1),
   teams:[], players:[], leagues:{}, fixtures:[], results:[],
-  continental:{ cl:[], el:[], ec:[], lib:[], suda:[], acl:[] },
+  continental:{cl:[],el:[],ec:[],lib:[],suda:[],acl:[]},
   continentalResults:[], history:[], youthPipeline:[],
   nextId:1, formation:'4-3-3',
-  tactic:{ pressing:6, tempo:5, width:5, style:'balanced', dline:'balanced' },
+  tactic:{pressing:6,tempo:5,width:5,style:'balanced',dline:'balanced'},
   playerImages:{}, scoutReports:[], transfers:[],
   dbMode:'default', currentPage:'dashboard',
+  transferRumors:[], leagueCoefficients:{},
+  intlResults:[],
 };
 
-// ── UTILS ──────────────────────────────────────────────────────
+// ── UTILS ──────────────────────────────────────
 const uid  = () => G.nextId++;
 const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const rf   = (a,b) => Math.random()*(b-a)+a;
 const clamp= (v,lo,hi) => Math.max(lo,Math.min(hi,v));
 const pick = a => a[rand(0,a.length-1)];
 const avg  = a => a.reduce((s,v)=>s+v,0)/a.length;
-const pct  = v => Math.round(v*10)/10;
-const money= v => v>=1e9?`£${(v/1e9).toFixed(2)}B`:v>=1e6?`£${(v/1e6).toFixed(1)}M`:v>=1e3?`£${(v/1e3).toFixed(0)}K`:`£${v}`;
+const money = v => {
+  if(v>=1e9) return `€${(v/1e9).toFixed(2)}B`;
+  if(v>=1e6) return `€${(v/1e6).toFixed(1)}M`;
+  if(v>=1e3) return `€${(v/1e3).toFixed(0)}K`;
+  return `€${v}`;
+};
+const moneyGBP = v => {
+  if(v>=1e9) return `£${(v/1e9).toFixed(2)}B`;
+  if(v>=1e6) return `£${(v/1e6).toFixed(1)}M`;
+  if(v>=1e3) return `£${(v/1e3).toFixed(0)}K`;
+  return `£${v}`;
+};
 const fmtDate = d => d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 const ovrCls = v => v>=85?'ovr-s':v>=75?'ovr-a':v>=65?'ovr-b':v>=55?'ovr-c':'ovr-d';
 const posType = p => POS_TYPE[p]||'mid';
@@ -454,270 +621,92 @@ function toast(msg,type='s'){
 function openModal(){document.getElementById('moverlay').classList.add('open')}
 function closeModal(){document.getElementById('moverlay').classList.remove('open')}
 
-// ── WORLD DATABASE ──────────────────────────────────────────────
-// Fictional team names inspired by real clubs, no IP infringement
-const WORLD_DB = {
-  Europe: {
-    England: {
-      'Premier Division': {
-        rep:90, teams:[
-          'London United','Mersey Rovers','Manchester Blues','Manchester Reds','North London Athletic',
-          'South London FC','West London City','Midlands Villa','Yorkshire United','Newcastle Eagles',
-          'Leicester City','Southampton','Crystal Palace FC','Wolves Athletic','Brighton Albion',
-          'Brentford United','Fulham Athletic','Bournemouth FC','Burnley Town','Sheffield Eagles'
-        ]
-      },
-      'Championship': {
-        rep:72, teams:[
-          'Leeds Athletic','Sunderland City','Derby County FC','Norwich City','Coventry Athletic',
-          'Watford FC','Bristol City','Preston North End','Millwall FC','Blackburn Rovers',
-          'West Brom Athletic','Hull City','Stoke Athletic','Birmingham City','Middlesbrough FC',
-          'Swansea City','Cardiff Athletic','Queens Park Athletic','Reading FC','Ipswich Town'
-        ]
-      }
-    },
-    Spain: {
-      'Primera Liga': {
-        rep:88, teams:[
-          'Madrid Royals','Catalonia FC','Atletico de Madrid','Basque Athletic','Seville United',
-          'Valencia Athletic','Real Betis','Villarreal FC','Sociedad Real','Osasuna Athletic',
-          'Celta Atlantic','Granada FC','Getafe Athletic','Rayo United','Mallorca FC',
-          'Cadiz Athletic','Las Palmas','Girona Athletic','Almeria FC','Alaves Athletic'
-        ]
-      }
-    },
-    Germany: {
-      'Bundesliga': {
-        rep:86, teams:[
-          'Munich Titans','Rhine United','Leipzig Athletic','Frankfurt Eagles','Dortmund FC',
-          'Leverkusen Athletic','Hamburg United','Bremen Athletic','Cologne FC','Freiburg Athletic',
-          'Stuttgart United','Wolfsburg Athletic','Mainz FC','Mönchengladbach United','Hoffenheim FC',
-          'Augsburg Athletic','Bochum FC','Heidenheim Athletic'
-        ]
-      }
-    },
-    Italy: {
-      'Serie Uno': {
-        rep:85, teams:[
-          'Milan Rosso','Milan Azzurro','Turin Vecchia','Naples United','Rome Capital',
-          'Rome Giallorossi','Atalanta Athletic','Florence FC','Lazio Athletic','Bologna United',
-          'Torino FC','Genoa Athletic','Sassuolo United','Udinese FC','Monza Athletic',
-          'Lecce United','Verona Athletic','Cagliari FC','Frosinone Athletic','Salernitana United'
-        ]
-      }
-    },
-    France: {
-      'Ligue Premiere': {
-        rep:82, teams:[
-          'Paris Capital FC','Marseille Athletic','Monaco Royale','Lyon United','Lille FC',
-          'Nice Athletic','Rennes FC','Lens Athletic','Reims United','Toulouse FC',
-          'Montpellier Athletic','Nantes FC','Metz Athletic','Strasbourg United','Brest FC',
-          'Le Havre Athletic','Clermont FC','Lorient Athletic','Auxerre FC','Rodez Athletic'
-        ]
-      }
-    },
-    Netherlands: {
-      'Eredivisie': {
-        rep:78, teams:[
-          'Amsterdam Ajax','Rotterdam Eagles','Eindhoven United','Alkmaar Athletic','Utrecht FC',
-          'Feyenoord Athletic','Twente United','Arnhem Eagles','Groningen FC','Heerenveen Athletic',
-          'NEC Nijmegen','Fortuna Sittard','Cambuur Leeuwarden','Waalwijk Athletic','Volendam FC',
-          'Excelsior Rotterdam','Almere Athletic','Emmen FC'
-        ]
-      }
-    },
-    Portugal: {
-      'Primeira Liga': {
-        rep:80, teams:[
-          'Lisbon Eagles','Porto United','Sporting Lisbon','Braga Athletic','Benfica FC',
-          'Vitoria Guimaraes','Gil Vicente','Moreirense FC','Famalicao Athletic','Boavista FC',
-          'Arouca United','Santa Clara','Estoril Athletic','Casa Pia FC','Portimonense Athletic',
-          'Vizela FC','Rio Ave Athletic','Pacos Ferreira'
-        ]
-      }
-    },
-    Belgium: {
-      'Pro League': {
-        rep:76, teams:[
-          'Brussels United','Brugge Athletic','Anderlecht FC','Gent United','Standard Athletic',
-          'Antwerp FC','Genk Athletic','Westerlo United','Cercle Brugge','Mechelen FC',
-          'Charleroi Athletic','Kortrijk FC','Eupen United','Sint-Truiden Athletic','Zulte-Waregem FC'
-        ]
-      }
-    },
-    Turkey: {
-      'Super Lig': {
-        rep:78, teams:[
-          'Istanbul United','Istanbul Blues','Istanbul Athletic','Ankara FC','Trabzon Athletic',
-          'Besiktas FC','Basaksehir United','Konyaspor Athletic','Kayserispor FC','Sivasspor Athletic',
-          'Antalyaspor United','Adana City','Fenerbahce FC','Galatasaray Athletic','Alanyaspor FC',
-          'Gaziantep Athletic','Hatayspor FC','Giresunspor Athletic'
-        ]
-      }
-    },
-    Scotland: {
-      'Scottish Premier': {
-        rep:72, teams:[
-          'Glasgow United','Glasgow Athletic','Edinburgh FC','Aberdeen Athletic','Hearts FC',
-          'Hibernian Athletic','Dundee United','Livingston FC','St Mirren Athletic','Motherwell FC',
-          'Kilmarnock Athletic','Ross County FC','St Johnstone Athletic','Dundee FC','Inverness Athletic'
-        ]
-      }
-    }
-  },
-  SouthAmerica: {
-    Brazil: {
-      'Serie A': {
-        rep:84, teams:[
-          'Flamengo Rio','São Paulo Athletic','Corinthians United','Palmeiras FC','Santos Athletic',
-          'Vasco da Gama','Botafogo United','Fluminense FC','Atletico Mineiro','Cruzeiro Athletic',
-          'Internacional FC','Gremio Athletic','Bragantino United','Fortaleza FC','Cuiaba Athletic',
-          'Coritiba United','Goias FC','Ceara Athletic','Bahia United','Juventude FC'
-        ]
-      }
-    },
-    Argentina: {
-      'Primera Division': {
-        rep:83, teams:[
-          'Buenos Aires United','Buenos Aires Juniors','Buenos Aires Racing','Buenos Aires Independent',
-          'Buenos Aires Athletic','Velez Sarsfield','San Lorenzo FC','Huracan Athletic',
-          'Lanus United','Banfield FC','Defensa United','Talleres Athletic','Atletico Tucuman',
-          'Newells Athletic','Rosario Central','Colon Athletic','Godoy Cruz FC','River Plate',
-          'Boca Juniors','Racing Club'
-        ]
-      }
-    },
-    Colombia: {
-      'Liga BetPlay': {
-        rep:72, teams:[
-          'Bogota United','Medellin Athletic','Cali FC','Junior Atlantic','Nacional Athletic',
-          'America Cali','Deportivo Pereira','Once Caldas','Tolima United','Millonarios FC',
-          'Santa Fe Athletic','Envigado FC','Pasto Athletic','Alianza United','Jaguares FC'
-        ]
-      }
-    },
-    Chile: {
-      'Primera Division': {
-        rep:70, teams:[
-          'Colo Colo','Universidad de Chile','Universidad Catolica','Antofagasta FC','Iquique Athletic',
-          'O\'Higgins United','Huachipato FC','Cobresal Athletic','Everton Chile','Audax Italiano',
-          'La Serena FC','Curico United','Deportes Temuco','Palestino FC','Union La Calera'
-        ]
-      }
-    }
-  },
-  NorthAmerica: {
-    USA: {
-      'MLS': {
-        rep:74, teams:[
-          'New York City FC','Los Angeles Galaxy','Atlanta United','Inter Miami FC','Seattle Sounders',
-          'Portland Timbers','Colorado Rapids','Philadelphia Union','New York Red Bulls','Chicago Fire',
-          'Toronto FC','Montreal Impact','Columbus Crew','Orlando City','DC United',
-          'Vancouver Whitecaps','San Jose Earthquakes','FC Dallas','Houston Dynamo','Real Salt Lake'
-        ]
-      }
-    },
-    Mexico: {
-      'Liga MX': {
-        rep:80, teams:[
-          'Club America','Guadalajara Chivas','Tigres UANL','Monterrey Athletic','Cruz Azul',
-          'UNAM Pumas','Atlas FC','Toluca Athletic','Santos Laguna','Leon FC',
-          'Pachuca Athletic','Tijuana FC','Queretaro United','Juarez Athletic','Necaxa FC',
-          'Atletico San Luis','Puebla FC','Mazatlan Athletic','Bravos FC','Xolos Athletic'
-        ]
-      }
-    }
-  },
-  Asia: {
-    Japan: {
-      'J-League': {
-        rep:72, teams:[
-          'Tokyo FC','Yokohama United','Osaka Athletic','Nagoya Grampus','Kobe Athletic',
-          'Urawa Reds','Gamba Osaka','Kashima Athletic','Kawasaki FC','Sapporo United',
-          'Sendai Athletic','Hiroshima FC','Vissel Kobe','Cerezo Osaka','Sanfrecce Athletic',
-          'Shonan Bellmare','FC Tokyo','Jubilo Iwata','Albirex Niigata','Kyoto Sanga'
-        ]
-      }
-    },
-    'South Korea': {
-      'K-League': {
-        rep:70, teams:[
-          'Seoul United','Jeonbuk Athletic','Ulsan City','Suwon Samsung','Pohang Athletic',
-          'Jeju United','Daegu Athletic','Incheon United','Seongnam FC','Daejeon Athletic',
-          'Gimcheon Athletic','Gangwon FC','Seoul E-Land','Gyeongnam FC','Busan IPark'
-        ]
-      }
-    },
-    'Saudi Arabia': {
-      'Saudi Pro League': {
-        rep:82, teams:[
-          'Riyadh Victory','Riyadh City FC','Jeddah Athletic','Jeddah United','Al-Noor FC',
-          'Eastern Athletic','Al-Qadsiah FC','Al-Ittifaq Athletic','Al-Fayha FC','Al-Wehda Athletic',
-          'Abha FC','Al-Hazem Athletic','Al-Akhdoud FC','Al-Riyadh Athletic','Al-Shabab FC',
-          'Al-Hilal Athletic'
-        ]
-      }
-    },
-    China: {
-      'Chinese Super League': {
-        rep:68, teams:[
-          'Shanghai Port','Beijing United','Shandong Athletic','Guangzhou FC','Tianjin City',
-          'Shenzhen Athletic','Wuhan United','Chengdu FC','Dalian Athletic','Qingdao FC',
-          'Chongqing Athletic','Henan FC','Hebei Athletic','Meizhou FC','Changchun Athletic',
-          'Nanjing City','Zhejiang FC','Sichuan Athletic'
-        ]
-      }
-    }
-  }
-};
+// ── MARKET VALUE CALCULATION (Transfermarkt-inspired) ─────────────
+function valCalc(ovr, age, pot, leagueRep=75) {
+  // Base value from OVR
+  let base;
+  if(ovr>=90) base = rand(80,150)*1e6;
+  else if(ovr>=85) base = rand(40,80)*1e6;
+  else if(ovr>=80) base = rand(20,40)*1e6;
+  else if(ovr>=75) base = rand(8,20)*1e6;
+  else if(ovr>=70) base = rand(2,8)*1e6;
+  else if(ovr>=65) base = rand(0.5,2)*1e6;
+  else base = rand(0.1,0.5)*1e6;
 
-// Continental competition structure
-const CONTINENTAL = {
-  cl:  { name:'Champions League',     region:'Europe',       slots:4, color:'var(--accent)',  class:'comp-cl' },
-  el:  { name:'Europa League',        region:'Europe',       slots:3, color:'var(--orange)',  class:'comp-el' },
-  ec:  { name:'Conference League',    region:'Europe',       slots:2, color:'var(--purple)',  class:'comp-ec' },
-  lib: { name:'Copa Libertadores',    region:'South America',slots:4, color:'var(--green)',   class:'comp-lib' },
-  suda:{ name:'Copa Sudamericana',    region:'South America',slots:3, color:'var(--gold)',    class:'comp-dom' },
-  acl: { name:'Asian Champions League',region:'Asia',        slots:2, color:'var(--green)',   class:'comp-lib' },
-};
+  // Age multiplier (peak 25-29)
+  const ageMul = age<20?1.4:age<23?1.6:age<25?1.5:age<28?1.3:age<30?1.0:age<32?0.7:age<34?0.45:0.25;
 
-// ── PLAYER SYSTEM ───────────────────────────────────────────────
+  // Potential multiplier
+  const potDiff = pot - ovr;
+  const potMul = potDiff>20?1.5:potDiff>12?1.3:potDiff>5?1.15:1.0;
+
+  // League reputation factor
+  const repMul = leagueRep>=88?1.3:leagueRep>=82?1.2:leagueRep>=75?1.1:leagueRep>=68?1.0:0.85;
+
+  return Math.round(base * ageMul * potMul * repMul);
+}
+
+// ── PLAYER GENERATION WITH TIER-AWARE QUALITY ──────────────────
 function mkPlayer(opts={}) {
-  const age  = opts.age  || rand(17,35);
-  const pos  = opts.pos  || pick(Object.keys(POS_TYPE));
-  const ptype= posType(pos);
-  const pot  = opts.potential || rand(55,97);
-  const dev  = age<23?rf(.6,.88):age<29?rf(.85,1.0):age<33?rf(.72,.94):rf(.55,.78);
-  const base = Math.round(pot*dev);
-  const sp   = (lo,hi) => clamp(rand(base-hi, base+lo), 28, 99);
+  const age   = opts.age  || rand(17,35);
+  const pos   = opts.pos  || pick(Object.keys(POS_TYPE));
+  const ptype = posType(pos);
+  const tier  = opts.tier || 2;
+  const tierOvr = TIER_OVR[tier] || TIER_OVR[2];
+  const tierPot = TIER_POT[tier] || TIER_POT[2];
 
+  // Determine player category in squad
+  const cat = opts.cat || (Math.random()<0.08?'star':Math.random()<0.4?'starter':'bench');
+
+  // Base OVR from tier
+  let ovrRange = tierOvr[cat] || tierOvr.bench;
+  if(opts.youth) ovrRange = tierOvr.youth;
+
+  // Age modifier: youth players lower
+  const ageBase = age<20 ? ovrRange[0]-rand(5,10) : age>32 ? ovrRange[0]-rand(0,6) : ovrRange[0];
+  const ovrTarget = clamp(rand(ageBase, ovrRange[1]), 35, 98);
+
+  // Potential
+  let pot;
+  const potRoll = Math.random();
+  if(potRoll < 0.05) {
+    const r = tierPot.high; pot = rand(r[0], r[1]);
+  } else if(potRoll < 0.3) {
+    const r = tierPot.mid; pot = rand(r[0], r[1]);
+  } else {
+    const r = tierPot.low; pot = rand(r[0], r[1]);
+  }
+  // Potential must be >= current OVR
+  pot = Math.max(pot, ovrTarget);
+  if(age>30) pot = Math.min(pot, ovrTarget+3);
+
+  // Generate attributes
+  const sp = (lo,hi) => clamp(rand(ovrTarget-hi, ovrTarget+lo), 28, 99);
   const a = {
-    // Technical
     finishing:sp(10,20), passing:sp(10,20), dribbling:sp(10,20),
     firstTouch:sp(8,15), crossing:sp(12,20), longShots:sp(15,25),
     tackling:sp(10,20), heading:sp(10,20), freeKick:sp(15,25),
-    // Physical
     pace:sp(15,25), acceleration:sp(12,20), strength:sp(12,20),
     stamina:sp(10,18), jumping:sp(12,20), agility:sp(10,18),
-    // Mental
     vision:sp(10,18), composure:sp(10,18), decisions:sp(10,18),
     positioning:sp(8,15), workRate:sp(8,15), aggression:sp(12,20),
     leadership:sp(15,25), concentration:sp(8,15),
-    // GK
     reflexes:sp(10,20), handling:sp(10,20), gkPos:sp(10,20),
     diving:sp(10,20), kicking:sp(12,22), communication:sp(15,25),
   };
 
-  // Position bias
-  if(ptype==='fwd'){a.finishing=clamp(a.finishing+rand(5,18),40,99);a.pace=clamp(a.pace+rand(3,12),40,99);a.positioning=clamp(a.positioning+rand(5,12),40,99)}
-  if(ptype==='mid'){a.passing=clamp(a.passing+rand(5,14),40,99);a.vision=clamp(a.vision+rand(5,14),40,99);a.stamina=clamp(a.stamina+rand(3,10),40,99)}
-  if(ptype==='def'){a.tackling=clamp(a.tackling+rand(5,16),40,99);a.strength=clamp(a.strength+rand(5,14),40,99);a.heading=clamp(a.heading+rand(5,14),40,99)}
-  if(ptype==='gk'){['reflexes','handling','gkPos','diving'].forEach(k=>{a[k]=clamp(a[k]+rand(12,22),40,99)})}
+  if(ptype==='fwd'){a.finishing=clamp(a.finishing+rand(5,18),40,99);a.pace=clamp(a.pace+rand(3,12),40,99);a.positioning=clamp(a.positioning+rand(5,12),40,99);}
+  if(ptype==='mid'){a.passing=clamp(a.passing+rand(5,14),40,99);a.vision=clamp(a.vision+rand(5,14),40,99);a.stamina=clamp(a.stamina+rand(3,10),40,99);}
+  if(ptype==='def'){a.tackling=clamp(a.tackling+rand(5,16),40,99);a.strength=clamp(a.strength+rand(5,14),40,99);a.heading=clamp(a.heading+rand(5,14),40,99);}
+  if(ptype==='gk'){['reflexes','handling','gkPos','diving'].forEach(k=>{a[k]=clamp(a[k]+rand(12,22),40,99);});}
 
-  const ovr = calcOvr(a,pos);
+  const ovr = calcOvr(a, pos);
+  const leagueRep = opts.leagueRep || 75;
+  const nat = opts.nationality || pick(NATS);
+
   return {
     id:uid(), name:`${pick(FN)} ${pick(LN)}`,
-    nationality:pick(NATS), age, pos,
+    nationality:nat, age, pos,
     height:rand(165,198), weight:rand(63,96),
     foot:Math.random()>.15?'Right':'Left',
     role:pick(ROLES[pos]||['Player']),
@@ -725,14 +714,13 @@ function mkPlayer(opts={}) {
     attrs:a, overall:ovr, potential:pot,
     form:rand(58,82), morale:rand(55,85),
     injuryRisk:rand(1,28), injured:false, injuryGames:0,
-    contract:{ salary:wageCalc(ovr), expires:G.season+rand(1,5) },
-    value:valCalc(ovr,age,pot),
+    contract:{salary:wageCalc(ovr,leagueRep), expires:G.season+rand(1,5)},
+    value:valCalc(ovr, age, pot, leagueRep),
     teamId:opts.teamId||null, loaned:false,
     stats:{goals:0,assists:0,apps:0,rating:0,shots:0,tackles:0,saves:0,cleanSheets:0,yellowCards:0,redCards:0},
     careerStats:{goals:0,assists:0,apps:0},
-    seasonLog:[],
-    forSale:false, transferListed:false,
-    scoutRating:null,
+    seasonLog:[], forSale:false, transferListed:false,
+    scoutRating:null, tier,
   };
 }
 
@@ -745,62 +733,79 @@ function calcOvr(a,pos) {
   else s=avg([a.finishing,a.positioning,a.composure,a.pace,a.dribbling,a.firstTouch,a.heading]);
   return Math.round(s);
 }
-const wageCalc = o => Math.round(o*o*14*(0.8+Math.random()*.4));
-const valCalc  = (o,age,pot) => {
-  const am = age<22?1.6:age<25?1.3:age<29?1.0:age<32?.7:.4;
-  const pm = pot>88?1.4:pot>80?1.2:pot>72?1.05:1.0;
-  return Math.round(o*o*1100*am*pm);
-};
 
-// ── WORLD GENERATION ────────────────────────────────────────────
+function wageCalc(ovr, leagueRep=75) {
+  const base = Math.round(ovr*ovr*14*(0.8+Math.random()*.4));
+  const repMul = leagueRep>=88?1.4:leagueRep>=82?1.2:leagueRep>=75?1.0:leagueRep>=68?0.75:0.5;
+  return Math.round(base * repMul);
+}
+
+// ── WORLD GENERATION ─────────────────────────
 function generateWorld() {
   G.teams=[]; G.players=[]; G.leagues={}; G.fixtures=[]; G.results=[];
+  G.leagueCoefficients={};
   let teamIdx=0;
-  // Walk WORLD_DB and create teams+players
+
   Object.entries(WORLD_DB).forEach(([continent,countries])=>{
     Object.entries(countries).forEach(([country,leagues])=>{
       Object.entries(leagues).forEach(([leagueName,data])=>{
         const leagueId=`${country}_${leagueName}`.replace(/\s+/g,'_');
+        const tier = data.tier || 2;
+        const leagueRep = data.rep;
         const leagueTeams=[];
-        data.teams.forEach(name=>{
-          const rep=clamp(data.rep+rand(-15,10),35,99);
+        const countryNat = COUNTRY_NAT[country] || pick(NATS);
+
+        data.teams.forEach((name,ti)=>{
           const squad=[];
-          const posDist=['GK','GK','CB','CB','CB','LB','RB','CDM','CM','CM','CAM','LW','RW','ST','ST','CF','LM','RM','CM','CB'];
-          posDist.forEach(pos=>{
-            const p=mkPlayer({pos,age:rand(18,34),teamId:teamIdx,potential:rand(55,Math.min(99,rep+12))});
-            p.teamId=teamIdx; squad.push(p.id); G.players.push(p);
+          const posDist=['GK','GK','GK','CB','CB','CB','CB','LB','RB','CDM','CDM','CM','CM','CM','CAM','LW','RW','ST','ST','CF','CB','LB','RB'];
+          posDist.forEach((pos,pi)=>{
+            const cat = pi<2?'star':pi<12?'starter':'bench';
+            const isYouth = pi>=18;
+            const age = isYouth?rand(17,22):(cat==='star'?rand(22,30):rand(18,35));
+            // 60% home country, 40% foreign
+            const nat = Math.random()<0.6?countryNat:pick(NATS);
+            const p = mkPlayer({pos, age, teamId:teamIdx, cat, tier, leagueRep, nationality:nat, youth:isYouth});
+            squad.push(p.id);
+            G.players.push(p);
           });
           G.teams.push({
             id:teamIdx, name, country, continent,
-            leagueId, rep, stadium:`${name} Stadium`,
-            capacity:rand(12000,92000),
-            finances:{ budget:rand(20,600)*1e6, wageBudget:rand(3,60)*1e6, transferBudget:rand(5,250)*1e6 },
+            leagueId, rep:leagueRep+rand(-8,8), tier,
+            stadium:`${name} Stadium`, capacity:rand(12000,92000),
+            finances:{
+              budget:rand(20,600)*1e6*(tier===1?3:tier===2?1.5:tier===3?0.7:0.3),
+              wageBudget:rand(3,60)*1e6*(tier===1?2.5:1),
+              transferBudget:rand(5,250)*1e6*(tier===1?2:tier===2?1.2:0.6)
+            },
             squad, formation:pick(Object.keys(FORMATIONS)),
             stats:{w:0,d:0,l:0,gf:0,ga:0,pts:0}, form:[],
-            trophies:{ league:0, cup:0, continental:0 },
+            trophies:{league:0,cup:0,continental:0},
           });
           leagueTeams.push(teamIdx);
           teamIdx++;
         });
+
         G.leagues[leagueId]={
-          id:leagueId, name:leagueName, country, continent,
-          rep:data.rep, teams:leagueTeams, season:1,
+          id:leagueId, name:leagueName, country, continent, tier,
+          rep:leagueRep, teams:leagueTeams, season:1,
           table:leagueTeams.map(id=>({id,w:0,d:0,l:0,gf:0,ga:0,pts:0,form:[]})),
           champions:[]
         };
+        G.leagueCoefficients[leagueId]=leagueRep;
         genFixtures(leagueId);
       });
     });
   });
-  // Setup continental competitions
+
   setupContinental();
-  console.log(`World generated: ${G.teams.length} teams, ${G.players.length} players, ${G.fixtures.length} fixtures`);
+  generateTransferRumors();
+  console.log(`World v3 generated: ${G.teams.length} teams, ${G.players.length} players`);
 }
 
 function genFixtures(lid) {
   const lg=G.leagues[lid]; if(!lg)return;
   const ids=[...lg.teams];
-  if(ids.length%2!==0)ids.push(-1); // bye
+  if(ids.length%2!==0)ids.push(-1);
   const n=ids.length, rounds=n-1;
   for(let r=0;r<rounds;r++){
     let md=r+1;
@@ -812,7 +817,6 @@ function genFixtures(lid) {
     }
     ids.splice(1,0,ids.pop());
   }
-  // Return fixtures
   const firstHalf=G.fixtures.filter(f=>f.leagueId===lid);
   firstHalf.forEach(f=>{
     G.fixtures.push({id:uid(),homeId:f.awayId,awayId:f.homeId,leagueId:lid,played:false,result:null,matchday:f.matchday+rounds,date:new Date(f.date.getTime()+rounds*7*86400000)});
@@ -820,17 +824,17 @@ function genFixtures(lid) {
 }
 
 function setupContinental() {
-  // Take top clubs from each region for continental comps
   ['cl','el','ec'].forEach((comp,ci)=>{
     const euLeagues=Object.values(G.leagues).filter(l=>l.continent==='Europe');
     const slots=[4,3,2][ci];
     const clubs=[];
-    euLeagues.forEach(l=>{
-      const sorted=[...l.table].sort((a,b)=>b.pts-a.pts||b.gf-b.ga-(a.gf-a.ga));
-      const take=sorted.slice(ci===0?0:ci===1?4:7, (ci===0?0:ci===1?4:7)+slots);
-      take.forEach(r=>{ if(r)clubs.push(r.id); });
+    euLeagues.sort((a,b)=>b.rep-a.rep).forEach(l=>{
+      const sorted=[...l.table].sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga));
+      const start=ci===0?0:ci===1?4:7;
+      const take=sorted.slice(start,start+slots);
+      take.forEach(r=>{if(r)clubs.push(r.id);});
     });
-    G.continental[comp]=clubs.slice(0,ci===0?32:ci===1?32:32);
+    G.continental[comp]=clubs.slice(0,32);
   });
   ['lib','suda'].forEach((comp,ci)=>{
     const saLeagues=Object.values(G.leagues).filter(l=>l.continent==='SouthAmerica');
@@ -842,28 +846,52 @@ function setupContinental() {
     });
     G.continental[comp]=clubs.slice(0,32);
   });
+  const asianLeagues=Object.values(G.leagues).filter(l=>l.continent==='Asia');
+  const aclClubs=[];
+  asianLeagues.forEach(l=>{
+    const sorted=[...l.table].sort((a,b)=>b.pts-a.pts);
+    sorted.slice(0,2).forEach(r=>{if(r)aclClubs.push(r.id);});
+  });
+  G.continental.acl=aclClubs.slice(0,16);
 }
 
-// ── MATCH ENGINE ────────────────────────────────────────────────
+// ── TRANSFER RUMORS ───────────────────────────
+function generateTransferRumors() {
+  G.transferRumors=[];
+  const rumors=['interested in','close to signing','in talks for','monitoring','has bid for','rejected offer for'];
+  for(let i=0;i<10;i++){
+    const p=G.players[rand(0,G.players.length-1)];
+    const club=G.teams[rand(0,G.teams.length-1)];
+    if(p&&club&&p.teamId!==club.id){
+      G.transferRumors.push({
+        player:p.name,playerTeam:G.teams.find(t=>t.id===p.teamId)?.name||'Free',
+        club:club.name,type:pick(rumors),
+        fee:money(Math.round(p.value*rf(0.85,1.15))),
+        date:new Date(G.date)
+      });
+    }
+  }
+}
+
+// ── MATCH ENGINE ─────────────────────────────
 function simMatch(fixture) {
   const home=G.teams.find(t=>t.id===fixture.homeId);
   const away=G.teams.find(t=>t.id===fixture.awayId);
   if(!home||!away)return null;
 
   const sqd = t => t.squad.map(id=>G.players.find(p=>p.id===id)).filter(Boolean).filter(p=>!p.injured);
-  const pow = (squad,home=false) => {
+  const pow = (squad,isHome=false) => {
     const s=[...squad].sort((a,b)=>b.overall-a.overall).slice(0,11);
     if(!s.length)return 60;
-    return s.reduce((x,p)=>x+p.overall+(p.form-65)*0.2,0)/s.length + (home?rand(0,5):0);
+    return s.reduce((x,p)=>x+p.overall+(p.form-65)*0.2,0)/s.length+(isHome?rand(0,5):0);
   };
 
   const hp=sqd(home), ap=sqd(away);
   const hPow=pow(hp,true)+rand(-4,4), aPow=pow(ap)+rand(-4,4);
   const tot=hPow+aPow, hDom=hPow/tot;
 
-  // Tactical modifiers
-  const tk=G.teams.find(t=>t.id===G.playerTeam)===home;
-  const tacBonus=tk?(G.tactic.pressing-5)*0.3:0;
+  const isMyTeam=G.teams.find(t=>t.id===G.playerTeam)===home;
+  const tacBonus=isMyTeam?(G.tactic.pressing-5)*0.3:0;
 
   const hShots=clamp(Math.round(rf(4,16)*hDom+tacBonus),1,20);
   const aShots=clamp(Math.round(rf(4,16)*(1-hDom)),1,20);
@@ -873,91 +901,41 @@ function simMatch(fixture) {
   let ag=clamp(Math.round(aXg*rf(.55,1.55)),0,10);
 
   const events=mkEvents(home,away,hp,ap,hg,ag);
-
-  // Stat updates
   events.filter(e=>e.type==='goal').forEach(e=>{
     const sc=G.players.find(p=>p.id===e.pid);
     if(sc){sc.stats.goals++;sc.careerStats.goals++;}
     if(e.aid){const as=G.players.find(p=>p.id===e.aid);if(as){as.stats.assists++;as.careerStats.assists++;}}
   });
-  events.filter(e=>e.type==='yellow').forEach(e=>{
-    const p=G.players.find(x=>x.id===e.pid);if(p)p.stats.yellowCards++;
-  });
+  events.filter(e=>e.type==='yellow').forEach(e=>{const p=G.players.find(x=>x.id===e.pid);if(p)p.stats.yellowCards++;});
   [...hp.slice(0,11),...ap.slice(0,11)].forEach(p=>{
     if(!p)return;
     p.stats.apps++;p.careerStats.apps++;
     const r=calcPRating(p,events);
     p.stats.rating=(p.stats.rating*(p.stats.apps-1)+r)/p.stats.apps;
   });
-  // GK clean sheet
   if(hg===0){const gk=ap.find(p=>p.pos==='GK');if(gk)gk.stats.cleanSheets++;}
   if(ag===0){const gk=hp.find(p=>p.pos==='GK');if(gk)gk.stats.cleanSheets++;}
-
   updTable(fixture.leagueId,fixture.homeId,fixture.awayId,hg,ag);
 
   return {
-    id:fixture.id, homeId:fixture.homeId, awayId:fixture.awayId, leagueId:fixture.leagueId,
-    hg, ag, date:fixture.date,
-    stats:{
-      homePoss:clamp(Math.round(hDom*60+rand(-8,8)),25,75),
-      awayPoss:clamp(Math.round((1-hDom)*60+rand(-8,8)),25,75),
-      hShots,aShots,hSot,aSot,
-      hXg:hXg.toFixed(2),aXg:aXg.toFixed(2),
-      hCorners:rand(2,10),aCorners:rand(2,10),
-      hFouls:rand(4,16),aFouls:rand(4,16),
-    },
+    id:fixture.id,homeId:fixture.homeId,awayId:fixture.awayId,leagueId:fixture.leagueId,
+    hg,ag,date:fixture.date,
+    stats:{homePoss:clamp(Math.round(hDom*60+rand(-8,8)),25,75),awayPoss:clamp(Math.round((1-hDom)*60+rand(-8,8)),25,75),hShots,aShots,hSot,aSot,hXg:hXg.toFixed(2),aXg:aXg.toFixed(2),hCorners:rand(2,10),aCorners:rand(2,10),hFouls:rand(4,16),aFouls:rand(4,16)},
     events
   };
 }
 
 function mkEvents(home,away,hp,ap,hg,ag) {
-  const evs=[];
-  const usedMins=new Set();
+  const evs=[]; const usedMins=new Set();
   const pickMin=()=>{let m;do{m=rand(1,90);}while(usedMins.has(m));usedMins.add(m);return m;};
-  const scorer=players=>{
-    const fwd=players.filter(p=>posType(p.pos)==='fwd');
-    const mid=players.filter(p=>posType(p.pos)==='mid');
-    const pool=[...fwd,...fwd,...mid,...players];
-    return pick(pool)||players[0];
-  };
-  const assister=(players,sc)=>{
-    const pool=players.filter(p=>p.id!==sc?.id);
-    return Math.random()>.12&&pool.length?pick(pool):null;
-  };
-
-  for(let i=0;i<hg;i++){
-    const sc=scorer(hp);const as=assister(hp,sc);
-    if(sc)evs.push({type:'goal',team:'home',min:pickMin(),pid:sc.id,pname:sc.name,aid:as?.id,aname:as?.name});
-  }
-  for(let i=0;i<ag;i++){
-    const sc=scorer(ap);const as=assister(ap,sc);
-    if(sc)evs.push({type:'goal',team:'away',min:pickMin(),pid:sc.id,pname:sc.name,aid:as?.id,aname:as?.name});
-  }
-  // Cards
-  for(let i=0;i<rand(1,6);i++){
-    const team=Math.random()>.5?'home':'away';
-    const pool=team==='home'?hp:ap;
-    const p=pick(pool);
-    if(p)evs.push({type:'yellow',team,min:pickMin(),pid:p.id,pname:p.name});
-  }
-  if(Math.random()<.04){
-    const team=Math.random()>.5?'home':'away';
-    const p=pick(team==='home'?hp:ap);
-    if(p){evs.push({type:'red',team,min:pickMin(),pid:p.id,pname:p.name});}
-  }
-  // Injury
-  if(Math.random()<.12){
-    const team=Math.random()>.5?'home':'away';
-    const p=pick(team==='home'?hp:ap);
-    if(p){p.injured=true;p.injuryGames=rand(2,15);evs.push({type:'injury',team,min:pickMin(),pid:p.id,pname:p.name});}
-  }
-  // Subs
-  for(let i=0;i<rand(2,4);i++){
-    const team=Math.random()>.5?'home':'away';
-    const pool=team==='home'?hp:ap;
-    const p=pick(pool),p2=pick(pool.filter(x=>x.id!==p?.id));
-    if(p&&p2)evs.push({type:'sub',team,min:rand(55,85),pid:p.id,pname:p.name,p2id:p2.id,p2name:p2.name});
-  }
+  const scorer=players=>{const fwd=players.filter(p=>posType(p.pos)==='fwd'),mid=players.filter(p=>posType(p.pos)==='mid'),pool=[...fwd,...fwd,...mid,...players];return pick(pool)||players[0];};
+  const assister=(players,sc)=>{const pool=players.filter(p=>p.id!==sc?.id);return Math.random()>.12&&pool.length?pick(pool):null;};
+  for(let i=0;i<hg;i++){const sc=scorer(hp);const as=assister(hp,sc);if(sc)evs.push({type:'goal',team:'home',min:pickMin(),pid:sc.id,pname:sc.name,aid:as?.id,aname:as?.name});}
+  for(let i=0;i<ag;i++){const sc=scorer(ap);const as=assister(ap,sc);if(sc)evs.push({type:'goal',team:'away',min:pickMin(),pid:sc.id,pname:sc.name,aid:as?.id,aname:as?.name});}
+  for(let i=0;i<rand(1,6);i++){const team=Math.random()>.5?'home':'away';const pool=team==='home'?hp:ap;const p=pick(pool);if(p)evs.push({type:'yellow',team,min:pickMin(),pid:p.id,pname:p.name});}
+  if(Math.random()<.04){const team=Math.random()>.5?'home':'away';const p=pick(team==='home'?hp:ap);if(p)evs.push({type:'red',team,min:pickMin(),pid:p.id,pname:p.name});}
+  if(Math.random()<.12){const team=Math.random()>.5?'home':'away';const p=pick(team==='home'?hp:ap);if(p){p.injured=true;p.injuryGames=rand(2,15);evs.push({type:'injury',team,min:pickMin(),pid:p.id,pname:p.name});}}
+  for(let i=0;i<rand(2,4);i++){const team=Math.random()>.5?'home':'away';const pool=team==='home'?hp:ap;const p=pick(pool),p2=pick(pool.filter(x=>x.id!==p?.id));if(p&&p2)evs.push({type:'sub',team,min:rand(55,85),pid:p.id,pname:p.name,p2id:p2.id,p2name:p2.name});}
   return evs.sort((a,b)=>a.min-b.min);
 }
 
@@ -967,8 +945,7 @@ function calcPRating(p,evs) {
   r+=evs.filter(e=>e.type==='goal'&&e.aid===p.id).length*.75;
   r-=evs.filter(e=>e.type==='yellow'&&e.pid===p.id).length*.35;
   r-=evs.filter(e=>e.type==='red'&&e.pid===p.id).length*1.5;
-  r+=(p.overall-70)*.022;
-  r+=rf(-.3,.3);
+  r+=(p.overall-70)*.022+rf(-.3,.3);
   return parseFloat(clamp(r,4.0,10.0).toFixed(1));
 }
 
@@ -992,22 +969,16 @@ function updTable(lid,hid,aid,hg,ag) {
   lg.table.sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);
 }
 
-// ── SIMULATION CONTROLS ──────────────────────────────────────────
-function getMyNextFix(){
-  return G.fixtures.find(f=>!f.played&&(f.homeId===G.playerTeam||f.awayId===G.playerTeam));
-}
+// ── SIMULATION CONTROLS ──────────────────────
+function getMyNextFix(){return G.fixtures.find(f=>!f.played&&(f.homeId===G.playerTeam||f.awayId===G.playerTeam));}
 function simMatchday(fixId){
-  const f=G.fixtures.find(x=>x.id===fixId);
-  if(!f)return;
+  const f=G.fixtures.find(x=>x.id===fixId);if(!f)return;
   const md=f.matchday,lid=f.leagueId;
   G.fixtures.filter(x=>x.matchday===md&&x.leagueId===lid&&!x.played).forEach(fx=>{
-    const r=simMatch(fx);
-    if(r){G.results.push(r);fx.played=true;}
+    const r=simMatch(fx);if(r){G.results.push(r);fx.played=true;}
   });
   G.date=new Date(f.date.getTime()+86400000);
-  checkSeasonEnd();
-  updateTopbar();
-  nav(G.currentPage);
+  checkSeasonEnd();updateTopbar();nav(G.currentPage);
   const mine=G.results.find(r=>r.id===f.id);
   if(mine){
     const hn=G.teams.find(t=>t.id===mine.homeId)?.name||'?';
@@ -1022,24 +993,17 @@ function simNext(){const f=getMyNextFix();if(f)simMatchday(f.id);else{simAllRema
 function simWeek(){for(let i=0;i<2;i++)simNext();}
 function simMonth(){for(let i=0;i<8;i++)simNext();}
 function simSeason(){
-  while(G.fixtures.some(f=>!f.played)){
-    const f=G.fixtures.find(x=>!x.played);if(!f)break;
-    const r=simMatch(f);if(r){G.results.push(r);f.played=true;}
-  }
+  while(G.fixtures.some(f=>!f.played)){const f=G.fixtures.find(x=>!x.played);if(!f)break;const r=simMatch(f);if(r){G.results.push(r);f.played=true;}}
   checkSeasonEnd();updateTopbar();nav(G.currentPage);
 }
 function simAllRemaining(){
-  G.fixtures.filter(f=>!f.played).slice(0,20).forEach(f=>{
-    const r=simMatch(f);if(r){G.results.push(r);f.played=true;}
-  });
+  G.fixtures.filter(f=>!f.played).slice(0,20).forEach(f=>{const r=simMatch(f);if(r){G.results.push(r);f.played=true;}});
 }
 
 function checkSeasonEnd(){
-  const myTeam=G.teams.find(t=>t.id===G.playerTeam);
-  if(!myTeam)return;
+  const myTeam=G.teams.find(t=>t.id===G.playerTeam);if(!myTeam)return;
   const lid=myTeam.leagueId;
-  const unplayed=G.fixtures.filter(f=>f.leagueId===lid&&!f.played);
-  if(unplayed.length===0)endSeason(lid);
+  if(G.fixtures.filter(f=>f.leagueId===lid&&!f.played).length===0)endSeason(lid);
 }
 function endSeason(lid){
   const lg=G.leagues[lid];if(!lg)return;
@@ -1049,48 +1013,56 @@ function endSeason(lid){
     G.history.push({season:G.season,league:lg.name,champion:champ.name,pts:lg.table[0]?.pts||0,date:new Date(G.date)});
     toast(`🏆 ${champ.name} win ${lg.name}!`,'i');
   }
-  // Player development
-  runDevelopment();
-  runAI();
-  G.season++;
-  // Reset
+  runDevelopment();runAI();G.season++;
   G.teams.forEach(t=>{t.stats={w:0,d:0,l:0,gf:0,ga:0,pts:0};t.form=[];});
   lg.table.forEach(r=>{r.w=0;r.d=0;r.l=0;r.gf=0;r.ga=0;r.pts=0;r.form=[];});
   G.players.forEach(p=>{p.stats={goals:0,assists:0,apps:0,rating:0,shots:0,tackles:0,saves:0,cleanSheets:0,yellowCards:0,redCards:0};});
   G.fixtures=G.fixtures.filter(f=>f.leagueId!==lid);
-  genFixtures(lid);
-  setupContinental();
+  genFixtures(lid);setupContinental();
+  generateTransferRumors();
   toast(`⚽ Season ${G.season} begins!`,'s');
 }
 
 function runDevelopment(){
   G.players.forEach(p=>{
     p.age++;
-    const grow=p.age<22?rand(0,4):p.age<26?rand(-1,2):p.age<30?rand(-2,1):p.age<33?rand(-3,0):rand(-5,-1);
+    // Development based on potential and age
+    const potRoom = p.potential - p.overall;
+    let grow;
+    if(p.age<20) grow=potRoom>10?rand(1,4):rand(0,2);
+    else if(p.age<22) grow=potRoom>8?rand(0,3):rand(-1,2);
+    else if(p.age<26) grow=potRoom>5?rand(-1,2):rand(-2,1);
+    else if(p.age<30) grow=rand(-2,1);
+    else if(p.age<33) grow=rand(-3,0);
+    else grow=rand(-5,-1);
+
     Object.keys(p.attrs).forEach(k=>{p.attrs[k]=clamp(p.attrs[k]+grow+rand(-1,1),28,99);});
     p.overall=calcOvr(p.attrs,p.pos);
-    p.value=valCalc(p.overall,p.age,p.potential);
+    // Update market value dynamically each season
+    const lg=G.teams.find(t=>t.id===p.teamId);
+    const league=lg?G.leagues[lg.leagueId]:null;
+    p.value=valCalc(p.overall,p.age,p.potential,league?.rep||75);
     p.form=clamp(p.form+rand(-6,6),35,92);
     p.morale=clamp(p.morale+rand(-4,4),25,98);
     if(p.injuryGames>0)p.injuryGames--;
     if(p.injuryGames===0)p.injured=false;
-    if(p.contract.expires<=G.season){p.contract.expires=G.season+rand(1,4);p.contract.salary=wageCalc(p.overall);}
+    if(p.contract.expires<=G.season){p.contract.expires=G.season+rand(1,4);p.contract.salary=wageCalc(p.overall,75);}
     if(p.age>37&&Math.random()<.55)p.retired=true;
   });
   G.players=G.players.filter(p=>!p.retired);
   G.teams.forEach(t=>{t.squad=t.squad.filter(id=>G.players.find(p=>p.id===id));});
+  // Update league coefficients based on continental performance
+  Object.values(G.leagues).forEach(lg=>{G.leagueCoefficients[lg.id]=lg.rep;});
 }
 
 function runAI(){
   G.teams.forEach(team=>{
     if(team.id===G.playerTeam)return;
-    // Sign youth
     if(Math.random()<.25){
       const pos=pick(Object.keys(POS_TYPE));
-      const p=mkPlayer({pos,age:rand(17,22),teamId:team.id,potential:rand(55,90)});
+      const p=mkPlayer({pos,age:rand(17,22),teamId:team.id,tier:team.tier||2,leagueRep:team.rep,youth:true});
       G.players.push(p);team.squad.push(p.id);
     }
-    // Free transfers
     if(Math.random()<.15){
       const free=G.players.filter(p=>!p.teamId&&!p.retired);
       if(free.length){const p=pick(free);p.teamId=team.id;team.squad.push(p.id);}
@@ -1098,7 +1070,7 @@ function runAI(){
   });
 }
 
-// ── TRANSFERS ────────────────────────────────────────────────────
+// ── TRANSFERS ────────────────────────────────
 function makeOffer(pid){
   const p=G.players.find(x=>x.id===pid);
   const team=G.teams.find(t=>t.id===G.playerTeam);
@@ -1113,12 +1085,8 @@ function makeOffer(pid){
     team.squad.push(p.id);
     team.finances.transferBudget-=p.value;
     G.transfers.push({season:G.season,type:'buy',player:p.name,from:ot?.name||'Free',to:team.name,fee:p.value});
-    closeModal();
-    toast(`✅ ${p.name} signed for ${money(p.value)}!`,'s');
-    nav('squad');
-  } else {
-    toast(`❌ ${p.name}'s club rejected the bid`,'e');
-  }
+    closeModal();toast(`✅ ${p.name} signed for ${money(p.value)}!`,'s');nav('squad');
+  } else {toast(`❌ ${p.name}'s club rejected the bid`,'e');}
 }
 function sellPlayer(pid){
   const p=G.players.find(x=>x.id===pid);
@@ -1128,74 +1096,70 @@ function sellPlayer(pid){
   p.teamId=null;p.forSale=false;
   team.finances.transferBudget+=Math.round(p.value*.85);
   G.transfers.push({season:G.season,type:'sell',player:p.name,from:team.name,to:'Market',fee:Math.round(p.value*.85)});
-  closeModal();
-  toast(`${p.name} sold for ${money(Math.round(p.value*.85))}`,'s');
-  nav('squad');
+  closeModal();toast(`${p.name} sold for ${money(Math.round(p.value*.85))}`,'s');nav('squad');
+}
+function renewContract(pid){
+  const p=G.players.find(x=>x.id===pid);if(!p)return;
+  p.contract.expires=G.season+rand(2,4);
+  p.morale=clamp(p.morale+rand(5,15),50,100);
+  toast(`${p.name} contract renewed until Season ${p.contract.expires}`,'s');
+  nav('finances');
 }
 
-// ── SCOUTING ─────────────────────────────────────────────────────
+// ── SCOUTING ─────────────────────────────────
 function scoutPlayer(pid){
-  const p=G.players.find(x=>x.id===pid);
-  if(!p)return;
+  const p=G.players.find(x=>x.id===pid);if(!p)return;
   p.scoutRating={
     technical:Math.round(avg([p.attrs.finishing,p.attrs.passing,p.attrs.dribbling])),
     physical:Math.round(avg([p.attrs.pace,p.attrs.strength,p.attrs.stamina])),
     mental:Math.round(avg([p.attrs.vision,p.attrs.composure,p.attrs.decisions])),
     potential:p.potential,
-    recommendation:p.potential>82?'Sign Immediately':p.potential>72?'Strong Interest':p.potential>62?'Monitor':'Pass'
+    recommendation:p.potential>85?'Sign Immediately':p.potential>78?'Strong Interest':p.potential>68?'Monitor':'Pass'
   };
   G.scoutReports.push({pid,name:p.name,season:G.season,...p.scoutRating,date:new Date(G.date)});
   toast(`📋 Scout report filed for ${p.name}`,'i');
 }
 
-// ── UI ────────────────────────────────────────────────────────────
+// ── NAVIGATION ───────────────────────────────
 function nav(page){
   G.currentPage=page;
   document.querySelectorAll('.nav-item').forEach(el=>{
     const txt=el.textContent.trim().toLowerCase();
     const match=txt.includes(page.toLowerCase())||
       (page==='dashboard'&&txt.includes('dashboard'))||
+      (page==='international'&&txt.includes('international'))||
       (page==='continental'&&txt.includes('continental'))||
       (page==='dbedit'&&txt.includes('db'))||
       (page==='mods'&&txt.includes('mods'))||
       (page==='scouting'&&txt.includes('scouting'));
     el.classList.toggle('active',match);
   });
-  document.getElementById('page-title').textContent=
-    {dashboard:'Dashboard',squad:'Squad',tactics:'Tactics',fixtures:'Fixtures',table:'League Table',
-     transfers:'Transfers',players:'Player Search',history:'History',finances:'Finances',
-     continental:'Continental Cups',dbedit:'Database Editor',mods:'Mods Manager',scouting:'Scouting'}[page]||page;
+  const titles={dashboard:'Dashboard',squad:'Squad',tactics:'Tactics',fixtures:'Fixtures',table:'League Table',transfers:'Transfers',players:'Player Search',history:'History',finances:'Finances',continental:'Continental Cups',international:'International Football',dbedit:'Database Editor',mods:'Mods Manager',scouting:'Scouting'};
+  document.getElementById('page-title').textContent=titles[page]||page;
   const c=document.getElementById('content');
-  const pages={
-    dashboard:renderDashboard, squad:renderSquad, tactics:renderTactics,
-    fixtures:renderFixtures, table:renderTable, transfers:renderTransfers,
-    players:renderPlayers, history:renderHistory, finances:renderFinances,
-    continental:renderContinental, dbedit:renderDbEditor, mods:renderMods,
-    scouting:renderScouting
-  };
+  const pages={dashboard:renderDashboard,squad:renderSquad,tactics:renderTactics,fixtures:renderFixtures,table:renderTable,transfers:renderTransfers,players:renderPlayers,history:renderHistory,finances:renderFinances,continental:renderContinental,international:renderInternational,dbedit:renderDbEditor,mods:renderMods,scouting:renderScouting};
   c.innerHTML=(pages[page]||renderDashboard)();
   updateTopbar();
 }
 
 function updateTopbar(){
-  const team=G.teams.find(t=>t.id===G.playerTeam);
-  if(!team)return;
+  const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return;
   document.getElementById('tb-season').textContent=`Season ${G.season}`;
   document.getElementById('tb-budget').textContent=money(team.finances.transferBudget);
   const lg=G.leagues[team.leagueId];
   const pos=lg?lg.table.findIndex(r=>r.id===G.playerTeam)+1:'—';
   const suf=pos===1?'st':pos===2?'nd':pos===3?'rd':'th';
-  document.getElementById('tb-pos').textContent=`${pos}${suf}`;
+  document.getElementById('tb-pos').textContent=`${pos}${suf} · ${lg?.name||''}`;
   document.getElementById('sim-date').textContent=fmtDate(G.date);
   const avgMorale=team.squad.map(id=>G.players.find(p=>p.id===id)?.morale||70).reduce((s,v)=>s+v,0)/(team.squad.length||1);
   document.getElementById('tb-morale').textContent=`Morale ${Math.round(avgMorale)}%`;
   document.getElementById('sb-name').textContent=team.name;
-  document.getElementById('sb-meta').textContent=`${team.country} · ${lg?.name||''}`;
+  document.getElementById('sb-meta').textContent=`${team.country} · ${lg?.name||''} · Tier ${team.tier||'—'}`;
   const rep=document.getElementById('sb-rep');
   rep.innerHTML=Array.from({length:5},(_,i)=>`<div class="rep-pip${i<Math.round(team.rep/20)?' on':''}"></div>`).join('');
 }
 
-// ══ RENDER: DASHBOARD ════════════════════════════════════════════
+// ═══════ RENDER: DASHBOARD ════════════════════
 function renderDashboard(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const lg=G.leagues[team.leagueId];
@@ -1204,30 +1168,13 @@ function renderDashboard(){
   const avgOvr=players.length?Math.round(avg(players.map(p=>p.overall))):0;
   const recent=G.results.filter(r=>r.homeId===G.playerTeam||r.awayId===G.playerTeam).slice(-5).reverse();
   const next3=G.fixtures.filter(f=>!f.played&&(f.homeId===G.playerTeam||f.awayId===G.playerTeam)).slice(0,3);
-  const topScorer=[...players].sort((a,b)=>b.stats.goals-a.stats.goals)[0];
 
   return `
 <div class="g4" style="margin-bottom:16px">
-  <div class="sbox">
-    <div class="sv" style="color:var(--accent)">${pos}<span style="font-size:18px;color:var(--text3)">${pos===1?'st':pos===2?'nd':pos===3?'rd':'th'}</span></div>
-    <div class="sl">League Position</div>
-    <div class="ss">${team.stats?.pts||0} pts · ${lg?.name||'—'}</div>
-  </div>
-  <div class="sbox">
-    <div class="sv">${avgOvr}</div>
-    <div class="sl">Squad Rating</div>
-    <div class="ss">${players.length} registered players</div>
-  </div>
-  <div class="sbox">
-    <div class="sv" style="color:var(--green)">${team.stats?.w||0}<span style="font-size:16px;color:var(--text3)">–${team.stats?.d||0}–${team.stats?.l||0}</span></div>
-    <div class="sl">W / D / L</div>
-    <div class="ss">${team.stats?.gf||0} scored · ${team.stats?.ga||0} conceded</div>
-  </div>
-  <div class="sbox">
-    <div class="sv" style="color:var(--gold)">${money(team.finances.transferBudget)}</div>
-    <div class="sl">Transfer Budget</div>
-    <div class="ss">${money(team.finances.wageBudget)} wage budget</div>
-  </div>
+  <div class="sbox"><div class="sv" style="color:var(--accent)">${pos}<span style="font-size:18px;color:var(--text3)">${pos===1?'st':pos===2?'nd':pos===3?'rd':'th'}</span></div><div class="sl">League Position</div><div class="ss">${team.stats?.pts||0} pts · ${lg?.name||'—'}</div></div>
+  <div class="sbox"><div class="sv">${avgOvr}</div><div class="sl">Squad Rating</div><div class="ss">${players.length} players registered</div></div>
+  <div class="sbox"><div class="sv" style="color:var(--green)">${team.stats?.w||0}<span style="font-size:16px;color:var(--text3)">–${team.stats?.d||0}–${team.stats?.l||0}</span></div><div class="sl">W / D / L</div><div class="ss">${team.stats?.gf||0} scored · ${team.stats?.ga||0} conceded</div></div>
+  <div class="sbox"><div class="sv" style="color:var(--gold)">${money(team.finances.transferBudget)}</div><div class="sl">Transfer Budget</div><div class="ss">${money(team.finances.wageBudget)} wage budget</div></div>
 </div>
 
 <div class="g2" style="margin-bottom:16px">
@@ -1237,7 +1184,7 @@ function renderDashboard(){
       const hn=G.teams.find(t=>t.id===r.homeId)?.name||'?';
       const an=G.teams.find(t=>t.id===r.awayId)?.name||'?';
       const isH=r.homeId===G.playerTeam;
-      const won=isH?r.hg>r.ag:r.ag>r.hg, draw=r.hg===r.ag;
+      const won=isH?r.hg>r.ag:r.ag>r.hg,draw=r.hg===r.ag;
       return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">
         <span class="badge badge-${draw?'y':won?'g':'r'}">${draw?'D':won?'W':'L'}</span>
         <span style="flex:1;color:var(--text2)">${hn} <strong style="color:var(--text);font-family:var(--fm)">${r.hg}–${r.ag}</strong> ${an}</span>
@@ -1258,7 +1205,7 @@ function renderDashboard(){
         <span style="flex:1;color:var(--text2)">${hn} <span style="color:var(--text3)">vs</span> ${an}</span>
         <span style="font-size:10px;color:var(--text3)">${hOvr} vs ${aOvr}</span>
       </div>`;
-    }).join(''):'<p style="color:var(--text3);font-size:12px">No upcoming fixtures</p>'}
+    }).join(''):'<p style="color:var(--text3);font-size:12px">Season complete</p>'}
   </div>
 </div>
 
@@ -1271,39 +1218,23 @@ function renderDashboard(){
       <td><span class="tname">${p.name}</span></td>
       <td><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></td>
       <td><span class="ovr ${ovrCls(p.overall)}">${p.overall}</span></td>
-      <td class="tn">${p.stats.goals}</td>
-      <td class="tn">${p.stats.assists}</td>
+      <td class="tn">${p.stats.goals}</td><td class="tn">${p.stats.assists}</td>
       <td class="tn" style="color:${p.stats.rating>=7?'var(--green)':p.stats.rating>=6?'var(--text)':'var(--red)'}">${p.stats.apps>0?p.stats.rating.toFixed(1):'—'}</td>
     </tr>`).join('')}
     </tbody></table>
   </div>
   <div class="card">
-    <div class="ch"><span class="ct">League Table</span></div>
-    ${miniTable(team.leagueId)}
+    <div class="ch"><span class="ct">Transfer Rumors</span></div>
+    ${G.transferRumors.slice(0,5).map(r=>`<div class="rumor-card">
+      <strong style="color:var(--text)">${r.player}</strong> <span style="color:var(--text3)">(${r.playerTeam})</span><br>
+      <span style="color:var(--gold)">${r.club}</span> <span style="color:var(--text3)">${r.type}</span>
+      <span style="float:right;color:var(--accent);font-family:var(--fm)">${r.fee}</span>
+    </div>`).join('') || '<p style="color:var(--text3)">No rumors yet</p>'}
   </div>
 </div>`;
 }
 
-function miniTable(lid){
-  const lg=G.leagues[lid];if(!lg)return '<p style="color:var(--text3)">No data</p>';
-  return `<table><thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead><tbody>
-  ${lg.table.slice(0,8).map((r,i)=>{
-    const t=G.teams.find(x=>x.id===r.id);
-    const isp=r.id===G.playerTeam;
-    const gd=r.gf-r.ga;
-    return `<tr style="${isp?'background:rgba(0,212,255,.06)':''}">
-      <td class="tr" style="border-left:2px solid ${i<4?'var(--accent)':i>=lg.table.length-3?'var(--red)':'transparent'};padding-left:8px">${i+1}</td>
-      <td><span class="tname" style="${isp?'color:var(--accent)':''}">${t?.name||'?'}</span></td>
-      <td class="tn">${r.w+r.d+r.l}</td>
-      <td class="tn">${r.w}</td><td class="tn">${r.d}</td><td class="tn">${r.l}</td>
-      <td class="tn" style="color:${gd>0?'var(--green)':gd<0?'var(--red)':'var(--text2)'}">${gd>0?'+':''}${gd}</td>
-      <td class="tn" style="font-weight:700;font-size:13px">${r.pts}</td>
-    </tr>`;
-  }).join('')}
-  </tbody></table>`;
-}
-
-// ══ RENDER: SQUAD ════════════════════════════════════════════════
+// ═══════ RENDER: SQUAD ═══════════════════════
 function renderSquad(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const players=team.squad.map(id=>G.players.find(p=>p.id===id)).filter(Boolean)
@@ -1312,7 +1243,7 @@ function renderSquad(){
 <div class="card">
   <div class="ch">
     <span class="ct">Squad (${players.length})</span>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
       <input class="finput" id="sq-s" placeholder="Search..." oninput="sqFilter()" style="width:160px">
       <select class="fselect" id="sq-pos" style="width:90px" onchange="sqFilter()">
         <option value="">All Pos</option>${['GK','CB','LB','RB','CDM','CM','CAM','LM','RM','LW','RW','ST','CF'].map(p=>`<option>${p}</option>`).join('')}
@@ -1348,7 +1279,7 @@ function sqTable(players){
       <td class="tn">${dri}</td><td class="tn">${def}</td><td class="tn">${phy}</td>
       <td><span style="color:${p.form>=72?'var(--green)':p.form>=55?'var(--gold)':'var(--red)'}">${p.form}%</span></td>
       <td><span style="color:${p.morale>=70?'var(--green)':p.morale>=50?'var(--gold)':'var(--red)'}">${p.morale}%</span></td>
-      <td class="tn" style="color:var(--text2)">${money(p.value)}</td>
+      <td class="tn">${money(p.value)}</td>
       <td class="tn" style="color:var(--text3)">£${(p.contract.salary).toLocaleString()}</td>
       <td class="tn" style="color:${p.contract.expires<=G.season+1?'var(--red)':'var(--text3)'}">S${p.contract.expires}</td>
     </tr>`;
@@ -1364,18 +1295,16 @@ function sqFilter(){
   const tbl=document.getElementById('sq-tbl');if(tbl)tbl.innerHTML=sqTable(players);
 }
 
-// ══ RENDER: TACTICS ══════════════════════════════════════════════
+// ═══════ RENDER: TACTICS ═════════════════════
 function renderTactics(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const fdata=FORMATIONS[G.formation]||FORMATIONS['4-3-3'];
-  const positions=fdata.pos, coords=fdata.coords;
+  const positions=fdata.pos,coords=fdata.coords;
   const players=team.squad.map(id=>G.players.find(p=>p.id===id)).filter(Boolean).sort((a,b)=>b.overall-a.overall);
-
   const assigned=positions.map((pos,i)=>{
     const ideal=players.filter(p=>!assigned?.includes(p)&&(p.pos===pos||(pos==='CM'&&['CM','CAM','CDM'].includes(p.pos))||(pos==='CB'&&p.pos==='CB')));
     return ideal[0]||players[i]||null;
   });
-
   return `
 <div class="g2">
   <div class="card">
@@ -1396,8 +1325,6 @@ function renderTactics(){
           <rect x="35" y="5" width="30" height="9" fill="none" stroke="#fff" stroke-width=".5"/>
           <rect x="25" y="127" width="50" height="18" fill="none" stroke="#fff" stroke-width=".5"/>
           <rect x="35" y="136" width="30" height="9" fill="none" stroke="#fff" stroke-width=".5"/>
-          <circle cx="50" cy="17" r="1" fill="#fff"/>
-          <circle cx="50" cy="133" r="1" fill="#fff"/>
         </svg>
         ${coords.map((c,i)=>{
           const p=assigned[i];
@@ -1421,7 +1348,7 @@ function renderTactics(){
     <div style="margin-bottom:18px">
       <div class="flabel" style="margin-bottom:8px">Defensive Line</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${['low block','balanced','high press'].map(s=>`<button class="btn ${G.tactic.dline===s?'btn-primary':'btn-secondary'}" onclick="G.tactic.dline='${s}';nav('tactics')">${s.replace('_',' ')}</button>`).join('')}
+        ${['low block','balanced','high press'].map(s=>`<button class="btn ${G.tactic.dline===s?'btn-primary':'btn-secondary'}" onclick="G.tactic.dline='${s}';nav('tactics')">${s}</button>`).join('')}
       </div>
     </div>
     ${renderSlider('Pressing Intensity','pressing',G.tactic.pressing)}
@@ -1431,8 +1358,7 @@ function renderTactics(){
       <div class="ct-sm" style="margin-bottom:10px">Starting XI</div>
       <table><thead><tr><th>#</th><th>Name</th><th>Pos</th><th>OVR</th><th>Role</th></tr></thead><tbody>
       ${assigned.map((p,i)=>p?`<tr onclick="showPlayerModal(${p.id})" style="cursor:pointer">
-        <td class="tr">${i+1}</td>
-        <td><span class="tname">${p.name}</span></td>
+        <td class="tr">${i+1}</td><td><span class="tname">${p.name}</span></td>
         <td><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></td>
         <td><span class="ovr ${ovrCls(p.overall)}">${p.overall}</span></td>
         <td><span class="tsub">${p.role}</span></td>
@@ -1452,31 +1378,27 @@ function renderSlider(label,key,val){
   </div>`;
 }
 
-// ══ RENDER: FIXTURES ════════════════════════════════════════════
+// ═══════ RENDER: FIXTURES ════════════════════
 function renderFixtures(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const myFix=G.fixtures.filter(f=>f.homeId===G.playerTeam||f.awayId===G.playerTeam);
   const myRes=G.results.filter(r=>r.homeId===G.playerTeam||r.awayId===G.playerTeam);
   return `<div class="card">
     <div class="ch"><span class="ct">Fixtures & Results</span></div>
-    <div class="tw"><table><thead><tr><th>MD</th><th>Date</th><th>Home</th><th>Score</th><th>Away</th><th>Stadium</th><th>xG</th></tr></thead><tbody>
+    <div class="tw"><table><thead><tr><th>MD</th><th>Date</th><th>Home</th><th>Score</th><th>Away</th><th>xG</th></tr></thead><tbody>
     ${myFix.map(f=>{
       const res=myRes.find(r=>r.id===f.id);
       const hn=G.teams.find(t=>t.id===f.homeId)?.name||'?';
       const an=G.teams.find(t=>t.id===f.awayId)?.name||'?';
       const isH=f.homeId===G.playerTeam;
       let badge='';
-      if(res){
-        const won=isH?res.hg>res.ag:res.ag>res.hg,draw=res.hg===res.ag;
-        badge=`<span class="badge badge-${draw?'y':won?'g':'r'}">${draw?'D':won?'W':'L'}</span>`;
-      }
+      if(res){const won=isH?res.hg>res.ag:res.ag>res.hg,draw=res.hg===res.ag;badge=`<span class="badge badge-${draw?'y':won?'g':'r'}">${draw?'D':won?'W':'L'}</span>`;}
       return `<tr ${res?`onclick="showMatchModal(${f.id})" style="cursor:pointer"`:''}">
         <td class="tr">${f.matchday}</td>
         <td><span class="tsub">${fmtDate(f.date)}</span></td>
         <td><span class="tname" style="${f.homeId===G.playerTeam?'color:var(--accent)':''}">${hn}</span></td>
         <td style="text-align:center;font-family:var(--fm);font-weight:700">${res?`${res.hg}–${res.ag}`:badge||'<span style="color:var(--text3)">vs</span>'}</td>
         <td><span class="tname" style="${f.awayId===G.playerTeam?'color:var(--accent)':''}">${an}</span></td>
-        <td><span class="tsub">${G.teams.find(t=>t.id===f.homeId)?.stadium||'—'}</span></td>
         <td class="tn" style="color:var(--text3)">${res?`${res.stats.hXg}–${res.stats.aXg}`:'—'}</td>
       </tr>`;
     }).join('')}
@@ -1484,38 +1406,32 @@ function renderFixtures(){
   </div>`;
 }
 
-// ══ RENDER: TABLE ════════════════════════════════════════════════
+// ═══════ RENDER: TABLE ═══════════════════════
 function renderTable(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const lg=G.leagues[team.leagueId];if(!lg)return '';
   return `<div class="card">
     <div class="ch">
       <span class="ct">${lg.name} — Season ${G.season}</span>
-      <div style="display:flex;gap:6px">
-        <span class="comp-badge comp-cl">UCL ×4</span>
-        <span class="comp-badge comp-el">UEL ×3</span>
-        <span class="comp-badge comp-ec">UECL ×2</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge" style="background:rgba(0,212,255,.1);color:var(--accent)">Tier ${lg.tier}</span>
+        <span class="ct-sm">Rep: ${lg.rep}</span>
       </div>
     </div>
-    <div class="tw"><table><thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Form</th><th>xG</th><th>Pts</th></tr></thead><tbody>
+    <div class="tw"><table><thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Form</th><th>Pts</th></tr></thead><tbody>
     ${lg.table.map((r,i)=>{
       const t=G.teams.find(x=>x.id===r.id);
       const isp=r.id===G.playerTeam;
       const gd=r.gf-r.ga;
       const played=r.w+r.d+r.l;
       const zone=i<4?'var(--accent)':i<7?'var(--orange)':i<9?'var(--purple)':i>=lg.table.length-3?'var(--red)':'transparent';
-      const xGApprox=(r.gf*0.9+Math.random()*r.l*0.5).toFixed(1);
       return `<tr style="${isp?'background:rgba(0,212,255,.06)':''}">
         <td style="padding-left:10px;border-left:3px solid ${zone}" class="tr">${i+1}</td>
-        <td><span class="tname" style="${isp?'color:var(--accent)':''}">${t?.name||'?'}</span>
-          ${t?.trophies?.league?`<span class="badge badge-g" style="margin-left:4px">🏆×${t.trophies.league}</span>`:''}
-        </td>
-        <td class="tn">${played}</td>
-        <td class="tn">${r.w}</td><td class="tn">${r.d}</td><td class="tn">${r.l}</td>
+        <td><span class="tname" style="${isp?'color:var(--accent)':''}">${t?.name||'?'}</span>${t?.trophies?.league?`<span class="badge badge-g" style="margin-left:4px">🏆×${t.trophies.league}</span>`:''}</td>
+        <td class="tn">${played}</td><td class="tn">${r.w}</td><td class="tn">${r.d}</td><td class="tn">${r.l}</td>
         <td class="tn">${r.gf}</td><td class="tn">${r.ga}</td>
         <td class="tn" style="color:${gd>0?'var(--green)':gd<0?'var(--red)':'var(--text2)'}">${gd>0?'+':''}${gd}</td>
         <td><div style="display:flex;gap:2px">${r.form?.slice(-5).map(f=>`<div class="form-${f.toLowerCase()}"></div>`).join('')||''}</div></td>
-        <td class="tn" style="color:var(--text3)">${xGApprox}</td>
         <td class="tn" style="font-weight:700;font-size:14px;color:${isp?'var(--accent)':'var(--text)'}">${r.pts}</td>
       </tr>`;
     }).join('')}
@@ -1529,7 +1445,7 @@ function renderTable(){
   </div>`;
 }
 
-// ══ RENDER: CONTINENTAL ═════════════════════════════════════════
+// ═══════ RENDER: CONTINENTAL ═════════════════
 function renderContinental(){
   return `
 <div class="cont-header">
@@ -1542,9 +1458,7 @@ ${Object.entries(CONTINENTAL).map(([key,comp])=>{
   const teams=clubs.slice(0,8).map(id=>G.teams.find(t=>t.id===id)).filter(Boolean);
   const myEntry=clubs.includes(G.playerTeam);
   return `<div class="card">
-    <div class="ch"><span class="ct" style="font-size:16px">${comp.name}</span>
-      ${myEntry?`<span class="badge badge-g">Qualified</span>`:''}
-    </div>
+    <div class="ch"><span class="ct" style="font-size:16px">${comp.name}</span>${myEntry?`<span class="badge badge-g">Qualified</span>`:''}</div>
     <div style="font-size:10px;color:var(--text3);margin-bottom:10px">${comp.region} · ${comp.slots} spots per league</div>
     ${teams.map((t,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
       <span class="tr">${i+1}</span>
@@ -1558,12 +1472,76 @@ ${Object.entries(CONTINENTAL).map(([key,comp])=>{
 </div>`;
 }
 
-// ══ RENDER: TRANSFERS ═══════════════════════════════════════════
+// ═══════ RENDER: INTERNATIONAL ═══════════════
+function renderInternational(){
+  const tabs=['World Cup','Euro Champ','Copa América','Asian Cup','Gold Cup','African Cup'];
+  const confs={UEFA:['England','Spain','Germany','France','Italy','Portugal','Netherlands','Belgium','Croatia','Serbia'],CONMEBOL:['Brazil','Argentina','Colombia','Chile','Uruguay'],CONCACAF:['USA','Mexico'],AFC:['Japan','South Korea','Saudi Arabia'],CAF:['Morocco','Nigeria','Senegal']};
+
+  // Build international squads from player nationalities
+  const getSquad = (natNames) => {
+    const allNats = natNames.flatMap(n=>INTL_TEAMS[n]?.nats||[]);
+    return G.players.filter(p=>allNats.includes(p.nationality)).sort((a,b)=>b.overall-a.overall).slice(0,23);
+  };
+
+  return `
+<div class="cont-header">
+  <div style="font-family:var(--fd);font-size:24px;font-weight:700;margin-bottom:4px">🌐 International Football</div>
+  <div style="font-size:11px;color:var(--text2)">National teams assembled from players across the world</div>
+</div>
+<div class="tabs">
+  ${Object.entries(confs).map(([conf],i)=>`<div class="tab${i===0?' active':''}" onclick="switchIntlTab('${conf}',this)">${conf}</div>`).join('')}
+</div>
+<div id="intl-content">
+${renderIntlConf('UEFA',confs.UEFA)}
+</div>`;
+}
+
+function renderIntlConf(conf, teams){
+  return `<div class="g3">
+  ${teams.map(nation=>{
+    const intl=INTL_TEAMS[nation];if(!intl)return '';
+    const nats=intl.nats;
+    const squad=G.players.filter(p=>nats.includes(p.nationality)).sort((a,b)=>b.overall-a.overall).slice(0,23);
+    const avgOvr=squad.length?Math.round(avg(squad.map(p=>p.overall))):0;
+    const topPlayers=squad.slice(0,5);
+    return `<div class="card">
+      <div class="ch">
+        <span style="font-size:22px">${intl.flag}</span>
+        <span class="ct" style="font-size:15px">${nation}</span>
+        <span class="ovr ${ovrCls(avgOvr)}">${avgOvr}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:10px">${squad.length} players available · ${conf}</div>
+      ${topPlayers.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11px">
+        <span class="pbadge ${posCls(p.pos)}">${p.pos}</span>
+        <span class="tname" onclick="showPlayerModal(${p.id})" style="cursor:pointer;flex:1">${p.name}</span>
+        <span class="ovr ${ovrCls(p.overall)}" style="width:28px;height:28px;font-size:11px">${p.overall}</span>
+      </div>`).join('')}
+      ${squad.length>5?`<div style="font-size:10px;color:var(--text3);margin-top:6px">+${squad.length-5} more players</div>`:''}
+    </div>`;
+  }).join('')}
+  </div>`;
+}
+
+function switchIntlTab(conf, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const confs={
+    UEFA:['England','Spain','Germany','France','Italy','Portugal','Netherlands','Belgium','Croatia','Serbia'],
+    CONMEBOL:['Brazil','Argentina','Colombia','Chile','Uruguay'],
+    CONCACAF:['USA','Mexico'],
+    AFC:['Japan','South Korea','Saudi Arabia'],
+    CAF:['Morocco','Nigeria','Senegal']
+  };
+  document.getElementById('intl-content').innerHTML=renderIntlConf(conf,confs[conf]||[]);
+}
+
+// ═══════ RENDER: TRANSFERS ═══════════════════
 function renderTransfers(){
   return `
 <div class="tabs">
   <div class="tab active" id="tab-mkt" onclick="switchTTab('mkt')">Transfer Market</div>
   <div class="tab" id="tab-lst" onclick="switchTTab('lst')">Listed Players</div>
+  <div class="tab" id="tab-rumor" onclick="switchTTab('rumor')">Rumors</div>
   <div class="tab" id="tab-log" onclick="switchTTab('log')">Transfer Log</div>
 </div>
 <div id="t-content">${tMarket()}</div>`;
@@ -1574,6 +1552,7 @@ function switchTTab(tab){
   const c=document.getElementById('t-content');
   if(tab==='mkt')c.innerHTML=tMarket();
   else if(tab==='lst')c.innerHTML=tListed();
+  else if(tab==='rumor')c.innerHTML=tRumors();
   else c.innerHTML=tLog();
 }
 function tMarket(){
@@ -1583,13 +1562,17 @@ function tMarket(){
     <select class="fselect" id="tm-nat" style="width:130px" onchange="tmFilter()"><option value="">All Nations</option>${NATS.map(n=>`<option>${n}</option>`).join('')}</select>
     <select class="fselect" id="tm-age" style="width:100px" onchange="tmFilter()"><option value="">All Ages</option><option value="u21">Under 21</option><option value="u25">Under 25</option><option value="prime">Prime (25-30)</option><option value="vet">Veteran (30+)</option></select>
     <select class="fselect" id="tm-ovr" style="width:110px" onchange="tmFilter()"><option value="">Any Rating</option><option value="70">OVR 70+</option><option value="75">OVR 75+</option><option value="80">OVR 80+</option><option value="85">OVR 85+</option></select>
+    <select class="fselect" id="tm-tier" style="width:90px" onchange="tmFilter()"><option value="">All Tiers</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option><option value="4">Tier 4</option></select>
+    <select class="fselect" id="tm-pot" style="width:120px" onchange="tmFilter()"><option value="">Any Potential</option><option value="80">POT 80+</option><option value="85">POT 85+</option><option value="90">POT 90+</option></select>
   </div>
   <div class="card"><div class="tw" id="tm-tbl">${tmTable(G.players.filter(p=>p.teamId!==G.playerTeam).sort((a,b)=>b.overall-a.overall).slice(0,80))}</div></div>`;
 }
 function tmTable(players){
-  return `<table><thead><tr><th>Name</th><th>Nat</th><th>Age</th><th>Pos</th><th>OVR</th><th>POT</th><th>Club</th><th>Value</th><th>Wage/wk</th><th>Morale</th><th>Action</th></tr></thead><tbody>
+  return `<table><thead><tr><th>Name</th><th>Nat</th><th>Age</th><th>Pos</th><th>OVR</th><th>POT</th><th>Club</th><th>Tier</th><th>Value</th><th>Wage/wk</th><th>Action</th></tr></thead><tbody>
   ${players.map(p=>{
     const club=G.teams.find(t=>t.id===p.teamId)?.name||'Free Agent';
+    const tierLg=G.teams.find(t=>t.id===p.teamId)?.tier||'—';
+    const tierColor=tierLg===1?'var(--accent)':tierLg===2?'var(--green)':tierLg===3?'var(--gold)':'var(--text3)';
     return `<tr onclick="showPlayerModal(${p.id})" style="cursor:pointer">
       <td><span class="tname">${p.name}</span><br><span class="tsub">${p.personality}</span></td>
       <td><span title="${p.nationality}">${NAT_FLAGS[p.nationality]||'🏳️'}</span></td>
@@ -1598,11 +1581,13 @@ function tmTable(players){
       <td><span class="ovr ${ovrCls(p.overall)}">${p.overall}</span></td>
       <td class="tn" style="color:var(--accent)">${p.potential}</td>
       <td><span class="tsub">${club}</span></td>
+      <td class="tn" style="color:${tierColor}">T${tierLg}</td>
       <td class="tn">${money(p.value)}</td>
       <td class="tn" style="color:var(--text3)">£${p.contract.salary.toLocaleString()}</td>
-      <td><span style="color:${p.morale>=70?'var(--green)':p.morale>=50?'var(--gold)':'var(--red)'}">${p.morale}%</span></td>
-      <td><button class="btn btn-success" style="padding:3px 9px;font-size:10px" onclick="event.stopPropagation();makeOffer(${p.id})">Bid</button>
-      <button class="btn btn-secondary" style="padding:3px 9px;font-size:10px;margin-left:3px" onclick="event.stopPropagation();scoutPlayer(${p.id})">Scout</button></td>
+      <td>
+        <button class="btn btn-success" style="padding:3px 9px;font-size:10px" onclick="event.stopPropagation();makeOffer(${p.id})">Bid</button>
+        <button class="btn btn-secondary" style="padding:3px 9px;font-size:10px;margin-left:3px" onclick="event.stopPropagation();scoutPlayer(${p.id})">Scout</button>
+      </td>
     </tr>`;
   }).join('')}
   </tbody></table>`;
@@ -1613,16 +1598,35 @@ function tmFilter(){
   const nat=document.getElementById('tm-nat')?.value||'';
   const age=document.getElementById('tm-age')?.value||'';
   const ovr=parseInt(document.getElementById('tm-ovr')?.value||'0')||0;
+  const tier=parseInt(document.getElementById('tm-tier')?.value||'0')||0;
+  const pot=parseInt(document.getElementById('tm-pot')?.value||'0')||0;
   let players=G.players.filter(p=>p.teamId!==G.playerTeam)
     .filter(p=>!q||p.name.toLowerCase().includes(q)||p.nationality.toLowerCase().includes(q))
     .filter(p=>!pos||p.pos===pos).filter(p=>!nat||p.nationality===nat)
     .filter(p=>!age||(age==='u21'?p.age<21:age==='u25'?p.age<25:age==='prime'?p.age>=25&&p.age<=30:p.age>30))
-    .filter(p=>!ovr||p.overall>=ovr).sort((a,b)=>b.overall-a.overall).slice(0,80);
+    .filter(p=>!ovr||p.overall>=ovr)
+    .filter(p=>!tier||p.tier===tier)
+    .filter(p=>!pot||p.potential>=pot)
+    .sort((a,b)=>b.overall-a.overall).slice(0,80);
   const tbl=document.getElementById('tm-tbl');if(tbl)tbl.innerHTML=tmTable(players);
 }
 function tListed(){
   const listed=G.players.filter(p=>p.forSale||p.transferListed);
   return `<div class="card"><div class="tw">${tmTable(listed)}</div></div>`;
+}
+function tRumors(){
+  return `<div class="card">
+    <div class="ch"><span class="ct">Transfer Rumors</span><button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="generateTransferRumors();nav('transfers')">🔄 Refresh</button></div>
+    ${G.transferRumors.map(r=>`<div class="rumor-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <strong style="color:var(--text)">${r.player}</strong> <span style="color:var(--text3);font-size:11px">(${r.playerTeam})</span><br>
+          <span style="color:var(--gold)">${r.club}</span> <span style="color:var(--text2)">${r.type}</span> this player
+        </div>
+        <span style="color:var(--accent);font-family:var(--fm);font-size:12px">${r.fee}</span>
+      </div>
+    </div>`).join('') || '<p style="color:var(--text3)">No rumors active</p>'}
+  </div>`;
 }
 function tLog(){
   if(!G.transfers.length)return '<div class="card"><p style="color:var(--text3)">No transfers yet</p></div>';
@@ -1637,29 +1641,32 @@ function tLog(){
   </tbody></table></div>`;
 }
 
-// ══ RENDER: PLAYERS ═════════════════════════════════════════════
+// ═══════ RENDER: PLAYERS (Advanced Search) ═══
 function renderPlayers(){
-  const top=G.players.sort((a,b)=>b.overall-a.overall).slice(0,150);
   return `<div class="card">
-    <div class="ch">
-      <span class="ct">Global Player Search</span>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <input class="finput" id="gp-s" placeholder="Name / Nationality..." oninput="gpFilter()" style="width:180px">
-        <select class="fselect" id="gp-pos" style="width:90px" onchange="gpFilter()"><option value="">All Pos</option>${['GK','CB','LB','RB','CDM','CM','CAM','LW','RW','ST'].map(p=>`<option>${p}</option>`).join('')}</select>
-        <select class="fselect" id="gp-league" style="width:150px" onchange="gpFilter()">
-          <option value="">All Leagues</option>
-          ${Object.values(G.leagues).sort((a,b)=>b.rep-a.rep).map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}
-        </select>
-      </div>
+    <div class="ch"><span class="ct">Global Player Search</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <input class="finput" id="gp-s" placeholder="Name / Nationality..." oninput="gpFilter()" style="width:180px">
+      <select class="fselect" id="gp-pos" style="width:90px" onchange="gpFilter()"><option value="">All Pos</option>${['GK','CB','LB','RB','CDM','CM','CAM','LW','RW','ST'].map(p=>`<option>${p}</option>`).join('')}</select>
+      <select class="fselect" id="gp-age2" style="width:100px" onchange="gpFilter()"><option value="">All Ages</option><option value="u21">Under 21</option><option value="u25">Under 25</option><option value="prime">Peak (25-30)</option><option value="vet">Veteran 30+</option></select>
+      <select class="fselect" id="gp-ovr" style="width:110px" onchange="gpFilter()"><option value="">Any OVR</option><option value="65">65+</option><option value="70">70+</option><option value="75">75+</option><option value="80">80+</option><option value="85">85+</option></select>
+      <select class="fselect" id="gp-pot" style="width:110px" onchange="gpFilter()"><option value="">Any POT</option><option value="75">75+</option><option value="80">80+</option><option value="85">85+</option><option value="90">90+</option></select>
+      <select class="fselect" id="gp-league" style="width:150px" onchange="gpFilter()"><option value="">All Leagues</option>${Object.values(G.leagues).sort((a,b)=>b.rep-a.rep).map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}</select>
+      <select class="fselect" id="gp-tier" style="width:90px" onchange="gpFilter()"><option value="">All Tiers</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option><option value="4">Tier 4</option></select>
+      <select class="fselect" id="gp-sort" style="width:120px" onchange="gpFilter()">
+        <option value="ovr">Sort: OVR</option><option value="pot">Sort: Potential</option><option value="val">Sort: Value</option><option value="age">Sort: Age</option><option value="goals">Sort: Goals</option>
+      </select>
     </div>
-    <div class="tw" id="gp-tbl">${gpTable(top)}</div>
+    <div class="tw" id="gp-tbl">${gpTable(G.players.sort((a,b)=>b.overall-a.overall).slice(0,100))}</div>
   </div>`;
 }
 function gpTable(players){
-  return `<table><thead><tr><th>#</th><th>Name</th><th>Nat</th><th>Age</th><th>Pos</th><th>OVR</th><th>POT</th><th>Club</th><th>League</th><th>Value</th><th>Goals</th><th>Assists</th><th>Apps</th></tr></thead><tbody>
+  return `<table><thead><tr><th>#</th><th>Name</th><th>Nat</th><th>Age</th><th>Pos</th><th>OVR</th><th>POT</th><th>Club</th><th>League</th><th>Tier</th><th>Value</th><th>G</th><th>A</th><th>Apps</th></tr></thead><tbody>
   ${players.map((p,i)=>{
     const club=G.teams.find(t=>t.id===p.teamId);
     const lg=club?G.leagues[club.leagueId]:null;
+    const tierLg=club?.tier||'—';
+    const tierColor=tierLg===1?'var(--accent)':tierLg===2?'var(--green)':tierLg===3?'var(--gold)':'var(--text3)';
     return `<tr onclick="showPlayerModal(${p.id})" style="cursor:pointer">
       <td class="tr">${i+1}</td>
       <td><span class="tname">${p.name}</span></td>
@@ -1670,6 +1677,7 @@ function gpTable(players){
       <td class="tn" style="color:var(--accent)">${p.potential}</td>
       <td><span class="tsub">${club?.name||'Free'}</span></td>
       <td><span class="tsub">${lg?.name||'—'}</span></td>
+      <td class="tn" style="color:${tierColor}">T${tierLg}</td>
       <td class="tn">${money(p.value)}</td>
       <td class="tn">${p.careerStats.goals}</td>
       <td class="tn">${p.careerStats.assists}</td>
@@ -1681,24 +1689,36 @@ function gpTable(players){
 function gpFilter(){
   const q=(document.getElementById('gp-s')?.value||'').toLowerCase();
   const pos=document.getElementById('gp-pos')?.value||'';
+  const age=document.getElementById('gp-age2')?.value||'';
+  const ovr=parseInt(document.getElementById('gp-ovr')?.value||'0')||0;
+  const pot=parseInt(document.getElementById('gp-pot')?.value||'0')||0;
   const lid=document.getElementById('gp-league')?.value||'';
+  const tier=parseInt(document.getElementById('gp-tier')?.value||'0')||0;
+  const sort=document.getElementById('gp-sort')?.value||'ovr';
   let players=G.players
     .filter(p=>!q||p.name.toLowerCase().includes(q)||p.nationality.toLowerCase().includes(q))
     .filter(p=>!pos||p.pos===pos)
+    .filter(p=>!age||(age==='u21'?p.age<21:age==='u25'?p.age<25:age==='prime'?p.age>=25&&p.age<=30:p.age>30))
+    .filter(p=>!ovr||p.overall>=ovr)
+    .filter(p=>!pot||p.potential>=pot)
     .filter(p=>{if(!lid)return true;const club=G.teams.find(t=>t.id===p.teamId);return club?.leagueId===lid;})
-    .sort((a,b)=>b.overall-a.overall).slice(0,150);
-  const tbl=document.getElementById('gp-tbl');if(tbl)tbl.innerHTML=gpTable(players);
+    .filter(p=>!tier||G.teams.find(t=>t.id===p.teamId)?.tier===tier);
+  if(sort==='pot') players.sort((a,b)=>b.potential-a.potential);
+  else if(sort==='val') players.sort((a,b)=>b.value-a.value);
+  else if(sort==='age') players.sort((a,b)=>a.age-b.age);
+  else if(sort==='goals') players.sort((a,b)=>b.careerStats.goals-a.careerStats.goals);
+  else players.sort((a,b)=>b.overall-a.overall);
+  const tbl=document.getElementById('gp-tbl');if(tbl)tbl.innerHTML=gpTable(players.slice(0,100));
 }
 
-// ══ RENDER: HISTORY ═════════════════════════════════════════════
+// ═══════ RENDER: HISTORY ═════════════════════
 function renderHistory(){
-  // Top scorers all time
-  const topScore=[...G.players].sort((a,b)=>b.careerStats.goals-a.careerStats.goals).slice(0,10);
   return `
 <div class="tabs">
   <div class="tab active" id="ht-0" onclick="switchHTab(0)">Champions</div>
   <div class="tab" id="ht-1" onclick="switchHTab(1)">Top Scorers</div>
-  <div class="tab" id="ht-2" onclick="switchHTab(2)">Transfers</div>
+  <div class="tab" id="ht-2" onclick="switchHTab(2)">League Coefficients</div>
+  <div class="tab" id="ht-3" onclick="switchHTab(3)">Transfers</div>
 </div>
 <div id="h-content">
 ${G.history.length?`<div class="card"><table><thead><tr><th>Season</th><th>League</th><th>Champion</th><th>Points</th><th>Date</th></tr></thead><tbody>
@@ -1712,19 +1732,19 @@ ${[...G.history].reverse().map(h=>`<tr>
 </div>`;
 }
 function switchHTab(i){
-  document.querySelectorAll('#h-content').forEach(()=>{});
-  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
+  document.querySelectorAll('[id^="ht-"]').forEach((t,j)=>t.classList.toggle('active',i===j));
   const c=document.getElementById('h-content');
-  if(i===0)c.innerHTML=G.history.length?`<div class="card"><table><thead><tr><th>Season</th><th>League</th><th>Champion</th><th>Points</th></tr></thead><tbody>${[...G.history].reverse().map(h=>`<tr><td class="tn">S${h.season}</td><td>${h.league}</td><td><span class="tname">${h.champion}</span></td><td class="tn">${h.pts}</td></tr>`).join('')}</tbody></table></div>`:'<div class="card"><p style="color:var(--text3)">No history yet</p></div>';
+  if(i===0) c.innerHTML=G.history.length?`<div class="card"><table><thead><tr><th>Season</th><th>League</th><th>Champion</th><th>Points</th></tr></thead><tbody>${[...G.history].reverse().map(h=>`<tr><td class="tn">S${h.season}</td><td>${h.league}</td><td><span class="tname">${h.champion}</span></td><td class="tn">${h.pts}</td></tr>`).join('')}</tbody></table></div>`:'<div class="card"><p style="color:var(--text3)">No history yet</p></div>';
   else if(i===1){
     const t=[...G.players].sort((a,b)=>b.careerStats.goals-a.careerStats.goals).slice(0,30);
-    c.innerHTML=`<div class="card"><table><thead><tr><th>#</th><th>Name</th><th>Pos</th><th>Club</th><th>Goals</th><th>Assists</th><th>Apps</th></tr></thead><tbody>${t.map((p,i)=>`<tr onclick="showPlayerModal(${p.id})" style="cursor:pointer"><td class="tr">${i+1}</td><td><span class="tname">${p.name}</span></td><td><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></td><td class="tsub">${G.teams.find(t=>t.id===p.teamId)?.name||'—'}</td><td class="tn" style="color:var(--green);font-weight:700">${p.careerStats.goals}</td><td class="tn">${p.careerStats.assists}</td><td class="tn">${p.careerStats.apps}</td></tr>`).join('')}</tbody></table></div>`;
-  } else {
-    c.innerHTML=tLog();
-  }
+    c.innerHTML=`<div class="card"><table><thead><tr><th>#</th><th>Name</th><th>Nat</th><th>Pos</th><th>Club</th><th>Goals</th><th>Assists</th><th>Apps</th></tr></thead><tbody>${t.map((p,i)=>`<tr onclick="showPlayerModal(${p.id})" style="cursor:pointer"><td class="tr">${i+1}</td><td><span class="tname">${p.name}</span></td><td>${NAT_FLAGS[p.nationality]||'🏳️'}</td><td><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></td><td class="tsub">${G.teams.find(t=>t.id===p.teamId)?.name||'—'}</td><td class="tn" style="color:var(--green);font-weight:700">${p.careerStats.goals}</td><td class="tn">${p.careerStats.assists}</td><td class="tn">${p.careerStats.apps}</td></tr>`).join('')}</tbody></table></div>`;
+  } else if(i===2){
+    const sorted=Object.entries(G.leagueCoefficients).map(([id,coeff])=>{const lg=G.leagues[id];return {id,name:lg?.name||id,country:lg?.country||'',coeff,tier:lg?.tier||'?'};}).sort((a,b)=>b.coeff-a.coeff);
+    c.innerHTML=`<div class="card"><table><thead><tr><th>#</th><th>League</th><th>Country</th><th>Tier</th><th>Coefficient</th></tr></thead><tbody>${sorted.map((r,i)=>`<tr><td class="tr">${i+1}</td><td><span class="tname">${r.name}</span></td><td class="tsub">${r.country}</td><td class="tn" style="color:${r.tier===1?'var(--accent)':r.tier===2?'var(--green)':r.tier===3?'var(--gold)':'var(--text3)'}">T${r.tier}</td><td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:4px;background:var(--bg4);border-radius:2px"><div style="height:100%;background:var(--accent);border-radius:2px;width:${r.coeff}%"></div></div><span class="tn">${r.coeff}</span></div></td></tr>`).join('')}</tbody></table></div>`;
+  } else c.innerHTML=tLog();
 }
 
-// ══ RENDER: FINANCES ════════════════════════════════════════════
+// ═══════ RENDER: FINANCES ════════════════════
 function renderFinances(){
   const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
   const players=team.squad.map(id=>G.players.find(p=>p.id===id)).filter(Boolean);
@@ -1733,8 +1753,8 @@ function renderFinances(){
   return `
 <div class="g3" style="margin-bottom:16px">
   <div class="sbox"><div class="sv" style="color:var(--gold)">${money(team.finances.transferBudget)}</div><div class="sl">Transfer Budget</div></div>
-  <div class="sbox"><div class="sv">${money(team.finances.wageBudget)}</div><div class="sl">Wage Budget</div><div class="ss">£${totalWages.toLocaleString()}pw used</div></div>
-  <div class="sbox"><div class="sv" style="color:var(--green)">${money(sqVal)}</div><div class="sl">Squad Value</div></div>
+  <div class="sbox"><div class="sv">${moneyGBP(team.finances.wageBudget)}</div><div class="sl">Wage Budget</div><div class="ss">${moneyGBP(totalWages)}pw used</div></div>
+  <div class="sbox"><div class="sv" style="color:var(--green)">${money(sqVal)}</div><div class="sl">Squad Market Value</div></div>
 </div>
 <div class="card">
   <div class="ch"><span class="ct">Contracts</span></div>
@@ -1746,299 +1766,25 @@ function renderFinances(){
     <td class="tn">£${p.contract.salary.toLocaleString()}</td>
     <td class="tn" style="color:${p.contract.expires<=G.season+1?'var(--red)':'var(--text2)'}">S${p.contract.expires}</td>
     <td class="tn">${money(p.value)}</td>
-    <td><button class="btn btn-danger" style="padding:3px 9px;font-size:10px" onclick="sellPlayer(${p.id})">Sell</button>
-    <button class="btn btn-secondary" style="padding:3px 9px;font-size:10px;margin-left:3px" onclick="renewContract(${p.id})">Renew</button></td>
+    <td>
+      <button class="btn btn-danger" style="padding:3px 9px;font-size:10px" onclick="sellPlayer(${p.id})">Sell</button>
+      <button class="btn btn-secondary" style="padding:3px 9px;font-size:10px;margin-left:3px" onclick="renewContract(${p.id})">Renew</button>
+    </td>
   </tr>`).join('')}
   </tbody></table></div>
 </div>`;
 }
-function renewContract(pid){
-  const p=G.players.find(x=>x.id===pid);
-  if(!p)return;
-  p.contract.expires=G.season+rand(2,4);
-  p.morale=clamp(p.morale+rand(5,15),50,100);
-  toast(`${p.name} contract renewed until Season ${p.contract.expires}`,'s');
-  nav('finances');
-}
 
-// ══ RENDER: DB EDITOR ═══════════════════════════════════════════
-function renderDbEditor(){
-  const leagueCount=Object.keys(G.leagues).length;
-  const teamCount=G.teams.length;
-  const playerCount=G.players.length;
-  return `
-<div class="g3" style="margin-bottom:16px">
-  <div class="sbox"><div class="sv">${leagueCount}</div><div class="sl">Leagues</div></div>
-  <div class="sbox"><div class="sv">${teamCount}</div><div class="sl">Teams</div></div>
-  <div class="sbox"><div class="sv">${playerCount.toLocaleString()}</div><div class="sl">Players</div></div>
-</div>
-<div class="tabs">
-  <div class="tab active" id="dbt-0" onclick="switchDbTab(0)">Browse Leagues</div>
-  <div class="tab" id="dbt-1" onclick="switchDbTab(1)">Create League</div>
-  <div class="tab" id="dbt-2" onclick="switchDbTab(2)">Create Player</div>
-  <div class="tab" id="dbt-3" onclick="switchDbTab(3)">Export / Import</div>
-</div>
-<div id="db-content">${dbBrowse()}</div>`;
-}
-function switchDbTab(i){
-  document.querySelectorAll('[id^="dbt-"]').forEach((t,j)=>t.classList.toggle('active',i===j));
-  const c=document.getElementById('db-content');
-  if(i===0)c.innerHTML=dbBrowse();
-  else if(i===1)c.innerHTML=dbCreateLeague();
-  else if(i===2)c.innerHTML=dbCreatePlayer();
-  else c.innerHTML=dbExportImport();
-}
-function dbBrowse(){
-  // Group leagues by continent
-  const byCont={};
-  Object.values(G.leagues).forEach(l=>{
-    if(!byCont[l.continent])byCont[l.continent]=[];
-    byCont[l.continent].push(l);
-  });
-  return `<div class="card">
-  ${Object.entries(byCont).map(([cont,leagues])=>`
-    <div class="league-group">
-      <div class="league-group-hdr" onclick="toggleGroup(this)">
-        <span>${cont} (${leagues.length} leagues)</span><span>▼</span>
-      </div>
-      <div class="league-group-body">
-        <table><thead><tr><th>League</th><th>Country</th><th>Rep</th><th>Teams</th><th>Players</th></tr></thead><tbody>
-        ${leagues.sort((a,b)=>b.rep-a.rep).map(l=>`<tr>
-          <td><span class="tname">${l.name}</span></td>
-          <td class="tsub">${l.country}</td>
-          <td class="tn" style="color:var(--accent)">${l.rep}</td>
-          <td class="tn">${l.teams.length}</td>
-          <td class="tn">${l.teams.reduce((s,tid)=>{const t=G.teams.find(x=>x.id===tid);return s+(t?.squad.length||0);},0)}</td>
-        </tr>`).join('')}
-        </tbody></table>
-      </div>
-    </div>`).join('')}
-  </div>`;
-}
-function toggleGroup(el){el.nextElementSibling.classList.toggle('open');}
-function dbCreateLeague(){
-  return `<div class="card">
-    <div class="ct" style="margin-bottom:16px">Create New League</div>
-    <div class="frow">
-      <div class="fgroup"><label class="flabel">League Name</label><input class="finput" id="nl-name" placeholder="Premier Division"></div>
-      <div class="fgroup"><label class="flabel">Country</label><input class="finput" id="nl-country" placeholder="England"></div>
-    </div>
-    <div class="frow">
-      <div class="fgroup"><label class="flabel">Continent</label>
-        <select class="fselect" id="nl-cont"><option>Europe</option><option>SouthAmerica</option><option>NorthAmerica</option><option>Asia</option><option>Africa</option></select>
-      </div>
-      <div class="fgroup"><label class="flabel">Reputation (1-100)</label><input type="number" class="finput" id="nl-rep" value="75" min="1" max="100" style="width:100%"></div>
-    </div>
-    <div class="fgroup">
-      <label class="flabel">Team Names (one per line, 10-20 teams)</label>
-      <textarea class="finput" id="nl-teams" rows="8" placeholder="London United&#10;Manchester Blues&#10;Yorkshire FC..."></textarea>
-    </div>
-    <button class="btn btn-primary" onclick="createLeague()" style="margin-top:8px">Create League</button>
-  </div>`;
-}
-function createLeague(){
-  const name=document.getElementById('nl-name')?.value.trim();
-  const country=document.getElementById('nl-country')?.value.trim();
-  const cont=document.getElementById('nl-cont')?.value;
-  const rep=parseInt(document.getElementById('nl-rep')?.value)||75;
-  const teamsRaw=document.getElementById('nl-teams')?.value.trim().split('\n').map(s=>s.trim()).filter(Boolean);
-  if(!name||!country||!teamsRaw||teamsRaw.length<4){toast('Fill in all fields and provide at least 4 teams','e');return;}
-  const lid=`${country}_${name}`.replace(/\s+/g,'_');
-  const leagueTeams=[];
-  let teamIdx=G.teams.length?Math.max(...G.teams.map(t=>t.id))+1:0;
-  teamsRaw.forEach(tname=>{
-    const squad=[];
-    ['GK','GK','CB','CB','LB','RB','CM','CM','CAM','ST','LW','RW','CDM','CB','ST','CM','RB','LB','GK','CM'].forEach(pos=>{
-      const p=mkPlayer({pos,age:rand(18,33),teamId:teamIdx,potential:rand(55,Math.min(99,rep+12))});
-      p.teamId=teamIdx;squad.push(p.id);G.players.push(p);
-    });
-    G.teams.push({id:teamIdx,name:tname,country,continent:cont,leagueId:lid,rep,stadium:`${tname} Stadium`,capacity:rand(15000,60000),finances:{budget:rand(20,300)*1e6,wageBudget:rand(3,30)*1e6,transferBudget:rand(5,100)*1e6},squad,formation:pick(Object.keys(FORMATIONS)),stats:{w:0,d:0,l:0,gf:0,ga:0,pts:0},form:[],trophies:{league:0,cup:0,continental:0}});
-    leagueTeams.push(teamIdx);teamIdx++;
-  });
-  G.leagues[lid]={id:lid,name,country,continent:cont,rep,teams:leagueTeams,season:G.season,table:leagueTeams.map(id=>({id,w:0,d:0,l:0,gf:0,ga:0,pts:0,form:[]})),champions:[]};
-  genFixtures(lid);
-  toast(`✅ League "${name}" created with ${leagueTeams.length} teams!`,'s');
-  switchDbTab(0);
-}
-function dbCreatePlayer(){
-  return `<div class="card">
-    <div class="ct" style="margin-bottom:16px">Create Player</div>
-    <div class="frow">
-      <div class="fgroup"><label class="flabel">First Name</label><input class="finput" id="np-fn" placeholder="James"></div>
-      <div class="fgroup"><label class="flabel">Last Name</label><input class="finput" id="np-ln" placeholder="Smith"></div>
-    </div>
-    <div class="frow">
-      <div class="fgroup"><label class="flabel">Nationality</label>
-        <select class="fselect" id="np-nat">${NATS.map(n=>`<option>${n}</option>`).join('')}</select>
-      </div>
-      <div class="fgroup"><label class="flabel">Position</label>
-        <select class="fselect" id="np-pos">${Object.keys(POS_TYPE).map(p=>`<option>${p}</option>`).join('')}</select>
-      </div>
-    </div>
-    <div class="frow">
-      <div class="fgroup"><label class="flabel">Age</label><input type="number" class="finput" id="np-age" value="22" min="16" max="40" style="width:100%"></div>
-      <div class="fgroup"><label class="flabel">Potential (OVR)</label><input type="number" class="finput" id="np-pot" value="78" min="40" max="99" style="width:100%"></div>
-    </div>
-    <div class="fgroup"><label class="flabel">Team (optional)</label>
-      <select class="fselect" id="np-team"><option value="">Free Agent</option>${G.teams.sort((a,b)=>b.rep-a.rep).map(t=>`<option value="${t.id}">${t.name} (${t.country})</option>`).join('')}</select>
-    </div>
-    <button class="btn btn-primary" onclick="createPlayer()" style="margin-top:8px">Create Player</button>
-  </div>`;
-}
-function createPlayer(){
-  const fn=document.getElementById('np-fn')?.value.trim()||pick(FN);
-  const ln=document.getElementById('np-ln')?.value.trim()||pick(LN);
-  const nat=document.getElementById('np-nat')?.value||'English';
-  const pos=document.getElementById('np-pos')?.value||'CM';
-  const age=parseInt(document.getElementById('np-age')?.value)||22;
-  const pot=parseInt(document.getElementById('np-pot')?.value)||78;
-  const tid=document.getElementById('np-team')?.value;
-  const teamId=tid?parseInt(tid):null;
-  const p=mkPlayer({pos,age,potential:pot,teamId});
-  p.name=`${fn} ${ln}`;p.nationality=nat;
-  G.players.push(p);
-  if(teamId!==null){const t=G.teams.find(x=>x.id===teamId);if(t)t.squad.push(p.id);}
-  toast(`✅ ${p.name} created (OVR ${p.overall})`,'s');
-  showPlayerModal(p.id);
-}
-function dbExportImport(){
-  return `<div class="g2">
-    <div class="card">
-      <div class="ct" style="margin-bottom:12px">Export Database</div>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Export entire world as JSON. Share with others or backup your world.</p>
-      <button class="btn btn-primary btn-block" style="margin-bottom:8px" onclick="exportDb()">📤 Export Full Database</button>
-      <button class="btn btn-secondary btn-block" onclick="exportPlayers()">📤 Export Players Only</button>
-    </div>
-    <div class="card">
-      <div class="ct" style="margin-bottom:12px">Import Database</div>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Import a previously exported database or community-created world.</p>
-      <div class="drop-zone" onclick="document.getElementById('imp-db').click()" id="imp-dropzone">
-        Drop JSON file here or click to browse
-        <input type="file" id="imp-db" accept=".json" style="display:none" onchange="importDb(this)">
-      </div>
-      <p style="font-size:10px;color:var(--text3);margin-top:8px">⚠️ This will replace your current world data</p>
-    </div>
-  </div>`;
-}
-function exportDb(){
-  const data={version:'2.0',exported:new Date().toISOString(),teams:G.teams,players:G.players,leagues:G.leagues,history:G.history,season:G.season};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`pitch-world-s${G.season}.json`;a.click();
-  toast('Database exported!','s');
-}
-function exportPlayers(){
-  const data={version:'2.0',type:'players',players:G.players};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`pitch-players-s${G.season}.json`;a.click();
-  toast('Players exported!','s');
-}
-function importDb(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const data=JSON.parse(e.target.result);
-      if(data.teams)G.teams=data.teams;
-      if(data.players)G.players=data.players;
-      if(data.leagues)G.leagues=data.leagues;
-      if(data.history)G.history=data.history;
-      if(data.season)G.season=data.season;
-      toast('✅ Database imported successfully!','s');
-      nav('dashboard');
-    }catch(err){toast('❌ Invalid JSON file','e');}
-  };
-  reader.readAsText(file);
-}
-
-// ══ RENDER: MODS ════════════════════════════════════════════════
-function renderMods(){
-  return `
-<div class="card" style="margin-bottom:14px">
-  <div class="ch"><span class="ct">Mods Manager</span></div>
-  <p style="font-size:12px;color:var(--text2);margin-bottom:16px">Import community databases, player packs, logo packs, and custom leagues. All mods are JSON-based and work entirely in the browser.</p>
-  <div class="g2">
-    <div>
-      <div class="ct-sm" style="margin-bottom:10px">Import Mods</div>
-      <div class="drop-zone" style="margin-bottom:8px" onclick="document.getElementById('mod-db').click()">
-        📂 Import League / World Database
-        <input type="file" id="mod-db" accept=".json" style="display:none" onchange="importDb(this)">
-      </div>
-      <div class="drop-zone" style="margin-bottom:8px" onclick="document.getElementById('mod-pl').click()">
-        👤 Import Player Pack
-        <input type="file" id="mod-pl" accept=".json" style="display:none" onchange="importPlayerPack(this)">
-      </div>
-      <div class="drop-zone" onclick="document.getElementById('mod-img').click()">
-        🖼️ Import Player Photo
-        <input type="file" id="mod-img" accept="image/*" style="display:none" onchange="importPlayerPhoto(this)">
-      </div>
-    </div>
-    <div>
-      <div class="ct-sm" style="margin-bottom:10px">Export</div>
-      <button class="btn btn-secondary btn-block" style="margin-bottom:8px" onclick="exportDb()">📤 Export Full World</button>
-      <button class="btn btn-secondary btn-block" style="margin-bottom:8px" onclick="exportPlayers()">📤 Export Players</button>
-      <button class="btn btn-secondary btn-block" onclick="exportFormations()">📤 Export Formations</button>
-    </div>
-  </div>
-</div>
-<div class="card">
-  <div class="ch"><span class="ct">GitHub Pages Deployment</span></div>
-  <div style="font-size:12px;color:var(--text2);line-height:1.8">
-    <p style="margin-bottom:8px">This game is a single <strong style="color:var(--text)">index.html</strong> file — deploy it anywhere static hosting is available.</p>
-    <div style="background:var(--bg3);border-radius:6px;padding:14px;font-family:var(--fm);font-size:11px;color:var(--accent);line-height:2;margin-bottom:12px">
-      # 1. Create GitHub repository<br>
-      # 2. Upload this file as index.html<br>
-      git init<br>
-      git add index.html<br>
-      git commit -m "Initial PITCH deployment"<br>
-      git remote add origin https://github.com/YOU/pitch-football.git<br>
-      git push -u origin main<br>
-      <br>
-      # 3. Enable GitHub Pages<br>
-      # Repository → Settings → Pages → Source: main branch<br>
-      # Your game will be live at:<br>
-      # https://YOU.github.io/pitch-football/
-    </div>
-    <p style="color:var(--text3);font-size:11px">✅ No backend needed. All data uses localStorage/IndexedDB. Works on GitHub Pages, Netlify, Vercel, or any static host.</p>
-  </div>
-</div>`;
-}
-function importPlayerPack(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const data=JSON.parse(e.target.result);
-      if(data.players){data.players.forEach(p=>{p.id=uid();G.players.push(p);});toast(`✅ ${data.players.length} players imported`,'s');}
-    }catch{toast('❌ Invalid player pack','e');}
-  };
-  reader.readAsText(file);
-}
-function importPlayerPhoto(input){
-  const file=input.files[0];if(!file)return;
-  // Ask which player
-  const pid=prompt('Enter Player ID (visible in player profile URL):');
-  if(!pid)return;
-  const reader=new FileReader();
-  reader.onload=e=>{G.playerImages[parseInt(pid)]=e.target.result;toast('Photo imported!','s');};
-  reader.readAsDataURL(file);
-}
-function exportFormations(){
-  const data={version:'2.0',formations:FORMATIONS,custom:G.tactic};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pitch-formations.json';a.click();
-  toast('Formations exported!','s');
-}
-
-// ══ RENDER: SCOUTING ════════════════════════════════════════════
+// ═══════ RENDER: SCOUTING ════════════════════
 function renderScouting(){
   return `
 <div class="card" style="margin-bottom:14px">
   <div class="ch"><span class="ct">Scouting Network</span></div>
-  <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Scout players to reveal full attributes and receive recommendations. Scouts can be sent globally.</p>
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
     <input class="finput" id="sc-s" placeholder="Player name..." style="width:200px" oninput="scFilter()">
     <select class="fselect" id="sc-pos" style="width:90px" onchange="scFilter()"><option value="">All Pos</option>${Object.keys(POS_TYPE).map(p=>`<option>${p}</option>`).join('')}</select>
-    <select class="fselect" id="sc-league" style="width:150px" onchange="scFilter()"><option value="">All Leagues</option>${Object.values(G.leagues).sort((a,b)=>b.rep-a.rep).slice(0,20).map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}</select>
+    <select class="fselect" id="sc-league" style="width:150px" onchange="scFilter()"><option value="">All Leagues</option>${Object.values(G.leagues).sort((a,b)=>b.rep-a.rep).slice(0,25).map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}</select>
+    <select class="fselect" id="sc-tier" style="width:90px" onchange="scFilter()"><option value="">All Tiers</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option><option value="4">Tier 4</option></select>
   </div>
   <div class="tw" id="sc-tbl">${scTable(G.players.filter(p=>p.teamId!==G.playerTeam).sort((a,b)=>b.potential-a.potential).slice(0,60))}</div>
 </div>
@@ -2052,25 +1798,30 @@ function renderScouting(){
     <td><span class="badge badge-${r.recommendation.includes('Sign')?'g':r.recommendation.includes('Strong')?'b':r.recommendation.includes('Monitor')?'y':'r'}">${r.recommendation}</span></td>
     <td class="tn">S${r.season}</td>
   </tr>`).join('')}
-  </tbody></table>`:'<p style="color:var(--text3);font-size:12px">No scout reports yet. Scout players from the transfer market.</p>'}
+  </tbody></table>`:'<p style="color:var(--text3);font-size:12px">No scout reports yet.</p>'}
 </div>`;
 }
 function scTable(players){
-  return `<table><thead><tr><th>Name</th><th>Nat</th><th>Age</th><th>Pos</th><th>Club</th><th>League</th><th>Scouted?</th><th>Action</th></tr></thead><tbody>
+  return `<table><thead><tr><th>Name</th><th>Nat</th><th>Age</th><th>Pos</th><th>OVR</th><th>POT</th><th>Club</th><th>Tier</th><th>Scouted?</th><th>Action</th></tr></thead><tbody>
   ${players.map(p=>{
     const club=G.teams.find(t=>t.id===p.teamId);
-    const lg=club?G.leagues[club.leagueId]:null;
     const scouted=G.scoutReports.find(r=>r.pid===p.id);
+    const tierLg=club?.tier||'—';
+    const tierColor=tierLg===1?'var(--accent)':tierLg===2?'var(--green)':tierLg===3?'var(--gold)':'var(--text3)';
     return `<tr>
       <td><span class="tname" onclick="showPlayerModal(${p.id})" style="cursor:pointer">${p.name}</span></td>
       <td>${NAT_FLAGS[p.nationality]||'🏳️'}</td>
       <td class="tn">${p.age}</td>
       <td><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></td>
+      <td><span class="ovr ${ovrCls(p.overall)}">${p.overall}</span></td>
+      <td class="tn" style="color:var(--accent)">${p.potential}</td>
       <td class="tsub">${club?.name||'Free'}</td>
-      <td class="tsub">${lg?.name||'—'}</td>
+      <td class="tn" style="color:${tierColor}">T${tierLg}</td>
       <td>${scouted?`<span class="badge badge-g">${scouted.recommendation}</span>`:'<span class="badge badge-y">Not Scouted</span>'}</td>
-      <td><button class="btn btn-secondary" style="padding:3px 9px;font-size:10px" onclick="scoutPlayer(${p.id});nav('scouting')">Scout</button>
-      <button class="btn btn-success" style="padding:3px 9px;font-size:10px;margin-left:3px" onclick="makeOffer(${p.id})">Bid</button></td>
+      <td>
+        <button class="btn btn-secondary" style="padding:3px 9px;font-size:10px" onclick="scoutPlayer(${p.id});nav('scouting')">Scout</button>
+        <button class="btn btn-success" style="padding:3px 9px;font-size:10px;margin-left:3px" onclick="makeOffer(${p.id})">Bid</button>
+      </td>
     </tr>`;
   }).join('')}
   </tbody></table>`;
@@ -2079,23 +1830,29 @@ function scFilter(){
   const q=(document.getElementById('sc-s')?.value||'').toLowerCase();
   const pos=document.getElementById('sc-pos')?.value||'';
   const lid=document.getElementById('sc-league')?.value||'';
+  const tier=parseInt(document.getElementById('sc-tier')?.value||'0')||0;
   const players=G.players.filter(p=>p.teamId!==G.playerTeam)
     .filter(p=>!q||p.name.toLowerCase().includes(q))
     .filter(p=>!pos||p.pos===pos)
     .filter(p=>{if(!lid)return true;return G.teams.find(t=>t.id===p.teamId)?.leagueId===lid;})
+    .filter(p=>!tier||G.teams.find(t=>t.id===p.teamId)?.tier===tier)
     .sort((a,b)=>b.potential-a.potential).slice(0,60);
   const tbl=document.getElementById('sc-tbl');if(tbl)tbl.innerHTML=scTable(players);
 }
 
-// ══ PLAYER MODAL ════════════════════════════════════════════════
+// ═══════ PLAYER MODAL ════════════════════════
 function showPlayerModal(pid){
   const p=G.players.find(x=>x.id===pid);if(!p)return;
-  const club=G.teams.find(t=>t.id===p.teamId)?.name||'Free Agent';
+  const club=G.teams.find(t=>t.id===p.teamId);
+  const clubName=club?.name||'Free Agent';
   const isMine=p.teamId===G.playerTeam;
   const flag=NAT_FLAGS[p.nationality]||'🏳️';
   const photo=G.playerImages[pid];
   const atBar=(v)=>{const col=v>=82?'var(--accent)':v>=70?'var(--green)':v>=55?'var(--gold)':'var(--red)';return `<div class="abr"><div class="abr-fill" style="width:${v}%;background:${col}"></div></div>`;};
   const ar=(label,val)=>`<div class="arow"><span class="aname">${label}</span><span class="aval">${val}</span>${atBar(val)}</div>`;
+  const potGap=p.potential-p.overall;
+  const potLabel=potGap>20?'Elite Prospect':potGap>12?'High Potential':potGap>5?'Room to Grow':'Peaked';
+  const tierLg=club?.tier||'—';
 
   document.getElementById('mtitle').textContent=p.name;
   document.getElementById('mcontent').innerHTML=`
@@ -2104,19 +1861,34 @@ function showPlayerModal(pid){
       ${photo?`<img src="${photo}" alt="Photo">`:`<span class="avatar-placeholder">${p.name.split(' ').map(w=>w[0]).join('')}</span>`}
     </div>
     <div style="flex:1">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
         <span class="ovr ${ovrCls(p.overall)}" style="width:40px;height:40px;font-size:18px">${p.overall}</span>
         <span class="pbadge ${posCls(p.pos)}" style="font-size:12px;padding:3px 8px">${p.pos}</span>
         <span class="badge badge-b">POT ${p.potential}</span>
+        <span class="badge" style="background:rgba(${tierLg===1?'0,212,255':tierLg===2?'0,232,120':tierLg===3?'245,200,66':'120,154,184'},.15);color:${tierLg===1?'var(--accent)':tierLg===2?'var(--green)':tierLg===3?'var(--gold)':'var(--text3)'};border:1px solid rgba(${tierLg===1?'0,212,255':tierLg===2?'0,232,120':tierLg===3?'245,200,66':'120,154,184'},.3)">T${tierLg}</span>
         ${p.injured?'<span class="badge badge-r">🤕 INJURED</span>':''}
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${flag} ${p.nationality} · ${p.age} yrs · ${p.height}cm / ${p.weight}kg · ${p.foot}-footed</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${p.role} · ${p.personality}</div>
-      <div style="font-size:11px;color:var(--text2)">${club} · ${money(p.value)} · £${p.contract.salary.toLocaleString()}pw · Exp S${p.contract.expires}</div>
-      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
-        <label class="btn btn-secondary" style="font-size:10px;padding:3px 8px;cursor:pointer">
-          📷 Upload Photo<input type="file" accept="image/*" style="display:none" onchange="uploadPlayerPhoto(event,${pid})">
-        </label>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">${flag} ${p.nationality} · ${p.age} yrs · ${p.height}cm / ${p.weight}kg · ${p.foot}-footed</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">${p.role} · ${p.personality}</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${clubName} · ${money(p.value)} · £${p.contract.salary.toLocaleString()}pw · Exp S${p.contract.expires}</div>
+      
+      <!-- Potential bar -->
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px">
+          <span>Potential: ${potLabel}</span><span>${p.overall} → ${p.potential}</span>
+        </div>
+        <div style="height:5px;background:var(--bg4);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${(p.overall/99)*100}%;background:var(--accent);border-radius:3px;position:relative">
+            <div style="position:absolute;right:-2px;top:0;bottom:0;width:${(potGap/99)*100}vw;max-width:${Math.max(0,(p.potential-p.overall)/99*100)}%;background:rgba(0,232,120,.4)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${!isMine?`<button class="btn btn-success" style="font-size:10px;padding:4px 10px" onclick="makeOffer(${pid})">💰 Make Bid</button>`:'<span class="badge badge-g">In Your Squad</span>'}
+        ${isMine?`<button class="btn btn-danger" style="font-size:10px;padding:4px 10px" onclick="sellPlayer(${pid})">📤 Sell</button>`:''}
+        <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="scoutPlayer(${pid});toast('Scout report filed','i')">🔍 Scout</button>
+        <label class="btn btn-secondary" style="font-size:10px;padding:4px 10px;cursor:pointer">📷 Photo<input type="file" accept="image/*" style="display:none" onchange="uploadPlayerPhoto(event,${pid})"></label>
       </div>
     </div>
   </div>
@@ -2146,132 +1918,358 @@ function showPlayerModal(pid){
       ${posType(p.pos)==='gk'?`<div class="ct-sm" style="margin:10px 0 8px">Goalkeeper</div>
       ${ar('Reflexes',p.attrs.reflexes)}${ar('Handling',p.attrs.handling)}${ar('GK Pos.',p.attrs.gkPos)}
       ${ar('Diving',p.attrs.diving)}${ar('Kicking',p.attrs.kicking)}${ar('Communication',p.attrs.communication)}`:''}
+      
+      ${G.scoutReports.find(r=>r.pid===pid)?`<div class="ct-sm" style="margin:10px 0 8px">Scout Report</div>
+      <div style="background:var(--bg3);border-radius:6px;padding:12px">
+        ${(()=>{const sr=G.scoutReports.find(r=>r.pid===pid);
+          return `<div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px">
+            <div style="text-align:center"><div style="font-family:var(--fd);font-size:22px;color:var(--green)">${sr.technical}</div><div style="font-size:9px;color:var(--text3)">TECHNICAL</div></div>
+            <div style="text-align:center"><div style="font-family:var(--fd);font-size:22px;color:var(--orange)">${sr.physical}</div><div style="font-size:9px;color:var(--text3)">PHYSICAL</div></div>
+            <div style="text-align:center"><div style="font-family:var(--fd);font-size:22px;color:var(--purple)">${sr.mental}</div><div style="font-size:9px;color:var(--text3)">MENTAL</div></div>
+          </div>
+          <span class="badge badge-${sr.recommendation.includes('Sign')?'g':sr.recommendation.includes('Strong')?'b':sr.recommendation.includes('Monitor')?'y':'r'}">${sr.recommendation}</span>`;
+        })()}</div>`:``}
     </div>
   </div>
 
-  ${G.scoutReports.find(r=>r.pid===pid)?`<div class="card card-sm" style="margin-bottom:12px;background:var(--bg3)">
-    <div class="ct-sm" style="margin-bottom:8px">Scout Report</div>
-    ${(()=>{const sr=G.scoutReports.find(r=>r.pid===pid);return`
-    <div style="display:flex;gap:12px;margin-bottom:8px">
-      <div style="text-align:center"><div style="font-family:var(--fm);font-size:20px;color:var(--accent)">${sr.technical}</div><div style="font-size:9px;color:var(--text3)">TECHNICAL</div></div>
-      <div style="text-align:center"><div style="font-family:var(--fm);font-size:20px;color:var(--green)">${sr.physical}</div><div style="font-size:9px;color:var(--text3)">PHYSICAL</div></div>
-      <div style="text-align:center"><div style="font-family:var(--fm);font-size:20px;color:var(--gold)">${sr.mental}</div><div style="font-size:9px;color:var(--text3)">MENTAL</div></div>
+  <div style="background:var(--bg3);border-radius:6px;padding:12px">
+    <div class="ct-sm" style="margin-bottom:8px">Career Stats</div>
+    <div style="display:flex;gap:20px;font-size:12px">
+      <span>Goals: <strong style="color:var(--green)">${p.careerStats.goals}</strong></span>
+      <span>Assists: <strong style="color:var(--accent)">${p.careerStats.assists}</strong></span>
+      <span>Apps: <strong>${p.careerStats.apps}</strong></span>
+      <span>Club: <strong>${clubName}</strong></span>
+      <span>Morale: <strong style="color:${p.morale>=70?'var(--green)':p.morale>=50?'var(--gold)':'var(--red)'}">${p.morale}%</strong></span>
     </div>
-    <div><span class="badge badge-${sr.recommendation.includes('Sign')?'g':sr.recommendation.includes('Strong')?'b':'y'}">${sr.recommendation}</span></div>`;})()}
-  </div>`:''}
-
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-    ${!isMine?`<button class="btn btn-success" onclick="makeOffer(${pid})">💸 Bid ${money(p.value)}</button>`:''}
-    ${!isMine?`<button class="btn btn-secondary" onclick="scoutPlayer(${pid});closeModal()">🔍 Scout</button>`:''}
-    ${isMine?`<button class="btn btn-danger" onclick="sellPlayer(${pid})">💼 Sell Player</button>`:''}
-    ${isMine?`<button class="btn btn-secondary" onclick="renewContract(${pid});closeModal()">📝 Renew Contract</button>`:''}
   </div>`;
+
   openModal();
 }
-function uploadPlayerPhoto(event,pid){
-  const file=event.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    G.playerImages[pid]=e.target.result;
-    const av=document.getElementById('pm-av');
-    if(av)av.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
-    toast('Photo uploaded!','s');
-  };
-  reader.readAsDataURL(file);
-}
 
-// ══ MATCH MODAL ═════════════════════════════════════════════════
 function showMatchModal(rid){
   const r=G.results.find(x=>x.id===rid);if(!r)return;
   const hn=G.teams.find(t=>t.id===r.homeId)?.name||'?';
   const an=G.teams.find(t=>t.id===r.awayId)?.name||'?';
-  const eIco=e=>e.type==='goal'?'⚽':e.type==='yellow'?'🟨':e.type==='red'?'🟥':e.type==='injury'?'🤕':e.type==='sub'?'🔄':'📝';
-  const eCls=e=>e.type==='goal'?'ev-goal':e.type==='yellow'?'ev-yel':e.type==='red'?'ev-red':e.type==='injury'?'ev-inj':e.type==='sub'?'ev-sub':'';
+  const evIcons={goal:'⚽',yellow:'🟡',red:'🟥',injury:'🤕',sub:'🔄'};
   document.getElementById('mtitle').textContent=`${hn} ${r.hg}–${r.ag} ${an}`;
   document.getElementById('mcontent').innerHTML=`
-  <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:0;text-align:center;background:var(--bg3);border-radius:8px;padding:16px;margin-bottom:16px">
-    <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">${hn}</div><div style="font-family:var(--fd);font-size:28px">${r.stats.homePoss}%</div><div style="font-size:10px;color:var(--text3)">POSSESSION</div></div>
-    <div style="border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 20px">
-      <div style="font-family:var(--fd);font-size:52px;font-weight:700;line-height:1;color:var(--text)">${r.hg}–${r.ag}</div>
-    </div>
-    <div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">${an}</div><div style="font-family:var(--fd);font-size:28px">${r.stats.awayPoss}%</div><div style="font-size:10px;color:var(--text3)">POSSESSION</div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px 4px;font-size:12px;margin-bottom:14px">
-    ${[
-      [r.stats.hShots,'Shots',r.stats.aShots],
-      [r.stats.hSot,'On Target',r.stats.aSot],
-      [r.stats.hXg,'xG',r.stats.aXg],
-      [r.stats.hCorners,'Corners',r.stats.aCorners],
-      [r.stats.hFouls,'Fouls',r.stats.aFouls],
-    ].map(([h,l,a])=>`
-      <span style="text-align:right;font-family:var(--fm)">${h}</span>
-      <span style="text-align:center;font-size:9px;color:var(--text3);letter-spacing:1px">${l}</span>
-      <span style="font-family:var(--fm)">${a}</span>`).join('')}
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;text-align:center;font-size:11px">
+    ${[['Possession',`${r.stats.homePoss}%`,`${r.stats.awayPoss}%`],['Shots',r.stats.hShots,r.stats.aShots],['On Target',r.stats.hSot,r.stats.aSot],['xG',r.stats.hXg,r.stats.aXg],['Corners',r.stats.hCorners,r.stats.aCorners],['Fouls',r.stats.hFouls,r.stats.aFouls]].map(([l,h,a])=>`
+    <div style="background:var(--bg3);border-radius:5px;padding:8px">
+      <div style="color:var(--text3);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px">${l}</div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--accent)">${h}</span><span style="color:var(--text3)">vs</span><span>${a}</span></div>
+    </div>`).join('')}
   </div>
   <div class="mfeed">
-    ${r.events.map(e=>`<div class="mev ${eCls(e)}">
-      <span class="mev-min">${e.min}'</span>
-      <span class="mev-ico">${eIco(e)}</span>
-      <span class="mev-txt">
-        ${e.type==='goal'?`<strong>GOAL!</strong> ${e.pname}${e.aname?` <span style="color:var(--text3)">(${e.aname})</span>`:''}`:
-          e.type==='yellow'?`Yellow card: <strong>${e.pname}</strong>`:
-          e.type==='red'?`<strong>RED CARD:</strong> ${e.pname}`:
-          e.type==='injury'?`Injury: <strong>${e.pname}</strong>`:
-          e.type==='sub'?`Sub: <strong>${e.p2name}</strong> ↔ ${e.pname}`:`Event: <strong>${e.pname}</strong>`}
-      </span>
-    </div>`).join('')}
+  ${r.events.map(e=>`<div class="mev ev-${e.type==='goal'?'goal':e.type==='yellow'?'yel':e.type==='red'?'red':e.type==='injury'?'inj':'sub'}">
+    <span class="mev-min">${e.min}'</span>
+    <span class="mev-ico">${evIcons[e.type]||'•'}</span>
+    <span class="mev-txt">${e.pname}${e.aname?' ('+e.aname+')':''}${e.p2name?' → '+e.p2name:''} <span style="color:var(--text3)">[${e.team}]</span></span>
+  </div>`).join('')}
   </div>`;
   openModal();
 }
 
-// ══ SETUP SCREEN ════════════════════════════════════════════════
-let selDbMode='default',selTeamIdx=0;
-function selectDb(mode){
-  selDbMode=mode;
-  ['default','custom'].forEach(m=>{document.getElementById('db-'+m)?.classList.toggle('sel',m===mode);});
-  document.getElementById('custom-db-upload').style.display=mode==='custom'?'block':'none';
-  populateLeagueSelect();
+function uploadPlayerPhoto(event,pid){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{G.playerImages[pid]=e.target.result;toast('Photo uploaded!','s');showPlayerModal(pid);};
+  reader.readAsDataURL(file);
 }
-function populateLeagueSelect(){
-  const sel=document.getElementById('s-league');
-  if(!sel)return;
-  // Build from WORLD_DB
-  sel.innerHTML='';
+
+// ═══════ RENDER: DB EDITOR ═══════════════════
+function renderDbEditor(){
+  return `
+<div class="g3" style="margin-bottom:16px">
+  <div class="sbox"><div class="sv">${Object.keys(G.leagues).length}</div><div class="sl">Leagues</div></div>
+  <div class="sbox"><div class="sv">${G.teams.length}</div><div class="sl">Teams</div></div>
+  <div class="sbox"><div class="sv">${G.players.length.toLocaleString()}</div><div class="sl">Players</div></div>
+</div>
+<div class="tabs">
+  <div class="tab active" id="dbt-0" onclick="switchDbTab(0)">Browse Leagues</div>
+  <div class="tab" id="dbt-1" onclick="switchDbTab(1)">Create League</div>
+  <div class="tab" id="dbt-2" onclick="switchDbTab(2)">Create Player</div>
+  <div class="tab" id="dbt-3" onclick="switchDbTab(3)">Export / Import</div>
+</div>
+<div id="db-content">${dbBrowse()}</div>`;
+}
+function switchDbTab(i){
+  document.querySelectorAll('[id^="dbt-"]').forEach((t,j)=>t.classList.toggle('active',i===j));
+  const c=document.getElementById('db-content');
+  if(i===0)c.innerHTML=dbBrowse();
+  else if(i===1)c.innerHTML=dbCreateLeague();
+  else if(i===2)c.innerHTML=dbCreatePlayer();
+  else c.innerHTML=dbExportImport();
+}
+function dbBrowse(){
+  const byCont={};
+  Object.values(G.leagues).forEach(l=>{if(!byCont[l.continent])byCont[l.continent]=[];byCont[l.continent].push(l);});
+  return `<div class="card">
+  ${Object.entries(byCont).map(([cont,leagues])=>`
+    <div class="league-group">
+      <div class="league-group-hdr" onclick="toggleGroup(this)"><span>${cont} (${leagues.length} leagues)</span><span>▼</span></div>
+      <div class="league-group-body">
+        <table><thead><tr><th>League</th><th>Country</th><th>Tier</th><th>Rep</th><th>Teams</th><th>Players</th></tr></thead><tbody>
+        ${leagues.sort((a,b)=>b.rep-a.rep).map(l=>`<tr>
+          <td><span class="tname">${l.name}</span></td><td class="tsub">${l.country}</td>
+          <td class="tn" style="color:${l.tier===1?'var(--accent)':l.tier===2?'var(--green)':l.tier===3?'var(--gold)':'var(--text3)'}">T${l.tier}</td>
+          <td class="tn" style="color:var(--accent)">${l.rep}</td>
+          <td class="tn">${l.teams.length}</td>
+          <td class="tn">${l.teams.reduce((s,tid)=>{const t=G.teams.find(x=>x.id===tid);return s+(t?.squad.length||0);},0)}</td>
+        </tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+function toggleGroup(el){el.nextElementSibling.classList.toggle('open');}
+function dbCreateLeague(){
+  return `<div class="card">
+    <div class="ct" style="margin-bottom:16px">Create New League</div>
+    <div class="frow3">
+      <div class="fgroup"><label class="flabel">League Name</label><input class="finput" id="nl-name" placeholder="Premier Division"></div>
+      <div class="fgroup"><label class="flabel">Country</label><input class="finput" id="nl-country" placeholder="England"></div>
+      <div class="fgroup"><label class="flabel">Continent</label>
+        <select class="fselect" id="nl-cont"><option>Europe</option><option>SouthAmerica</option><option>NorthAmerica</option><option>Asia</option><option>Africa</option></select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fgroup"><label class="flabel">Reputation (1-100)</label><input type="number" class="finput" id="nl-rep" value="75" min="1" max="100" style="width:100%"></div>
+      <div class="fgroup"><label class="flabel">League Tier</label>
+        <select class="fselect" id="nl-tier"><option value="1">Tier 1 (Elite)</option><option value="2" selected>Tier 2 (Strong)</option><option value="3">Tier 3 (Mid)</option><option value="4">Tier 4 (Lower)</option></select>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Team Names (one per line)</label>
+      <textarea class="finput" id="nl-teams" rows="8" placeholder="London United&#10;Manchester Blues&#10;Yorkshire FC..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="createLeague()">Create League</button>
+  </div>`;
+}
+function createLeague(){
+  const name=document.getElementById('nl-name')?.value.trim();
+  const country=document.getElementById('nl-country')?.value.trim();
+  const cont=document.getElementById('nl-cont')?.value;
+  const rep=parseInt(document.getElementById('nl-rep')?.value)||75;
+  const tier=parseInt(document.getElementById('nl-tier')?.value)||2;
+  const teamsRaw=document.getElementById('nl-teams')?.value.trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!name||!country||!teamsRaw||teamsRaw.length<4){toast('Fill in all fields, minimum 4 teams','e');return;}
+  const lid=`${country}_${name}`.replace(/\s+/g,'_');
+  const leagueTeams=[];
+  let teamIdx=G.teams.length?Math.max(...G.teams.map(t=>t.id))+1:0;
+  teamsRaw.forEach(tname=>{
+    const squad=[];
+    ['GK','GK','CB','CB','LB','RB','CM','CM','CAM','ST','LW','RW','CDM','CB','ST','CM','RB','LB','GK','CM'].forEach((pos,pi)=>{
+      const cat=pi<2?'star':pi<12?'starter':'bench';
+      const p=mkPlayer({pos,age:rand(18,33),teamId:teamIdx,tier,leagueRep:rep,cat});
+      p.teamId=teamIdx;squad.push(p.id);G.players.push(p);
+    });
+    G.teams.push({id:teamIdx,name:tname,country,continent:cont,leagueId:lid,rep,tier,stadium:`${tname} Stadium`,capacity:rand(15000,60000),finances:{budget:rand(20,300)*1e6,wageBudget:rand(3,30)*1e6,transferBudget:rand(5,100)*1e6},squad,formation:pick(Object.keys(FORMATIONS)),stats:{w:0,d:0,l:0,gf:0,ga:0,pts:0},form:[],trophies:{league:0,cup:0,continental:0}});
+    leagueTeams.push(teamIdx);teamIdx++;
+  });
+  G.leagues[lid]={id:lid,name,country,continent:cont,tier,rep,teams:leagueTeams,season:G.season,table:leagueTeams.map(id=>({id,w:0,d:0,l:0,gf:0,ga:0,pts:0,form:[]})),champions:[]};
+  G.leagueCoefficients[lid]=rep;
+  genFixtures(lid);
+  toast(`✅ League "${name}" created with ${leagueTeams.length} teams!`,'s');
+  switchDbTab(0);
+}
+function dbCreatePlayer(){
+  return `<div class="card">
+    <div class="ct" style="margin-bottom:16px">Create Player</div>
+    <div class="frow"><div class="fgroup"><label class="flabel">First Name</label><input class="finput" id="np-fn" placeholder="James"></div><div class="fgroup"><label class="flabel">Last Name</label><input class="finput" id="np-ln" placeholder="Smith"></div></div>
+    <div class="frow">
+      <div class="fgroup"><label class="flabel">Nationality</label><select class="fselect" id="np-nat">${NATS.map(n=>`<option>${n}</option>`).join('')}</select></div>
+      <div class="fgroup"><label class="flabel">Position</label><select class="fselect" id="np-pos">${Object.keys(POS_TYPE).map(p=>`<option>${p}</option>`).join('')}</select></div>
+    </div>
+    <div class="frow">
+      <div class="fgroup"><label class="flabel">Age</label><input type="number" class="finput" id="np-age" value="22" min="16" max="40" style="width:100%"></div>
+      <div class="fgroup"><label class="flabel">Potential</label><input type="number" class="finput" id="np-pot" value="78" min="40" max="99" style="width:100%"></div>
+    </div>
+    <div class="fgroup"><label class="flabel">Team (optional)</label>
+      <select class="fselect" id="np-team"><option value="">Free Agent</option>${G.teams.sort((a,b)=>b.rep-a.rep).map(t=>`<option value="${t.id}">${t.name} (${t.country})</option>`).join('')}</select>
+    </div>
+    <button class="btn btn-primary" onclick="createPlayer()">Create Player</button>
+  </div>`;
+}
+function createPlayer(){
+  const fn=document.getElementById('np-fn')?.value.trim()||pick(FN);
+  const ln=document.getElementById('np-ln')?.value.trim()||pick(LN);
+  const nat=document.getElementById('np-nat')?.value||'English';
+  const pos=document.getElementById('np-pos')?.value||'CM';
+  const age=parseInt(document.getElementById('np-age')?.value)||22;
+  const pot=parseInt(document.getElementById('np-pot')?.value)||78;
+  const tid=document.getElementById('np-team')?.value;
+  const teamId=tid?parseInt(tid):null;
+  const team=teamId!==null?G.teams.find(x=>x.id===teamId):null;
+  const p=mkPlayer({pos,age,potential:pot,teamId,tier:team?.tier||2,leagueRep:team?.rep||75});
+  p.name=`${fn} ${ln}`;p.nationality=nat;p.potential=pot;
+  G.players.push(p);
+  if(teamId!==null&&team){team.squad.push(p.id);}
+  toast(`✅ ${p.name} created (OVR ${p.overall}, POT ${pot})`,'s');
+  showPlayerModal(p.id);
+}
+function dbExportImport(){
+  return `<div class="g2">
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px">Export</div>
+      <button class="btn btn-primary btn-block" style="margin-bottom:8px" onclick="exportDb()">📤 Export Full World</button>
+      <button class="btn btn-secondary btn-block" onclick="exportPlayers()">📤 Export Players Only</button>
+    </div>
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px">Import</div>
+      <div class="drop-zone" onclick="document.getElementById('imp-db').click()" id="imp-dropzone">
+        Drop JSON database here
+        <input type="file" id="imp-db" accept=".json" style="display:none" onchange="importDb(this)">
+      </div>
+      <p style="font-size:10px;color:var(--text3);margin-top:8px">⚠️ Replaces current world</p>
+    </div>
+  </div>`;
+}
+function exportDb(){
+  const data={version:'3.0',exported:new Date().toISOString(),teams:G.teams,players:G.players,leagues:G.leagues,history:G.history,season:G.season};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`pitch-v3-world-s${G.season}.json`;a.click();
+  toast('Exported!','s');
+}
+function exportPlayers(){
+  const data={version:'3.0',type:'players',players:G.players};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`pitch-v3-players-s${G.season}.json`;a.click();
+  toast('Players exported!','s');
+}
+function importDb(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(data.teams)G.teams=data.teams;
+      if(data.players)G.players=data.players;
+      if(data.leagues)G.leagues=data.leagues;
+      if(data.history)G.history=data.history;
+      if(data.season)G.season=data.season;
+      toast('✅ Database imported!','s');nav('dashboard');
+    }catch{toast('❌ Invalid JSON','e');}
+  };
+  reader.readAsText(file);
+}
+
+// ═══════ RENDER: MODS ════════════════════════
+function renderMods(){
+  return `
+<div class="card" style="margin-bottom:14px">
+  <div class="ch"><span class="ct">Mods Manager</span></div>
+  <div class="g2">
+    <div>
+      <div class="ct-sm" style="margin-bottom:10px">Import</div>
+      <div class="drop-zone" style="margin-bottom:8px" onclick="document.getElementById('mod-db').click()">📂 Import World Database<input type="file" id="mod-db" accept=".json" style="display:none" onchange="importDb(this)"></div>
+      <div class="drop-zone" style="margin-bottom:8px" onclick="document.getElementById('mod-pl').click()">👤 Import Player Pack<input type="file" id="mod-pl" accept=".json" style="display:none" onchange="importPlayerPack(this)"></div>
+      <div class="drop-zone" onclick="document.getElementById('mod-img').click()">🖼️ Import Player Photo<input type="file" id="mod-img" accept="image/*" style="display:none" onchange="importPlayerPhoto(this)"></div>
+    </div>
+    <div>
+      <div class="ct-sm" style="margin-bottom:10px">Export</div>
+      <button class="btn btn-secondary btn-block" style="margin-bottom:8px" onclick="exportDb()">📤 Export Full World</button>
+      <button class="btn btn-secondary btn-block" onclick="exportPlayers()">📤 Export Players</button>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div class="ch"><span class="ct">GitHub Pages Deployment</span></div>
+  <div style="background:var(--bg3);border-radius:6px;padding:14px;font-family:var(--fm);font-size:11px;color:var(--accent);line-height:2">
+    git init &amp;&amp; git add index.html<br>
+    git commit -m "PITCH v3 deploy"<br>
+    git remote add origin https://github.com/YOU/pitch.git<br>
+    git push -u origin main<br>
+    # Enable Pages: Settings → Pages → main branch
+  </div>
+</div>`;
+}
+function importPlayerPack(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{const data=JSON.parse(e.target.result);if(data.players){data.players.forEach(p=>{p.id=uid();G.players.push(p);});toast(`✅ ${data.players.length} players imported`,'s');}}catch{toast('❌ Invalid player pack','e');}
+  };
+  reader.readAsText(file);
+}
+function importPlayerPhoto(input){
+  const file=input.files[0];if(!file)return;
+  const pid=prompt('Enter Player ID:');if(!pid)return;
+  const reader=new FileReader();
+  reader.onload=e=>{G.playerImages[parseInt(pid)]=e.target.result;toast('Photo imported!','s');};
+  reader.readAsDataURL(file);
+}
+
+// ═══════ SETUP WIZARD ════════════════════════
+let setupStep=1;
+let selLeagueKey='';
+let selTeamIdx=0;
+
+function goStep(n){
+  if(n>setupStep+1&&n>1){toast('Complete previous steps first','i');return;}
+  setupStep=n;
+  [1,2,3,4].forEach(i=>{
+    const el=document.getElementById(`step-${i}`);
+    if(el)el.style.display=i===n?'block':'none';
+  });
+  document.querySelectorAll('.step-pill').forEach((el,i)=>{
+    el.classList.toggle('active',i===n-1);
+    if(i<n-1)el.classList.add('done');
+  });
+  if(n===3)renderLeagueChips();
+}
+
+function renderLeagueChips(){
+  const filter=document.getElementById('tier-filter')?.value||'';
+  const container=document.getElementById('league-chips');if(!container)return;
+  const chips=[];
+  const tierColors=['','var(--accent)','var(--green)','var(--gold)','var(--text3)'];
   Object.entries(WORLD_DB).forEach(([cont,countries])=>{
-    const grp=document.createElement('optgroup');grp.label=cont;
     Object.entries(countries).forEach(([country,leagues])=>{
       Object.entries(leagues).forEach(([lname,data])=>{
-        const opt=document.createElement('option');
-        opt.value=`${country}||${lname}`;
-        opt.textContent=`${lname} (${country})`;
-        grp.appendChild(opt);
+        const tier=data.tier||2;
+        if(filter&&tier!==parseInt(filter))return;
+        const key=`${country}||${lname}`;
+        chips.push(`<div class="league-chip${key===selLeagueKey?' sel':''}" onclick="selectLeague('${key}',this)" title="${country}">
+          <div class="tier-dot" style="background:${tierColors[tier]||'var(--text3)'}"></div>
+          ${lname} <span style="color:var(--text3)">(${country})</span>
+        </div>`);
       });
     });
-    sel.appendChild(grp);
   });
-  renderTeamPicker();
+  container.innerHTML=chips.join('');
 }
+
+function selectLeague(key,el){
+  selLeagueKey=key;
+  document.querySelectorAll('.league-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  const [country,lname]=key.split('||');
+  document.getElementById('sel-league-name').textContent=`${lname} · ${country}`;
+}
+
 function renderTeamPicker(){
-  const val=document.getElementById('s-league')?.value||'';
-  const [country,lname]=val.split('||');
-  const container=document.getElementById('team-picker');if(!container)return;
-  // Find teams in this league from WORLD_DB
+  if(!selLeagueKey){document.getElementById('team-picker').innerHTML='<p style="color:var(--text3)">Select a league first</p>';return;}
+  const [country,lname]=selLeagueKey.split('||');
   let teams=[];
   Object.entries(WORLD_DB).forEach(([cont,countries])=>{
-    if(countries[country]&&countries[country][lname]){
-      teams=countries[country][lname].teams;
-    }
+    if(countries[country]&&countries[country][lname]){teams=countries[country][lname].teams;}
   });
-  container.innerHTML=teams.map((name,i)=>`
-    <div class="tpick${i===0?' sel':''}" onclick="pickTeam(this,${i})" data-idx="${i}">
-      <div class="tpick-name">${name}</div>
-      <div class="tpick-meta">${country}</div>
-    </div>`).join('');
+  const container=document.getElementById('team-picker');
+  container.innerHTML=teams.map((name,i)=>`<div class="tpick${i===0?' sel':''}" onclick="pickTeam(this,${i})"><div class="tpick-name">${name}</div><div class="tpick-meta">${country}</div></div>`).join('');
   selTeamIdx=0;
 }
+
 function pickTeam(el,idx){
   document.querySelectorAll('.tpick').forEach(e=>e.classList.remove('sel'));
   el.classList.add('sel');selTeamIdx=idx;
+}
+
+function selectDb(mode){
+  G.dbMode=mode;
+  document.querySelectorAll('.db-opt').forEach(e=>e.classList.remove('sel'));
+  document.getElementById(`db-${mode}`).classList.add('sel');
+  document.getElementById('custom-db-upload').style.display=mode==='custom'?'block':'none';
 }
 
 function loadCustomDb(input){
@@ -2279,20 +2277,16 @@ function loadCustomDb(input){
   document.getElementById('db-file-status').textContent=`Loading ${file.name}...`;
   const reader=new FileReader();
   reader.onload=e=>{
-    try{
-      JSON.parse(e.target.result); // validate
-      document.getElementById('db-file-status').textContent=`✅ ${file.name} loaded`;
-      toast('Custom database ready','s');
-    }catch{document.getElementById('db-file-status').textContent='❌ Invalid JSON';toast('Invalid file','e');}
+    try{JSON.parse(e.target.result);document.getElementById('db-file-status').textContent=`✅ ${file.name} loaded`;toast('Custom database ready','s');}
+    catch{document.getElementById('db-file-status').textContent='❌ Invalid JSON';toast('Invalid file','e');}
   };
   reader.readAsText(file);
 }
 
 async function startGame(){
+  if(!selLeagueKey&&G.dbMode!=='custom'){toast('Please select a league first','e');return;}
   const mgr=document.getElementById('s-mgr')?.value.trim()||'Manager';
   const nat=document.getElementById('s-nat')?.value||'English';
-  const leagueVal=document.getElementById('s-league')?.value||'';
-  const [country,lname]=leagueVal.split('||');
   G.mgr=mgr;G.mgrNat=nat;
 
   document.getElementById('s-loading').style.display='block';
@@ -2300,14 +2294,15 @@ async function startGame(){
   let pct=0;
   const iv=setInterval(()=>{pct=Math.min(pct+rand(3,12),90);fill.style.width=pct+'%';},80);
 
-  await new Promise(r=>setTimeout(r,900));
+  await new Promise(r=>setTimeout(r,1000));
   generateWorld();
 
-  // Find the player's chosen team
-  const lid=`${country}_${lname}`.replace(/\s+/g,'_');
-  const lg=G.leagues[lid];
-  if(lg){
-    G.playerTeam=lg.teams[selTeamIdx]||lg.teams[0];
+  // Find player's team
+  if(selLeagueKey){
+    const [country,lname]=selLeagueKey.split('||');
+    const lid=`${country}_${lname}`.replace(/\s+/g,'_');
+    const lg=G.leagues[lid];
+    if(lg){G.playerTeam=lg.teams[selTeamIdx]||lg.teams[0];}
   } else {
     G.playerTeam=G.teams[0]?.id||0;
   }
@@ -2320,72 +2315,86 @@ async function startGame(){
   nav('dashboard');
   const teamName=G.teams.find(t=>t.id===G.playerTeam)?.name||'Your Club';
   toast(`⚽ Welcome, ${mgr}! Managing ${teamName}`,'s');
-
-  // Auto-save
   saveGame();
 }
 
-// ── PERSISTENCE ──────────────────────────────────────────────────
+// ── PERSISTENCE ───────────────────────────────
 function saveGame(){
   try{
-    const save={version:'2.0',date:Date.now(),G:{mgr:G.mgr,mgrNat:G.mgrNat,playerTeam:G.playerTeam,season:G.season,date:G.date,formation:G.formation,tactic:G.tactic,nextId:G.nextId,history:G.history,transfers:G.transfers,scoutReports:G.scoutReports,playerImages:G.playerImages}};
-    localStorage.setItem('pitch_save_meta',JSON.stringify(save));
-    // Save teams, players, leagues, fixtures, results in chunks
-    localStorage.setItem('pitch_teams',JSON.stringify(G.teams));
-    localStorage.setItem('pitch_leagues',JSON.stringify(G.leagues));
-    // Players too large — save in batches
+    const save={version:'3.0',date:Date.now(),G:{mgr:G.mgr,mgrNat:G.mgrNat,playerTeam:G.playerTeam,season:G.season,date:G.date,formation:G.formation,tactic:G.tactic,nextId:G.nextId,history:G.history,transfers:G.transfers,scoutReports:G.scoutReports,playerImages:G.playerImages,leagueCoefficients:G.leagueCoefficients,transferRumors:G.transferRumors}};
+    localStorage.setItem('pitch3_meta',JSON.stringify(save));
+    localStorage.setItem('pitch3_teams',JSON.stringify(G.teams));
+    localStorage.setItem('pitch3_leagues',JSON.stringify(G.leagues));
     const chunkSize=500;
     const chunks=Math.ceil(G.players.length/chunkSize);
-    localStorage.setItem('pitch_players_chunks',chunks.toString());
-    for(let i=0;i<chunks;i++){
-      localStorage.setItem(`pitch_players_${i}`,JSON.stringify(G.players.slice(i*chunkSize,(i+1)*chunkSize)));
-    }
-    localStorage.setItem('pitch_fixtures',JSON.stringify(G.fixtures.slice(-500)));
-    localStorage.setItem('pitch_results',JSON.stringify(G.results.slice(-200)));
+    localStorage.setItem('pitch3_players_chunks',chunks.toString());
+    for(let i=0;i<chunks;i++){localStorage.setItem(`pitch3_players_${i}`,JSON.stringify(G.players.slice(i*chunkSize,(i+1)*chunkSize)));}
+    localStorage.setItem('pitch3_fixtures',JSON.stringify(G.fixtures.slice(-500)));
+    localStorage.setItem('pitch3_results',JSON.stringify(G.results.slice(-200)));
+    toast('💾 Saved','s');
   }catch(e){console.warn('Save failed:',e);}
 }
+
 function loadGame(){
   try{
-    const meta=localStorage.getItem('pitch_save_meta');
-    if(!meta)return false;
+    const meta=localStorage.getItem('pitch3_meta');if(!meta)return false;
     const save=JSON.parse(meta);
-    Object.assign(G,save.G);
-    G.date=new Date(G.date);
-    G.teams=JSON.parse(localStorage.getItem('pitch_teams')||'[]');
-    G.leagues=JSON.parse(localStorage.getItem('pitch_leagues')||'{}');
-    const chunks=parseInt(localStorage.getItem('pitch_players_chunks')||'0');
+    Object.assign(G,save.G);G.date=new Date(G.date);
+    G.teams=JSON.parse(localStorage.getItem('pitch3_teams')||'[]');
+    G.leagues=JSON.parse(localStorage.getItem('pitch3_leagues')||'{}');
+    const chunks=parseInt(localStorage.getItem('pitch3_players_chunks')||'0');
     G.players=[];
-    for(let i=0;i<chunks;i++){const c=localStorage.getItem(`pitch_players_${i}`);if(c)G.players.push(...JSON.parse(c));}
-    G.fixtures=JSON.parse(localStorage.getItem('pitch_fixtures')||'[]');
-    G.results=JSON.parse(localStorage.getItem('pitch_results')||'[]');
+    for(let i=0;i<chunks;i++){const c=localStorage.getItem(`pitch3_players_${i}`);if(c)G.players.push(...JSON.parse(c));}
+    G.fixtures=JSON.parse(localStorage.getItem('pitch3_fixtures')||'[]');
+    G.results=JSON.parse(localStorage.getItem('pitch3_results')||'[]');
     return true;
-  }catch(e){console.warn('Load failed:',e);return false;}
+  }catch{return false;}
 }
 
-// Auto-save every 2 minutes
+// ── INIT ─────────────────────────────────────
 setInterval(()=>{if(G.playerTeam!==null)saveGame();},120000);
 
-// ── INIT ──────────────────────────────────────────────────────────
-document.getElementById('moverlay').addEventListener('click',e=>{
-  if(e.target===document.getElementById('moverlay'))closeModal();
-});
+document.getElementById('moverlay').addEventListener('click',e=>{if(e.target===document.getElementById('moverlay'))closeModal();});
 
-// Try to load existing save
 window.addEventListener('load',()=>{
-  populateLeagueSelect();
-  // If previous save exists, could offer continue — kept simple here
+  // Try load existing save
+  if(loadGame()&&G.playerTeam!==null){
+    document.getElementById('setup').style.display='none';
+    document.getElementById('app').style.display='flex';
+    nav('dashboard');
+    toast(`Welcome back, ${G.mgr}!`,'s');
+  } else {
+    populateSetupLeagues();
+  }
 });
 
-// Drag-n-drop for DB upload
-['db-dropzone','imp-dropzone'].forEach(id=>{
-  const el=document.getElementById(id);
-  if(!el)return;
+function populateSetupLeagues(){
+  renderLeagueChips();
+}
+
+// Setup step 4: render team picker when reaching step 4
+const origGoStep=goStep;
+function goStep(n){
+  if(n>setupStep+1&&n>1){toast('Complete previous steps first','i');return;}
+  setupStep=n;
+  [1,2,3,4].forEach(i=>{const el=document.getElementById(`step-${i}`);if(el)el.style.display=i===n?'block':'none';});
+  document.querySelectorAll('.step-pill').forEach((el,i)=>{el.classList.toggle('active',i===n-1);if(i<n-1)el.classList.add('done');});
+  if(n===3)renderLeagueChips();
+  if(n===4){
+    if(!selLeagueKey){toast('Please select a league','e');setupStep=3;[1,2,3,4].forEach(i=>{const el=document.getElementById(`step-${i}`);if(el)el.style.display=i===3?'block':'none';});return;}
+    renderTeamPicker();
+  }
+}
+
+// Drag and drop for imports
+['imp-dropzone'].forEach(id=>{
+  const el=document.getElementById(id);if(!el)return;
   el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('dragover');});
   el.addEventListener('dragleave',()=>el.classList.remove('dragover'));
   el.addEventListener('drop',e=>{
     e.preventDefault();el.classList.remove('dragover');
     const file=e.dataTransfer.files[0];
-    if(file){const inp=document.getElementById(id==='db-dropzone'?'db-file':'imp-db');if(inp){inp.files=e.dataTransfer.files;id==='db-dropzone'?loadCustomDb(inp):importDb(inp);}}
+    if(file){const inp=document.getElementById('imp-db');if(inp){inp.files=e.dataTransfer.files;importDb(inp);}}
   });
 });
 </script>
