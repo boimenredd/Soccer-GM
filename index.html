@@ -578,10 +578,16 @@ const FORMATIONS = {
   '4-3-3':  {pos:['GK','LB','CB','CB','RB','CM','CM','CM','LW','ST','RW'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[25,52],[50,52],[75,52],[18,28],[50,16],[82,28]]},
   '4-2-3-1':{pos:['GK','LB','CB','CB','RB','CDM','CDM','CAM','LW','RW','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[33,62],[67,62],[50,44],[18,30],[82,30],[50,14]]},
   '4-4-2':  {pos:['GK','LB','CB','CB','RB','LM','CM','CM','RM','ST','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[12,52],[36,52],[64,52],[88,52],[36,16],[64,16]]},
+  '4-4-2 (Diamond)':{pos:['GK','LB','CB','CB','RB','CDM','CM','CM','CAM','ST','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[50,64],[28,52],[72,52],[50,40],[36,16],[64,16]]},
   '3-5-2':  {pos:['GK','CB','CB','CB','LWB','CDM','CM','CM','RWB','ST','ST'],coords:[[50,92],[24,72],[50,72],[76,72],[12,52],[34,52],[50,46],[66,52],[88,52],[36,16],[64,16]]},
   '5-3-2':  {pos:['GK','LWB','CB','CB','CB','RWB','CM','CM','CM','ST','ST'],coords:[[50,92],[10,68],[28,72],[50,72],[72,72],[90,68],[25,50],[50,46],[75,50],[36,16],[64,16]]},
+  '5-4-1':  {pos:['GK','LWB','CB','CB','CB','RWB','LM','CM','CM','RM','ST'],coords:[[50,92],[10,68],[28,72],[50,72],[72,72],[90,68],[12,50],[36,50],[64,50],[88,50],[50,16]]},
   '4-1-4-1':{pos:['GK','LB','CB','CB','RB','CDM','LM','CM','CM','RM','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[50,60],[10,44],[32,44],[68,44],[90,44],[50,14]]},
+  '4-3-2-1':{pos:['GK','LB','CB','CB','RB','CM','CM','CM','LW','RW','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[25,58],[50,58],[75,58],[30,36],[70,36],[50,14]]},
   '3-4-3':  {pos:['GK','CB','CB','CB','LM','CM','CM','RM','LW','ST','RW'],coords:[[50,92],[24,72],[50,72],[76,72],[12,50],[36,50],[64,50],[88,50],[18,24],[50,14],[82,24]]},
+  '3-4-1-2':{pos:['GK','CB','CB','CB','LM','CM','CM','RM','CAM','ST','ST'],coords:[[50,92],[24,72],[50,72],[76,72],[12,52],[36,52],[64,52],[88,52],[50,36],[34,16],[66,16]]},
+  '4-5-1':  {pos:['GK','LB','CB','CB','RB','LM','CM','CAM','CM','RM','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[10,50],[32,50],[50,44],[68,50],[90,50],[50,14]]},
+  '4-1-2-1-2':{pos:['GK','LB','CB','CB','RB','CDM','CM','CM','CAM','ST','ST'],coords:[[50,92],[12,72],[32,72],[68,72],[88,72],[50,62],[28,50],[72,50],[50,38],[36,16],[64,16]]},
 };
 
 const POS_TYPE = {GK:'gk',CB:'def',LB:'def',RB:'def',LWB:'def',RWB:'def',CDM:'mid',CM:'mid',CAM:'mid',LM:'mid',RM:'mid',LW:'fwd',RW:'fwd',ST:'fwd',CF:'fwd'};
@@ -619,54 +625,95 @@ function natFlag(nat) {
 var NAT_FLAGS = new Proxy({}, { get: function(t,k){ return natFlag(k); } });
 const NATS = Object.keys(NAT_FLAG_CODES);
 
-// Country   nationality mapping
+// Country → nationality mapping
 const COUNTRY_NAT = {
   England:'English',Spain:'Spanish',Germany:'German',France:'French',Italy:'Italian',
   Portugal:'Portuguese',Netherlands:'Dutch',Belgium:'Belgian',Turkey:'Turkish',Scotland:'Scottish',
   Brazil:'Brazilian',Argentina:'Argentine',Colombia:'Colombian',Chile:'Chilean',Uruguay:'Uruguayan',
   USA:'American',Mexico:'Mexican',Japan:'Japanese','South Korea':'Korean',
   'Saudi Arabia':'Saudi',China:'Chinese',Russia:'Russian',Israel:'Israeli',
+  Greece:'Greek',Switzerland:'Swiss',Austria:'Austrian',Denmark:'Danish',
+  Norway:'Norwegian',Sweden:'Swedish',Poland:'Polish',Croatia:'Croatian',
+  Serbia:'Serbian',Ukraine:'Ukrainian',Romania:'Romanian',Hungary:'Hungarian',
+  Morocco:'Moroccan',Nigeria:'Nigerian',Senegal:'Senegalese',Ghana:'Ghanaian',
+  Algeria:'Algerian',Egypt:'Egyptian','Ivory Coast':'Ivorian',Cameroon:'Cameroonian',
+  Wales:'Welsh','Northern Ireland':'Northern Irish',Ireland:'Irish',
+  Kazakhstan:'Kazakh',Uzbekistan:'Uzbek',Azerbaijan:'Azerbaijani',Georgia:'Georgian',
+  'South Africa':'South African',Kenya:'Kenyan',Tunisia:'Tunisian',
+  Ecuador:'Ecuadorian',Peru:'Peruvian',Paraguay:'Paraguayan',Bolivia:'Bolivian',
+  Venezuela:'Venezuelan',Honduras:'Honduran',Guatemala:'Guatemalan',Panama:'Panamanian',
+  Iran:'Iranian',Iraq:'Iraqi',Jordan:'Jordanian',Lebanon:'Lebanese',
+  India:'Indian',Indonesia:'Indonesian',Thailand:'Thai',Vietnam:'Vietnamese',Malaysia:'Malaysian',
 };
 
 // -- NATIONALITY-BASED NAME POOLS --------------
 const NAT_NAMES = {
-  English:  {fn:['James','Harry','Jack','Declan','Mason','Phil','Marcus','Trent','Bukayo','Jude','Jordan','Daniel','Ben','Kalvin','Emile','Harvey','Conor','Lewis','Aaron','Reece'],ln:['Smith','Jones','Williams','Taylor','Brown','Davies','Evans','Wilson','Thomas','Roberts','Johnson','Walker','White','Hall','Green','Wood','Hughes','Clarke','Harris','Martin']},
-  Spanish:  {fn:['Pedri','Gavi','Ferran','Ansu','Dani','Pablo','Mikel','Iker','Sergio','David','Alvaro','Borja','Marco','Diego','Jesus','Rodri','Fabian','Marcos','Carlos','Alejandro'],ln:['Garcia','Martinez','Lopez','Sanchez','Gonzalez','Fernandez','Rodriguez','Perez','Gomez','Torres','Ruiz','Diaz','Jimenez','Moreno','Alvarez','Munoz','Romero','Molina','Navarro','Ortega']},
-  German:   {fn:['Kai','Leroy','Timo','Leon','Niklas','Joshua','Serge','Ilkay','Thomas','Manuel','Jamal','Florian','Marco','Mario','Julian','Luca','Maximilian','Kevin','Sven','Hans'],ln:['Muller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz','Hoffmann','Koch','Richter','Klein','Wolf','Neuer','Kroos','Klose','Reus','Gotze','Draxler']},
-  French:   {fn:['Kylian','Karim','Paul','Antoine','Ousmane','Presnel','Lucas','Benjamin','Theo','Wissam','Kingsley','Christopher','Moussa','Jonathan','Corentin','Matteo','Adrien','William','Clement','Raphael'],ln:['Dupont','Martin','Bernard','Thomas','Robert','Petit','Dubois','Leroy','Moreau','Laurent','Simon','Michel','Lefebvre','Lefevre','Roux','Fontaine','Giroud','Pogba','Mbappe','Benzema']},
-  Italian:  {fn:['Lorenzo','Federico','Nicolo','Giacomo','Marco','Luca','Andrea','Alessandro','Davide','Ciro','Gianluca','Mattia','Roberto','Emerson','Leonardo','Stefano','Giovanni','Maurizio','Antonio','Riccardo'],ln:['Rossi','Ferrari','Esposito','Bianchi','Romano','Colombo','Ricci','Marino','Greco','Bruno','Gallo','Conti','De Luca','Mancini','Pellegrini','Barella','Verratti','Donnarumma','Bonucci','Chiellini']},
-  Portuguese:{fn:['Bruno','Joao','Diogo','Ruben','Bernardo','Goncalo','Nelson','Danilo','Vitinha','Matheus','Andre','Pedro','Ruben','William','Rafael','Cristiano','Luis','Nuno','Domingos','Abel'],ln:['Silva','Santos','Oliveira','Costa','Ferreira','Carvalho','Rodrigues','Martins','Goncalves','Lopes','Pinto','Alves','Neto','Moutinho','Pepe','Cancelo','Fernandes','Leao','Jota','Horta']},
-  Dutch:    {fn:['Frenkie','Cody','Memphis','Davy','Virgil','Georginio','Denzel','Daley','Steven','Ryan','Wout','Nathan','Luuk','Donyell','Calvin','Justin','Quincy','Tijjani','Jordy','Xavi'],ln:['de Jong','Gakpo','Depay','Klaassen','van Dijk','Wijnaldum','Dumfries','Blind','Bergwijn','Gravenberch','Weghorst','Ake','de Vrij','Malen','Stengs','Koopmeiners','Promes','Nakamba','Kluivert','Simons']},
-  Belgian:  {fn:['Kevin','Romelu','Eden','Dries','Jan','Toby','Thomas','Youri','Axel','Nacer','Timothy','Lois','Jeremy','Christian','Leandro','Thorgan','Dennis','Divock','Michy','Arthur'],ln:['De Bruyne','Lukaku','Hazard','Mertens','Vertonghen','Alderweireld','Meunier','Tielemans','Witsel','Chadli','Castagne','Openda','Doku','Benteke','Trossard','Origi','Batshuayi','Kompany','Januzaj','Carrasco']},
-  Brazilian:{fn:['Vinicius','Rodrygo','Neymar','Raphinha','Richarlison','Gabriel','Casemiro','Thiago','Lucas','Antony','Endrick','Marquinhos','Alisson','Ederson','Alex','Bremer','Danilo','Militao','Paqueta','Firmino'],ln:['Silva','Santos','Oliveira','Costa','Ferreira','Jesus','Barbosa','Alves','Neto','Araujo','Pereira','Rodrigues','Gomes','Souza','Lima','Cunha','Nascimento','Carvalho','Ribeiro','Moura']},
-  Argentine:{fn:['Lionel','Paulo','Lautaro','Rodrigo','Nicolas','Alejandro','Leandro','Julian','Joaquin','Angel','Giovani','Nahuel','Enzo','Exequiel','Marcos','Facundo','Gonzalo','Mauro','Roberto','Alejandro'],ln:['Messi','Dybala','Martinez','De Paul','Gonzalez','Garnacho','Paredes','Alvarez','Correa','Di Maria','Lo Celso','Molina','Fernandez','Palacios','Acuna','Buonanotte','Higuain','Icardi','Pereyra','Simeone']},
-  Colombian:{fn:['Luis','James','Juan','Radamel','Edwin','Carlos','Davinson','Yerry','Miguel','Cuadrado','Duvan','Rafael','Sebastian','Fredy','Teo','Jhon','Gustavo','Javier','Miguel','Carlos'],ln:['Diaz','Rodriguez','Cuadrado','Falcao','Cardona','Bacca','Sanchez','Mina','Borja','Ospina','Zapata','Santos','Villa','Guarin','Castano','Murillo','Quintero','Lerma','Arias','Mosquera']},
-  Chilean:  {fn:['Alexis','Charles','Arturo','Gary','Mauricio','Ben','Claudio','Erick','Sebastian','Pablo','Eduardo','Felipe','Marcelo','Esteban','Jorge','Rodrigo','Nicolas','Cristobal','Diego','Ivan'],ln:['Sanchez','Aranguiz','Vidal','Medel','Isla','Brereton','Bravo','Pulgar','Pinilla','Hernandez','Vargas','Gutierrez','Diaz','Suazo','Valdivia','Valdes','Millar','Pizarro','Mena','Castillo']},
-  American: {fn:['Christian','Tyler','Weston','Pulisic','Gio','Sergino','Josh','Matt','DeAndre','Zack','John','Jordan','Brendan','Cameron','Aaron','Jordan','Ricardo','Paxten','Cade','Sam'],ln:['Pulisic','Adams','McKennie','Reyna','Dest','Sargent','Turner','Yedlin','Steffen','Brooks','Aaronson','Weah','Cannon','Carter-Vickers','Long','Morris','Pepi','Aaronson','Lletget','Robinson']},
-  Mexican:  {fn:['Hirving','Raul','Guillermo','Edson','Henry','Carlos','Jesus','Hector','Andres','Roberto','Uriel','Santiago','Orbelin','Chucky','Alan','Rodolfo','Cesar','Oswaldo','Jonathan','Diego'],ln:['Lozano','Jimenez','Ochoa','Alvarez','Moreno','Vela','Corona','Herrera','Guardado','Alvarado','Antuna','Munoz','Pineda','Tecatito','Pulido','Pizarro','Montes','Suarez','Urretaviscaya','Valdes']},
-  Japanese: {fn:['Takumi','Kaoru','Ritsu','Wataru','Shoya','Maya','Ao','Junya','Takehiro','Yuta','Daichi','Ayase','Hiroki','Kou','Takuya','Daizen','Koki','Sho','Naomichi','Miki'],ln:['Minamino','Mitoma','Doan','Endo','Nakamura','Yoshida','Tanaka','Ito','Tomiyasu','Yano','Kamada','Ueda','Ito','Hata','Matsuda','Maeda','Hashioka','Kushibiki','Ueda','Ito']},
-  Korean:   {fn:['Son','Lee','Kim','Park','Hwang','Cho','Jung','Kwon','Oh','Na','Lim','Bae','Jeon','Kang','Choi','Yoon','Shin','Ha','Yoo','Ryu'],ln:['Heung-min','Jae-sung','Min-jae','Ji-sung','Hee-chan','Gue-sung','Woo-young','Chang-hoon','Se-jun','Sang-ho','Seung-woo','Jun-ho','Seong-ryong','In-beom','Hyun-woo','Jong-kyu','Seok-hyeon','Chang-woo','Hyeon-jun','Ui-jo']},
+  English:  {fn:['James','Harry','Jack','Declan','Mason','Phil','Marcus','Trent','Bukayo','Jude','Jordan','Daniel','Ben','Kalvin','Emile','Harvey','Conor','Lewis','Aaron','Reece','Ollie','Ryan','Kyle','Jadon','Raheem','Adam','Charlie','Sam','Luke','Tom','Nathan','Curtis','Eberechi','Michael','Joe','Liam','Brad','Scott','Bobby','Dominic'],ln:['Smith','Jones','Williams','Taylor','Brown','Davies','Evans','Wilson','Thomas','Roberts','Johnson','Walker','White','Hall','Green','Wood','Hughes','Clarke','Harris','Martin','Lewis','Thompson','Robinson','Fox','Mitchell','Anderson','Campbell','Mason','Dean','Rice','Maguire','Alexander','Chilwell','Saka','Sterling','Stones','Trippier','Henderson','Rashford','Kane']},
+  Spanish:  {fn:['Pedri','Gavi','Ferran','Ansu','Dani','Pablo','Mikel','Iker','Sergio','David','Alvaro','Borja','Marco','Diego','Jesus','Rodri','Fabian','Marcos','Carlos','Alejandro','Roberto','Victor','Juan','Nacho','Marc','Eric','Gerard','Unai','Raul','Fernando','Pedro','Miguel','Antonio','Alberto','Alvaro','Isco','Thiago','Koke','Saul','Jordi'],ln:['Garcia','Martinez','Lopez','Sanchez','Gonzalez','Fernandez','Rodriguez','Perez','Gomez','Torres','Ruiz','Diaz','Jimenez','Moreno','Alvarez','Munoz','Romero','Molina','Navarro','Ortega','Castro','Vargas','Ramos','Pique','Busquets','Alba','Asensio','Morata','Herrera','Carvajal','Navas','Sarabia','Oyarzabal','Olmo','Yamal','Dani','Laporte','Eric','Gavi','Mikel']},
+  German:   {fn:['Kai','Leroy','Timo','Leon','Niklas','Joshua','Serge','Ilkay','Thomas','Manuel','Jamal','Florian','Marco','Julian','Luca','Maximilian','Kevin','Sven','Mats','Antonio','Christopher','Jonas','Robin','Emre','Nico','Thilo','Lukas','Karim','David','Hannes','Benjamin','Klara','Willi','Rudi','Franz','Gerhard','Hans','Uwe','Klaus','Rainer'],ln:['Muller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz','Hoffmann','Koch','Richter','Klein','Wolf','Neuer','Kroos','Gnabry','Sane','Havertz','Rudiger','Kimmich','Goretzka','Musiala','Wirtz','Fullkrug','Schlotterbeck','Tah','Raum','Henrichs','Mittelstadt','Andrich','Gross','Draxler','Gotze','Reus','Brandt','Arnold','Can','Hummels','Boateng']},
+  French:   {fn:['Kylian','Karim','Paul','Antoine','Ousmane','Presnel','Lucas','Benjamin','Theo','Wissam','Kingsley','Christopher','Moussa','Jonathan','Corentin','Matteo','Adrien','William','Clement','Raphael','Eduardo','Axel','Ibrahima','Nordi','Ferland','Jonathan','Nabil','Romain','Olivier','Steve'],ln:['Dupont','Martin','Bernard','Thomas','Robert','Petit','Dubois','Leroy','Moreau','Laurent','Simon','Michel','Roux','Mbappé','Benzema','Pogba','Griezmann','Dembele','Kante','Varane','Mendy','Saliba','Rabiot','Coman','Camavinga','Tchouameni','Thuram','Pavard','Maignan','Upamecano','Giroud','Ben Yedder','Fekir','Veretout','Tolisso','Nzonzi','Diaby','Umtiti','Hernandez','Kounde']},
+  Italian:  {fn:['Lorenzo','Federico','Nicolo','Giacomo','Marco','Luca','Andrea','Alessandro','Davide','Ciro','Gianluca','Mattia','Roberto','Emerson','Leonardo','Stefano','Giovanni','Maurizio','Antonio','Riccardo','Sandro','Vincenzo','Cristiano','Bryan','Manuel','Jorginho','Francesco','Gianluigi','Matteo','Simone','Domenico','Wilfried','Giacomo','Giorgio','Leonardo','Nicolo','Raspadori','Scalvini'],ln:['Rossi','Ferrari','Esposito','Bianchi','Romano','Colombo','Ricci','Marino','Greco','Bruno','Gallo','Conti','Donnarumma','Bonucci','Chiellini','Barella','Verratti','Pellegrini','Insigne','Immobile','Jorginho','Spinazzola','Florenzi','Bastoni','Acerbi','Frattesi','Tonali','Zaniolo','Calabria','Locatelli','Di Lorenzo','Mancini','Scamacca','Gnonto','Fagioli','Bellanova','Rovella','Miretti']},
+  Portuguese:{fn:['Bruno','Joao','Diogo','Ruben','Bernardo','Goncalo','Nelson','Danilo','Vitinha','Matheus','Andre','Pedro','Rafael','Cristiano','Luis','Nuno','Domingos','Abel','Joao','Ricardo','Joao','Renato','Joao','Sergio','Cedric','Anthony','Otavio','William','Joao','Rafa'],ln:['Silva','Santos','Oliveira','Costa','Ferreira','Carvalho','Rodrigues','Martins','Goncalves','Lopes','Pinto','Alves','Neto','Moutinho','Cancelo','Fernandes','Leao','Jota','Horta','Dalot','Pepe','Ruben','Neves','Palinha','Vitinha','Ramos','Semedo','Guerreiro','Mendes','Trincao']},
+  Dutch:    {fn:['Frenkie','Cody','Memphis','Virgil','Georginio','Denzel','Daley','Ryan','Wout','Nathan','Luuk','Donyell','Justin','Tijjani','Xavi','Teun','Brian','Steven','Jeremie','Jurrien','Sven','Joshua','Ian','Josh','Myron','Guus','Pier','Dirk','Arjen','Ruud'],ln:['de Jong','Gakpo','Depay','van Dijk','Wijnaldum','Dumfries','Blind','Bergwijn','Gravenberch','Weghorst','Ake','de Vrij','Malen','Koopmeiners','Promes','Simons','Brobbey','Zirkzee','Frimpong','Timber','Maatsen','Veerman','Schouten','Sugawara','Hato','van den Berg','van Hecke','Botman','Blind','de Roon']},
+  Belgian:  {fn:['Kevin','Romelu','Eden','Dries','Jan','Toby','Thomas','Youri','Axel','Timothy','Lois','Jeremy','Christian','Leandro','Thorgan','Dennis','Divock','Michy','Arthur','Charles','Alexis','Aster','Johan','Adnan','Yannick','Eliot','Orel','Leandro','Hugo','Albert'],ln:['De Bruyne','Lukaku','Hazard','Mertens','Vertonghen','Alderweireld','Meunier','Tielemans','Witsel','Castagne','Openda','Doku','Benteke','Trossard','Origi','Batshuayi','Kompany','Januzaj','Carrasco','De Ketelaere','Mangala','Vanaken','Casteels','Mignolet','Courtois','Boyata','Dendoncker','Saelemaekers','Chadli','Praet']},
+  Brazilian:{fn:['Vinicius','Rodrygo','Neymar','Raphinha','Richarlison','Gabriel','Casemiro','Thiago','Lucas','Antony','Endrick','Marquinhos','Alisson','Ederson','Bremer','Danilo','Militao','Paqueta','Firmino','Philippe','Willian','Roberto','Renato','Alex','Fred','Fabinho','Filipe','Anderson','Douglas','Hulk','Fernandinho','Renan','Pedro','Matheus','Gustavo','Igor','Bruno','Evanilson','Igor','Gabriel'],ln:['Silva','Santos','Oliveira','Costa','Ferreira','Jesus','Barbosa','Araujo','Pereira','Rodrigues','Gomes','Souza','Lima','Cunha','Nascimento','Carvalho','Ribeiro','Moura','Cavalcanti','Magalhaes','Augusto','Hernanes','Paulinho','Willian','Hulk','Fred','Tardelli','Pato','Ronaldo','Romario','Zagallo','Bebeto','Ronaldinho','Kaka','Robinho','Adriano','Diego','Ganso','Oscar','Bernard']},
+  Argentine:{fn:['Lionel','Paulo','Lautaro','Rodrigo','Nicolas','Alejandro','Leandro','Julian','Joaquin','Angel','Giovani','Nahuel','Enzo','Exequiel','Marcos','Facundo','Gonzalo','Mauro','Alexis','Guido','German','Lucas','Franco','Nahuel','Thiago','Alejo','Valentin','Matias','Ezequiel','Federico'],ln:['Messi','Dybala','Martinez','De Paul','Gonzalez','Garnacho','Paredes','Alvarez','Correa','Di Maria','Lo Celso','Molina','Fernandez','Palacios','Acuna','Buonanotte','Romero','Lisandro','Mac Allister','Rulli','Pezzella','Montiel','Tagliafico','Almada','Echeverri','Medina','Funes Mori','Retegui','Simeone','Herrera']},
+  Colombian:{fn:['Luis','James','Juan','Radamel','Edwin','Carlos','Davinson','Yerry','Miguel','Duvan','Rafael','Sebastian','Fredy','Jhon','Gustavo','Javier','Eder','Miguel','Jefferson','Luis'],ln:['Diaz','Rodriguez','Cuadrado','Falcao','Cardona','Bacca','Sanchez','Mina','Borja','Ospina','Zapata','Santos','Villa','Murillo','Quintero','Lerma','Mosquera','Porras','Lerma','Arango']},
+  Chilean:  {fn:['Alexis','Charles','Arturo','Gary','Mauricio','Ben','Claudio','Erick','Sebastian','Pablo','Eduardo','Felipe','Marcelo','Esteban','Jorge','Rodrigo','Nicolas','Diego','Ivan','Luciano'],ln:['Sanchez','Aranguiz','Vidal','Medel','Isla','Brereton','Bravo','Pulgar','Hernandez','Vargas','Gutierrez','Diaz','Suazo','Valdivia','Millar','Pizarro','Mena','Castillo','Contreras','Palacios']},
+  Uruguayan:{fn:['Luis','Edinson','Diego','Federico','Ronald','Maxi','Rodrigo','Nahitan','Lucas','Sebastian','Giorgian','Mathias','Jose','Facundo','Nicolas','Darwin','Agustin','Carlos','Guillermo','Pablo'],ln:['Suarez','Cavani','Godin','Valverde','Araujo','Gomez','Bentancur','Nandez','Torreira','Coates','De Arrascaeta','Olivera','Gimenez','Torres','Nunez','Canobbio','Viana','Varela','Garcia','Josema']},
+  Mexican:  {fn:['Hirving','Raul','Guillermo','Edson','Henry','Carlos','Jesus','Hector','Andres','Roberto','Uriel','Santiago','Alan','Rodolfo','Cesar','Oswaldo','Jonathan','Diego','Jorge','Luis'],ln:['Lozano','Jimenez','Ochoa','Alvarez','Moreno','Vela','Corona','Herrera','Guardado','Alvarado','Antuna','Munoz','Pineda','Pulido','Pizarro','Montes','Suarez','Valdes','Torres','Ramos']},
+  American: {fn:['Christian','Tyler','Weston','Gio','Sergino','Josh','Matt','DeAndre','John','Jordan','Brendan','Cameron','Aaron','Ricardo','Paxten','Cade','Sam','Jonathan','Sebastian','Landon','Clint','Michael','Timothy','Owen','Folarin','Patrick','Malik','Shaq','Brandon','Kevin'],ln:['Pulisic','Adams','McKennie','Reyna','Dest','Sargent','Turner','Yedlin','Brooks','Aaronson','Weah','Cannon','Long','Pepi','Lletget','Robinson','Moore','Musah','Acosta','Donovan','Dempsey','Bradley','Howard','Altidore','Balogun','Ferreira','Tillman','Moore','Vazquez','de la Torre']},
+  Honduran: {fn:['Alberth','Romell','Alex','Maynor','Emilio','Henry','Bryan','Jorge','Carlos','Luis'],ln:['Elis','Quioto','Lopez','Figueroa','Izaguirre','Figueroa','Ruiz','Benguche','Costly','Palacios']},
+  Guatemalan:{fn:['Carlos','Jose','Luis','Miguel','Marco','Juan','Diego','Pedro','Fernando','Sergio'],ln:['Ruiz','Lopez','Morales','Rodriguez','Gonzalez','Martinez','Perez','Garcia','Sanchez','Torres']},
+  Panamanian:{fn:['Roman','Abdiel','Rolando','Gabriel','Alberto','Jose','Eric','Richard','Anibal','Joel'],ln:['Torres','Ayarza','Murillo','Gomez','Baloy','Davis','Fehr','Phillips','Quintero','Godoy']},
+  Japanese: {fn:['Takumi','Kaoru','Ritsu','Wataru','Shoya','Maya','Ao','Junya','Takehiro','Yuta','Daichi','Ayase','Hiroki','Daizen','Koki','Sho','Naomichi','Keito','Tomoki','Yuta','Yusuke','Takefusa','Jiro','Taro','Keisuke','Shinji','Kagawa','Nagatomo','Hasebe','Kawashima'],ln:['Minamino','Mitoma','Doan','Endo','Nakamura','Yoshida','Tanaka','Ito','Tomiyasu','Kamada','Ueda','Maeda','Hashioka','Honda','Kagawa','Nagatomo','Hasebe','Kawashima','Osako','Inui','Asano','Kubo','Furuhashi','Watanabe','Sakai','Makino','Gotoku','Onaiwu','Ugajin','Hayashi']},
+  Korean:   {fn:['Son','Hwang','Cho','Kim','Park','Lee','Jung','Kwon','Oh','Lim','Bae','Jeon','Kang','Choi','Yoon','Shin','Ha','Yoo','Ryu','Na','Seok','Min','Dong','Jae','Sung'],ln:['Heung-min','Hee-chan','Gue-sung','Min-jae','Ji-sung','Jae-sung','Woo-young','Chang-hoon','Se-jun','Seung-woo','In-beom','Hyun-woo','Chang-woo','Hyeon-jun','Ui-jo','Tae-hwan','Jun-ho','Seong-ryong','Jong-kyu','Dong-gook','Cha Bum-kun','Park Ji-sung','Ki Sung-yueng','Koo Ja-cheol','Lee Seung-woo']},
+  Chinese:  {fn:['Wei','Fei','Yang','Lei','Xin','Hao','Tao','Jun','Bin','Peng','Chao','Rui','Kun','Kai','Bo','Jian','Ming','Long','Xiang','Feng','Zhi','Yu','Hao','Chen','Sheng'],ln:['Wang','Zhang','Li','Liu','Chen','Yang','Wu','Zhao','Huang','Zhou','Sun','Ma','Zhu','Hu','Guo','He','Lin','Gao','Luo','Zheng','Wu Lei','Wang Shuangling','Xu Xin','Tan Long','Zhang Linpeng']},
   Saudi:    {fn:['Salem','Mohammed','Abdullah','Saleh','Firas','Hattan','Ali','Yasser','Ahmad','Nawaf','Saud','Sultan','Fahad','Turki','Khalid','Riyadh','Saad','Hamdan','Nasser','Omar'],ln:['Al-Dawsari','Al-Buraikan','Al-Ghannam','Al-Malki','Al-Brikan','Bahbri','Al-Hassan','Al-Shahrani','Al-Tambakti','Al-Aqidi','Al-Mutairi','Asiri','Al-Ghamdi','Al-Shehri','Alharbi','Kanno','Fallatah','Saleh','Al-Majrishi','Hilal']},
-  Chinese:  {fn:['Wei','Fei','Yang','Lei','Xin','Hao','Tao','Jun','Bin','Peng','Chao','Rui','Kun','Kai','Bo','Jian','Ming','Long','Xiang','Feng'],ln:['Wang','Zhang','Li','Liu','Chen','Yang','Wu','Zhao','Huang','Zhou','Sun','Ma','Zhu','Hu','Guo','He','Lin','Gao','Luo','Zheng']},
-  Turkish:  {fn:['Hakan','Burak','Cengiz','Caglar','Ozan','Kenan','Ferdi','Okay','Salih','Zeki','Dorukhan','Yusuf','Umut','Merih','Kaan','Irfan','Berkan','Orkun','Serdar','Arda'],ln:['Calhanoglu','Ylmaz','Under','Soyuncu','Kabak','Yldz','Kadoglu','Yokuslu','Ozcan','Celik','Tokoz','Yazc','Bulut','Demiral','Ayhan','Can','Kokcu','Kokcu','Gulbrandsen','Turan']},
-  Norwegian:{fn:['Erling','Martin','Alexander','Kristoffer','Sander','Mathias','Elias','Kristian','Mohamed','Veton','Ole','Stefan','Birger','Lasse','Ola','rjan','Even','John','Mats','Kristoffer'],ln:['Haaland','degaard','Srloth','Thorstvedt','Berge','Normann','Ajer','Selnaes','Elyounoussi','Berisha','Solskjr','Johansen','Helland','Berg','Gunnarsson','Nyland','Henriksen','Arne','Pedersen','Bjrnbak']},
-  Scottish: {fn:['Scott','Andrew','Ryan','James','Steven','Kieran','Grant','Craig','Kenny','David','John','Paul','Gary','Barry','Callum','Lewis','Billy','Robbie','Kevin','Allan'],ln:['McTominay','Robertson','Christie','Forrest','Tierney','Hanley','Kennedy','McLean','Gilmour','McGinn','Armstrong','Burke','Dykes','Fleck','Adams','Patterson','Cooper','Burke','McKenna','Ralston']},
-  Swedish:  {fn:['Zlatan','Alexander','Dejan','Victor','Sebastian','Marcus','Robin','Emil','Anthony','Oscar','Jens','Gustav','Filip','Jonathan','Linus','Albin','Andreas','Viktor','Hugo','Pontus'],ln:['Ibrahimovic','Isak','Kulusevski','Nilsson','Larsson','Berg','Quaison','Forsberg','Elanga','Krafth','Eliasson','Svensson','Helander','Bengtsson','Wahlqvist','Ekdal','Granqvist','Claesson','Kvist','Jansson']},
-  Danish:   {fn:['Christian','Pierre','Andreas','Kasper','Simon','Jannik','Daniel','Jonas','Yussuf','Joakim','Martin','Mikkel','Victor','Alexander','Joachim','Mathias','Thomas','Rasmus','Nicolai','Mads'],ln:['Eriksen','Emile Hojbjerg','Christiansen','Schmeichel','Kjr','Vestergaard','Wass','Wind','Poulsen','Maehle','Braithwaite','Damsgaard','Boilesen','Bah','Andersen','Jensen','Delaney','Nrgaard','Hjer','Skov']},
-  Moroccan: {fn:['Achraf','Youssef','Sofiane','Hakim','Noussair','Abdelhamid','Romain','Selim','Brahim','Ayoub','Munir','Nayef','Adam','Zakaria','Ilias','Jawad','Sofyan','Youssef','Nizar','Yassine'],ln:['Hakimi','En-Nesyri','Boufal','Ziyech','Mazraoui','Sabiri','Saiss','Benrahma','Amrabat','El Yaagoubi','Ounahi','Aguerd','El Ouahabi','Aboukhlal','El Arabi','Benkhaire','Chair','Benoun','Tagnaouti','Bono']},
-  Nigerian: {fn:['Victor','Wilfried','Kelechi','Alex','Ahmed','Emmanuel','Leon','Odion','William','Zaidu','Chidera','Paul','Chukwueze','Troost','Nnamdi','Kenneth','Taiwo','Moses','Ola','Ebunoluwa'],ln:['Osimhen','Ndidi','Iheanacho','Musa','Musa','Eze','Balogun','Ighalo','Troost-Ekong','Sanusi','Ejuke','Obi','Chukwueze','Lekaj','Onyekuru','Omeruo','Awoniyi','Simon','Ebisindei','Ajayi']},
-  Senegalese:{fn:['Sadio','Kalidou','Edouard','Pape','Boulaye','Idrissa','Ismaila','Nampalys','Famara','Mbaye','Gana','Bamba','Lamine','Moussa','Omar','Habib','Mamadou','Ibrahima','Cheikhou','Alfred'],ln:['Mane','Koulibaly','Mendy','Matar Gueye','Dia','Gueye','Sarr','Mendy','Diedhiou','Diagne','Gueye','Diallo','Camara','Kouyate','Thiam','Diallo','Niang','Mbaye','Kouyate','Ndiaye']},
-  Uruguayan:{fn:['Luis','Edinson','Diego','Federico','Ronald','Maxi','Rodrigo','Nahitan','Lucas','Sebastian','Giorgian','Mathias','Jose','Facundo','Nicolas','Darwin','Agustin','Carlos','Guillermo','Pablo'],ln:['Suarez','Cavani','Godin','Valverde','Araujo','Gomez','Bentancur','Nandez','Torreira','Coates','De Arrascaeta','Olivera','Gimenez','Torres','Lodeiro','Nunez','Canobbio','Viana','Varela','Garcia']},
-  Polish:   {fn:['Robert','Piotr','Wojciech','Grzegorz','Kamil','Jan','Arkadiusz','Maciej','Bartosz','Jakub','Karol','Damian','Sebastian','Krzysztof','Mariusz','Przemysaw','Micha','ukasz','Mateusz','Rafa'],ln:['Lewandowski','Zielinski','Szczesny','Krychowiak','Glik','Bednarek','Milik','Rybus','Bereszynski','Moder','Linetty','Szymanski','Walukiewicz','Piatek','Klich','Frankowski','Helik','Fabianski','Kownacki','Sousa']},
-  Russian:  {fn:['Artem','Aleksei','Aleksandr','Fedor','Daniil','Dmitry','Igor','Ivan','Sergei','Yuri','Georgi','Pavel','Anton','Roman','Mikhail','Nikita','Kirill','Maxim','Andrei','Oleg'],ln:['Dzyuba','Miranchuk','Golovin','Smolov','Kuzyaev','Cheryshev','Akinfeev','Zhirkov','Ignashevich','Fernandes','Zhirkov','Mamayev','Petrov','Shirokov','Berezutsky','Mostovoy','Kuzmin','Komlichenko','Ionov','Samedov']},
-  Croatian: {fn:['Luka','Ivan','Marcelo','Mateo','Ante','Dejan','Josko','Borna','Nikola','Josip','Mario','Sime','Tin','Petar','Domagoj','Andrej','Duje','Ivan','Tomislav','Bruno'],ln:['Modric','Perisic','Brozovic','Kovacic','Rebic','Lovren','Gvardiol','Sosa','Vlasic','Juranuic','Budimir','Vrsaljko','Jedvaj','Vusio','Vida','Kramaric','Caleta-Car','Strinic','Pjaca','Petkovic']},
-  Israeli:  {fn:['Eran','Dor','Manor','Munas','Loai','Neta','Idan','Dia','Almog','Bar','Omri','Omer','Sagiv','Tomer','Nikita','Gal','Matan','Eden','Nili','Chen'],ln:['Zahavi','Peretz','Solomon','Dabbur','Taha','Lavi','Ben Basat','Elmkies','Cohen','Abu Hanna','Ben Harush','Atzili','Jehezkel','Hemed','Rukavytsya','Kricheli','Haziza','Shabailov','Einbinder','Mika']},
+  Turkish:  {fn:['Hakan','Burak','Cengiz','Caglar','Ozan','Kenan','Ferdi','Okay','Salih','Zeki','Yusuf','Umut','Merih','Kaan','Irfan','Berkan','Orkun','Serdar','Arda','Baris','Halil','Cenk','Emre','Enes','Ersin','Ugur','Dorukhan','Mehmet','Ozan','Ridvan'],ln:['Calhanoglu','Ylmaz','Under','Soyuncu','Kabak','Yildiz','Kadoglu','Yokuslu','Ozcan','Celik','Yazici','Bulut','Demiral','Ayhan','Can','Kokcu','Guler','Unal','Turan','Demirbay','Inan','Torun','Bayindir','Gunok','Muldur','Elmali','Tufan','Calhano','Karaman','Akturkoglu']},
+  Norwegian:{fn:['Erling','Martin','Alexander','Kristoffer','Sander','Mathias','Elias','Mohamed','Ole','Stefan','Lasse','Ola','Even','John','Mats','Jens','Tobias','Joshua','Stian','Magnus'],ln:['Haaland','Odegaard','Sorloth','Thorstvedt','Berge','Normann','Ajer','Elyounoussi','Berisha','Solskjaer','Johansen','Helland','Berg','Henriksen','Pedersen','Selnæs','Wolff Eikrem','King','Dæhli','Lunde']},
+  Swedish:  {fn:['Zlatan','Alexander','Victor','Sebastian','Marcus','Robin','Emil','Anthony','Oscar','Jens','Gustav','Filip','Jonathan','Linus','Albin','Andreas','Hugo','Pontus','Jordan','Dejan'],ln:['Ibrahimovic','Isak','Nilsson','Larsson','Berg','Quaison','Forsberg','Elanga','Eliasson','Svensson','Helander','Bengtsson','Wahlqvist','Ekdal','Granqvist','Claesson','Kvist','Jansson','Larsson','Lustig']},
+  Danish:   {fn:['Christian','Pierre','Andreas','Kasper','Simon','Jannik','Daniel','Jonas','Yussuf','Joakim','Martin','Mikkel','Victor','Alexander','Rasmus','Nicolai','Mads','Christian','Martin','Mathias'],ln:['Eriksen','Hojbjerg','Christiansen','Schmeichel','Kjaer','Vestergaard','Wass','Wind','Poulsen','Maehle','Braithwaite','Damsgaard','Andersen','Jensen','Norgaard','Hjomark','Bah','Delaney','Dolberg','Lindstrom']},
+  Scottish: {fn:['Scott','Andrew','Ryan','James','Steven','Kieran','Grant','Craig','Kenny','David','John','Paul','Gary','Barry','Callum','Lewis','Billy','Robbie','Kevin','Allan'],ln:['McTominay','Robertson','Christie','Forrest','Tierney','Hanley','Kennedy','McLean','Gilmour','McGinn','Armstrong','Dykes','Fleck','Adams','Patterson','Cooper','McKenna','Ralston','Lawrence','Gallagher']},
+  Welsh:    {fn:['Gareth','Aaron','Daniel','Ben','Joe','Connor','Brennan','Chris','Ethan','Harry'],ln:['Bale','Ramsey','James','Davies','Allen','Roberts','Johnson','Gunter','Ampadu','Wilson']},
+  Irish:    {fn:['Seamus','Shane','Callum','Jeff','Adam','Conor','James','Matt','Ryan','Troy'],ln:['Coleman','Duffy','Robinson','Hendrick','Idah','Hourihane','McCarthy','Doherty','Browne','Parrott']},
+  Polish:   {fn:['Robert','Piotr','Wojciech','Grzegorz','Kamil','Jan','Arkadiusz','Maciej','Bartosz','Jakub','Karol','Damian','Sebastian','Krzysztof','Mariusz','Michal','Lukasz','Mateusz','Rafal','Pawel'],ln:['Lewandowski','Zielinski','Szczesny','Krychowiak','Glik','Bednarek','Milik','Rybus','Bereszynski','Moder','Linetty','Szymanski','Walukiewicz','Piatek','Klich','Frankowski','Helik','Fabianski','Kownacki','Sousa']},
+  Russian:  {fn:['Artem','Aleksei','Aleksandr','Fedor','Daniil','Dmitry','Igor','Ivan','Sergei','Yuri','Georgi','Pavel','Anton','Roman','Mikhail','Nikita','Kirill','Maxim','Andrei','Oleg'],ln:['Dzyuba','Miranchuk','Golovin','Smolov','Kuzyaev','Cheryshev','Akinfeev','Zhirkov','Mostovoy','Komlichenko','Ionov','Samedov','Berezutsky','Kudryashov','Petrov','Zabolotny','Magkeev','Gaponov','Kozlov','Tikhonov']},
+  Ukrainian:{fn:['Andriy','Oleksandr','Mykhailo','Viktor','Artem','Ruslan','Taras','Serhii','Bohdan','Oleh','Yevhen','Vitaliy','Denys','Roman','Yukhym','Mykyta','Ihor','Valery','Marlos','Dynamo'],ln:['Shevchenko','Zinchenko','Mudryk','Tsygankov','Dovbyk','Malinovskyi','Stepanenko','Sydorchuk','Yarmolenko','Kovalenko','Lunin','Matviyenko','Bondar','Boyko','Zabarnyi','Konoplia','Mykolenko','Yaremchuk','Shaparenko','Kryvtsov']},
+  Croatian: {fn:['Luka','Ivan','Marcelo','Mateo','Ante','Dejan','Josko','Borna','Nikola','Josip','Mario','Sime','Domagoj','Andrej','Duje','Tomislav','Bruno','Ivan','Lovro','Mislav'],ln:['Modric','Perisic','Brozovic','Kovacic','Rebic','Lovren','Gvardiol','Sosa','Vlasic','Budimir','Vrsaljko','Jedvaj','Vida','Kramaric','Caleta-Car','Pjaca','Petkovic','Pasalic','Majer','Orsic']},
+  Serbian:  {fn:['Dusan','Aleksandar','Nemanja','Sergej','Nikola','Luka','Filip','Andrija','Sasa','Stefan','Darko','Ivan','Marko','Mladen','Predrag','Jovan','Bojan','Dejan','Milan','Matija'],ln:['Vlahovic','Mitrovic','Matic','Milinkovic-Savic','Milenkovic','Ilic','Kostic','Pavlovic','Lukic','Vranjes','Jovic','Lazovic','Grujic','Krstovic','Gudelj','Tadic','Rajkovic','Djuricic','Babic','Radunovic']},
+  Romanian: {fn:['Ianis','Ciprian','Razvan','Florin','Alex','Dan','Radu','Andrei','Marian','Cristian'],ln:['Hagi','Tatarusanu','Marin','Coman','Cicaldau','Balgradean','Dragusin','Mitrita','Alibec','Puscas']},
+  Greek:    {fn:['Kostas','Giorgos','Tasos','Anastasios','Nikos','Stefanos','Panagiotis','Christos','Aris','Kyriakos'],ln:['Manolas','Tzavellas','Bakasetas','Douvikas','Tsimikas','Koulouris','Retsos','Fortounis','Siovas','Pelkas']},
+  Swiss:    {fn:['Granit','Xherdan','Yann','Haris','Denis','Fabian','Steven','Breel','Renato','Ricardo'],ln:['Xhaka','Shaqiri','Sommer','Seferovic','Zakaria','Frei','Zuber','Embolo','Steffen','Rodriguez']},
+  Austrian: {fn:['David','Marko','Stefan','Marcel','Florian','Christoph','Stefan','Kevin','Michael','Martin'],ln:['Alaba','Arnautovic','Lainer','Sabitzer','Kainz','Baumgartner','Posch','Danso','Gregoritsch','Hinteregger']},
+  Moroccan: {fn:['Achraf','Youssef','Sofiane','Hakim','Noussair','Abdelhamid','Romain','Selim','Brahim','Ayoub','Munir','Nayef','Adam','Zakaria','Ilias','Jawad','Sofyan','Yassine'],ln:['Hakimi','En-Nesyri','Boufal','Ziyech','Mazraoui','Sabiri','Saiss','Benrahma','Amrabat','Ounahi','Aguerd','Aboukhlal','Bono','Tagnaouti','Chair','Benoun','Bounou','El Yamiq','Dari','Belal']},
+  Nigerian: {fn:['Victor','Wilfried','Kelechi','Alex','Ahmed','Emmanuel','Leon','Odion','William','Zaidu','Chidera','Paul','Chukwueze','Taiwo','Moses','Frank','Nnamdi','Onyeka','Calvin','Samuel'],ln:['Osimhen','Ndidi','Iheanacho','Musa','Eze','Balogun','Ighalo','Troost-Ekong','Sanusi','Ejuke','Obi','Chukwueze','Awoniyi','Simon','Ajayi','Lookman','Omeruo','Aribo','Bassey','Boniface']},
+  Senegalese:{fn:['Sadio','Kalidou','Edouard','Pape','Boulaye','Idrissa','Ismaila','Nampalys','Famara','Mbaye','Gana','Bamba','Lamine','Moussa','Omar','Habib','Mamadou','Ibrahima','Cheikhou','Alfred'],ln:['Mane','Koulibaly','Mendy','Gueye','Dia','Sarr','Mendy','Diedhiou','Diagne','Gueye','Diallo','Camara','Kouyate','Thiam','Niang','Mbaye','Kouyate','Ndiaye','Bayo','Sane']},
+  Ghanaian: {fn:['Andre','Jordan','Thomas','Tariq','Antoine','Dede','Michael','Baffour','Samuel','Ibrahim'],ln:['Ayew','Ayew','Partey','Lamptey','Semenyo','Kudus','Boateng','Gyan','Owusu','Mensah']},
+  Ivorian:  {fn:['Nicolas','Eric','Serge','Max','Jonathan','Sebastien','Habib','Franck','Yaya','Didier'],ln:['Pepe','Bailly','Aurier','Gradel','Kodjia','Haller','Diallo','Kessie','Toure','Drogba']},
+  Cameroonian:{fn:['Vincent','Eric','Andre','Sebastien','Nicholas','Frank','Nicolas','Jean-Marie','Zambo','Harold'],ln:['Aboubakar','Choupo-Moting','Onana','Haller','Nkoulou','Zambo-Anguissa','Ngamaleu','Wabo','Ntcham','Nkemdirim']},
+  Algerian: {fn:['Riyad','Islam','Sofiane','Yacine','Ismael','Adam','Houssem','Mehdi','Samir','Youcef'],ln:['Mahrez','Slimani','Feghouli','Bennacer','Benali','Ounas','Aouar','Bensebaini','Nasri','Atal']},
+  Egyptian: {fn:['Mohamed','Trezeguet','Ahmed','Mostafa','Omar','Mahmoud','Karim','Amr','Ahmed','Marwan'],ln:['Salah','Ibrahim','Elmohamady','Mohamed','Marmoush','Hassan','Fouad','Warda','Hegazi','Attiat-Allah']},
+  Malian:   {fn:['Moussa','Yves','Hamari','Boubacar','Diadie','Adama','Cheick','Amadou','Kalilou','Ibrahim'],ln:['Marega','Bissouma','Traore','Kone','Samake','Diallo','Coulibaly','Diarra','Coulibaly','Traore']},
+  Congolese:{fn:['Yannick','Cedric','Maecky','Yoane','Gael','Jonathan','Junior','Merveille','Charly','Emmanuel'],ln:['Bolasie','Bakambu','Ngoy','Bola','Kakuta','Lumeka','Makola','Ngoma','Musonda','Luyindama']},
+  Kenyan:   {fn:['Micheal','Jesse','Ayub','Victor','Clifton','Joash','Eric','Ovella','Karim','Teddy'],ln:['Olunga','Were','Timbe','Wanyama','Miheso','Otieno','Johana','Odhiambo','Bane','Onyango']},
+  Israeli:  {fn:['Eran','Dor','Manor','Munas','Loai','Neta','Idan','Almog','Bar','Omri','Omer','Sagiv','Tomer','Gal','Matan','Eden','Ben','Neta','Maor','Tomer'],ln:['Zahavi','Peretz','Solomon','Dabbur','Taha','Lavi','Ben Basat','Cohen','Elmkies','Atzili','Jehezkel','Hemed','Haziza','Kricheli','Einbinder','Mika','Bitton','Saborit','Planic','Tzedek']},
+  Iranian:  {fn:['Mehdi','Sardar','Alireza','Roozbeh','Saman','Morteza','Majid','Karim','Ahmad','Hamid'],ln:['Taremi','Azmoun','Jahanbakhsh','Cheshmi','Ghoddos','Pouraliganji','Hosseini','Ansarifard','Noorollahi','Shajari']},
+  Iraqi:    {fn:['Mohanad','Ali','Alaa','Amjad','Bashar','Hussein','Ahmed','Omar','Salam','Mahdi'],ln:['Ali','Adnan','Kadhim','Abboud','Abbas','Rashid','Hassan','Ibrahim','Latif','Salim']},
+  Australian:{fn:['Mat','Aaron','Tom','Jackson','Riley','Daniel','James','Jamie','Ajdin','Craig'],ln:['Ryan','Mooy','Rogic','Irvine','McGree','Arzani','Jeggo','Maclaren','Hrustic','Goodwin']},
+  South_African:{fn:['Bafana','Percy','Themba','Sifiso','Lebo','Siyanda','Thulani','Itumeleng','Dean','Keagan'],ln:['Zungu','Tau','Zwane','Hlanti','Mothiba','Xulu','Cele','Khune','Furman','Dolly']},
+  Tunisian: {fn:['Wahbi','Youssef','Ellyes','Mohamed','Ali','Hamza','Fakhreddine','Aissa','Saif','Montassar'],ln:['Khazri','Msakni','Skhiri','Drager','Mathlouthi','Lahmar','Ben Romdhane','Laidouni','Talbi','Meriah']},
+  Ecuadorian:{fn:['Enner','Moises','Pervis','Felix','Gonzalo','Jose','Angel','Xavier','Jhegson','Jeremy'],ln:['Valencia','Caicedo','Estupinan','Torres','Plata','Cifuentes','Mena','Arreaga','Mendez','Sarmiento']},
+  Peruvian: {fn:['Paolo','Christian','Edison','Andre','Gianluca','Andy','Alex','Sergio','Edison','Luis'],ln:['Guerrero','Cueva','Flores','Carrillo','Lapadula','Polo','Valera','Pena','Santamaria','Advincula']},
+  Paraguayan:{fn:['Oscar','Derlis','Miguel','Angel','Mathias','Fabian','Gustavo','Junior','Cecilio','Richard'],ln:['Romero','Gonzalez','Almada','Romero','Villasanti','Balbuena','Gomez','Alonso','Dominguez','Ortiz']},
+  Bolivian: {fn:['Marcelo','Erwin','Jeyson','Juan','Diego','Ramiro','Moises','Rudy','Carlos','Adrian'],ln:['Moreno','Saavedra','Fuertes','Vaca','Bejarano','Gutierrez','Villarroel','Cardozo','Saucedo','Jusino']},
+  Venezuelan:{fn:['Salomon','Josef','Darwin','Yangel','Rolf','Jan','Fernando','Tomas','Roberto','Adalberto'],ln:['Rondon','Martinez','Machis','Herrera','Feltscher','Vargas','Casseres','Rincon','Rosales','Penaranda']},
 };
 
 // Fallback pool for unlisted nationalities
 const NAME_FALLBACK = {
-  fn:['Omar','Ibrahim','Yusuf','Ahmed','Kwame','Nnamdi','Moussa','Enzo','Mateo','Diego','Alexis','Rafael','Lucas','Felipe','Marco','Ivan','Toni','Stefan','André','Leandro'],
-  ln:['Diallo','Touré','Koné','Ibrahim','Okafor','Diatta','Traore','Silva','Santos','García','Fernandez','Torres','Rodrigues','Martins','Costa','Petrov','Novak','Popov','Hansen','Lindqvist']
+  fn:['Omar','Ibrahim','Yusuf','Ahmed','Kwame','Nnamdi','Moussa','Enzo','Mateo','Diego','Alexis','Rafael','Lucas','Felipe','Marco','Ivan','Toni','Stefan','Andre','Leandro'],
+  ln:['Diallo','Toure','Kone','Ibrahim','Okafor','Diatta','Traore','Silva','Santos','Garcia','Fernandez','Torres','Rodrigues','Martins','Costa','Petrov','Novak','Popov','Hansen','Lindqvist']
 };
 
 function getNameForNat(nat) {
@@ -773,21 +820,57 @@ const LEAGUE_TIERS = {
   'China_Chinese_Super_League':4,'Japan_J-League':4,'South_Korea_K_League_1':4,'Colombia_Liga_BetPlay':4,'Chile_Primera_Division':4,
 };
 
-// OVR ranges by tier and player category (FIFA-realistic: world class ~87-91, average pro ~68-74)
+// OVR ranges by tier - realistic (world class ~87-91, cap at 94)
 const TIER_OVR = {
   1: { star:[82,91], starter:[72,82], bench:[63,72], youth:[55,68] },
-  2: { star:[77,85], starter:[68,77], bench:[58,68], youth:[52,65] },
-  3: { star:[72,80], starter:[63,72], bench:[53,63], youth:[48,62] },
-  4: { star:[65,75], starter:[55,65], bench:[47,57], youth:[44,58] },
+  2: { star:[76,85], starter:[67,76], bench:[57,67], youth:[51,64] },
+  3: { star:[71,79], starter:[62,71], bench:[52,62], youth:[47,61] },
+  4: { star:[64,74], starter:[54,64], bench:[46,56], youth:[43,57] },
 };
 
-// Potential ranges by tier (max potential for a top prospect ~92-94)
+// Potential: should be close to OVR (within 10-15 usually), cap absolute max at 94
 const TIER_POT = {
-  1: { high:[84,93], mid:[74,86], low:[64,76] },
-  2: { high:[79,90], mid:[70,82], low:[60,73] },
-  3: { high:[74,86], mid:[65,77], low:[55,68] },
-  4: { high:[67,81], mid:[57,71], low:[48,63] },
+  1: { high:[82,94], mid:[73,84], low:[64,75] },
+  2: { high:[77,90], mid:[68,80], low:[58,70] },
+  3: { high:[72,86], mid:[63,75], low:[53,66] },
+  4: { high:[64,80], mid:[55,68], low:[46,60] },
 };
+
+// FIFA ranking-based country talent quality (1=best, 5=weakest)
+const COUNTRY_QUALITY = {
+  Spanish:1,Argentine:1,French:1,English:1,
+  Brazilian:2,Portuguese:2,Dutch:2,Moroccan:2,Belgian:2,German:2,Croatian:2,Italian:2,Colombian:2,American:2,Mexican:2,Uruguayan:2,Swiss:2,Japanese:2,
+  Iranian:3,Danish:3,Korean:3,Ecuadorian:3,Austrian:3,Turkish:3,Nigerian:3,Australian:3,Algerian:3,Ukrainian:3,Egyptian:3,Norwegian:3,Senegalese:3,Israeli:3,
+  Polish:4,Russian:4,Welsh:4,Scottish:4,Ivorian:4,Serbian:4,Chilean:4,Paraguayan:4,Venezuelan:4,Peruvian:4,Ghanaian:4,Honduran:4,Cameroonian:4,Malian:4,Greek:4,Tunisian:4,Congolese:4,Romanian:4,Swedish:4,Hungarian:4,Croatian:4,
+};
+
+// Regional nationality pools for realistic player distribution
+const LEAGUE_NAT_PROFILE = {
+  Europe:{
+    domestic:0.30, regional:0.40,
+    regional_nats:['Spanish','French','German','Italian','Portuguese','Dutch','Belgian','Croatian','Serbian','Polish','Brazilian','Argentine','Senegalese','Ivorian','Nigerian','Moroccan','Algerian','Ghanaian','Cameroonian','Uruguayan','Colombian'],
+    global:0.30,
+  },
+  SouthAmerica:{domestic:0.55,regional:0.35,regional_nats:['Argentine','Brazilian','Colombian','Chilean','Uruguayan','Peruvian','Ecuadorian','Paraguayan','Bolivian','Venezuelan'],global:0.10},
+  NorthAmerica:{domestic:0.45,regional:0.35,regional_nats:['Mexican','American','Colombian','Argentine','Brazilian','Honduran','Guatemalan','Panamanian','Jamaican','Canadian'],global:0.20},
+  Asia:{domestic:0.65,regional:0.25,regional_nats:['Brazilian','Argentine','Moroccan','Nigerian','French','Spanish','Korean','Japanese','Chinese','Australian'],global:0.10},
+  Africa:{domestic:0.60,regional:0.30,regional_nats:['Nigerian','Senegalese','Ivorian','Ghanaian','Cameroonian','Moroccan','Algerian','Egyptian','Malian','Congolese'],global:0.10},
+};
+
+function pickNatForLeague(countryNat, continent, playerOverall) {
+  const profile = LEAGUE_NAT_PROFILE[continent] || LEAGUE_NAT_PROFILE.Europe;
+  const r = Math.random();
+  const eliteBoost = playerOverall >= 78 ? 0.20 : 0;
+  if (r < profile.domestic - eliteBoost) {
+    return countryNat;
+  } else if (r < profile.domestic + profile.regional) {
+    const pool = profile.regional_nats.filter(function(n){return n !== countryNat;});
+    return pick(pool.length ? pool : NATS);
+  } else {
+    const qualityNats = NATS.filter(function(n){return (COUNTRY_QUALITY[n]||5) <= 3;});
+    return pick(qualityNats.length ? qualityNats : NATS);
+  }
+}
 
 // -- WORLD DATABASE (Real Team Names) -------------------
 const WORLD_DB = {
@@ -797,16 +880,20 @@ const WORLD_DB = {
       'Championship':{rep:72,tier:3,teams:['Leeds United','Sunderland','Derby County','Norwich City','Coventry City','Watford','Bristol City','Preston North End','Millwall','Blackburn Rovers','West Brom','Hull City','Stoke City','Birmingham City','Middlesbrough','Swansea City','Cardiff City','QPR','Reading','Ipswich Town']}
     },
     Spain:{
-      'La Liga':{rep:88,tier:1,teams:['Real Madrid','Barcelona','Atletico Madrid','Athletic Club','Sevilla','Valencia','Real Betis','Villarreal','Real Sociedad','Osasuna','Celta Vigo','Granada','Getafe','Rayo Vallecano','Mallorca','Cadiz','Las Palmas','Girona','Almeria','Alaves']}
+      'La Liga':{rep:88,tier:1,teams:['Real Madrid','Barcelona','Atletico Madrid','Athletic Club','Sevilla','Valencia','Real Betis','Villarreal','Real Sociedad','Osasuna','Celta Vigo','Granada','Getafe','Rayo Vallecano','Mallorca','Cadiz','Las Palmas','Girona','Almeria','Alaves']},
+      'La Liga 2':{rep:68,tier:3,teams:['Sporting Gijon','Leganes','Racing Santander','Mirandes','Levante','Huesca','Albacete','Oviedo','Burgos','Eldense','Villarreal B','Elche','Espanyol','Andorra','Zaragoza','Tenerife','Valladolid','Cartagena','Alcorcon','Las Palmas B']}
     },
     Germany:{
-      'Bundesliga':{rep:86,tier:1,teams:['Bayern Munich','Borussia Dortmund','RB Leipzig','Eintracht Frankfurt','Bayer Leverkusen','Wolfsburg','Borussia Monchengladbach','Hoffenheim','Freiburg','Mainz','Stuttgart','Augsburg','Union Berlin','Werder Bremen','Cologne','Bochum','Heidenheim','Darmstadt']}
+      'Bundesliga':{rep:86,tier:1,teams:['Bayern Munich','Borussia Dortmund','RB Leipzig','Eintracht Frankfurt','Bayer Leverkusen','Wolfsburg','Borussia Monchengladbach','Hoffenheim','Freiburg','Mainz','Stuttgart','Augsburg','Union Berlin','Werder Bremen','Cologne','Bochum','Heidenheim','Darmstadt']},
+      'Bundesliga 2':{rep:70,tier:3,teams:['Hamburg','Schalke','Hannover','Fortuna Dusseldorf','Kaiserslautern','Nuremberg','Paderborn','Karlsruher','Hertha Berlin','SpVgg Greuther Furth','Wehen Wiesbaden','Elversberg','Magdeburg','Osnabrück','Braunschweig','St Pauli','Regensburg','Rostock']}
     },
     Italy:{
-      'Serie A':{rep:85,tier:1,teams:['Inter Milan','AC Milan','Juventus','Napoli','Roma','Lazio','Atalanta','Fiorentina','Torino','Bologna','Genoa','Sassuolo','Udinese','Monza','Lecce','Verona','Cagliari','Frosinone','Salernitana','Empoli']}
+      'Serie A':{rep:85,tier:1,teams:['Inter Milan','AC Milan','Juventus','Napoli','Roma','Lazio','Atalanta','Fiorentina','Torino','Bologna','Genoa','Sassuolo','Udinese','Monza','Lecce','Verona','Cagliari','Frosinone','Salernitana','Empoli']},
+      'Serie B':{rep:67,tier:3,teams:['Palermo','Bari','Venezia','Catanzaro','Parma','Modena','Brescia','Sudtirol','Cremonese','Spezia','Como','Cosenza','Sampdoria','Pisa','Reggiana','Cittadella','Ascoli','Feralpisalo','Lecco','FeralpiSalo']}
     },
     France:{
-      'Ligue 1':{rep:82,tier:1,teams:['Paris Saint-Germain','Marseille','Monaco','Lyon','Lille','Nice','Rennes','Lens','Reims','Toulouse','Montpellier','Nantes','Metz','Strasbourg','Brest','Le Havre','Clermont Foot','Lorient','Auxerre','Metz']}
+      'Ligue 1':{rep:82,tier:1,teams:['Paris Saint-Germain','Marseille','Monaco','Lyon','Lille','Nice','Rennes','Lens','Reims','Toulouse','Montpellier','Nantes','Metz','Strasbourg','Brest','Le Havre','Clermont Foot','Lorient','Auxerre','Bordeaux']},
+      'Ligue 2':{rep:64,tier:3,teams:['Caen','Guingamp','Dijon','Pau','Quevilly','Laval','Bastia','Dunkerque','Rodez','Amiens','Valenciennes','Niort','Saint-Etienne','Grenoble','Annecy','Martigues','Troyes','Angers','Ajaccio','Concarneau']}
     },
     Netherlands:{
       'Eredivisie':{rep:78,tier:2,teams:['Ajax','Feyenoord','PSV Eindhoven','AZ Alkmaar','Utrecht','Twente','Vitesse','Groningen','Heerenveen','NEC Nijmegen','Fortuna Sittard','Cambuur','RKC Waalwijk','Volendam','Excelsior','Almere City','Go Ahead Eagles','Emmen']}
@@ -822,6 +909,48 @@ const WORLD_DB = {
     },
     Scotland:{
       'Scottish Premiership':{rep:72,tier:3,teams:['Celtic','Rangers','Hearts','Hibernian','Aberdeen','Dundee United','Livingston','St Mirren','Motherwell','Kilmarnock','Ross County','St Johnstone','Dundee','Inverness','Hamilton']}
+    },
+    Russia:{
+      'Premier League':{rep:74,tier:3,teams:['Zenit St Petersburg','CSKA Moscow','Spartak Moscow','Lokomotiv Moscow','Dynamo Moscow','Krasnodar','Rubin Kazan','Akhmat Grozny','Sochi','Ural Yekaterinburg','Ufa','Arsenal Tula','Krylya Sovetov','Khimki','Torpedo Moscow','Rostov','FK Orenburg','Nizhegorodets']}
+    },
+    Greece:{
+      'Super League':{rep:70,tier:3,teams:['Olympiacos','Panathinaikos','PAOK','AEK Athens','Aris','Atromitos','OFI','Panionios','Ionikos','Asteras Tripolis','Lamia','Volos','PAS Giannina','Panetolikos','Levadiakos','Xanthi']}
+    },
+    Austria:{
+      'Bundesliga':{rep:72,tier:3,teams:['Red Bull Salzburg','Sturm Graz','Rapid Vienna','Austria Vienna','Wolfsberg','Hartberg','Ried','Rheindorf Altach','Blau-Weiss Linz','GAK Graz','LASK','Lustenau']}
+    },
+    Czech:{
+      'Fortuna Liga':{rep:70,tier:3,teams:['Slavia Prague','Sparta Prague','Viktoria Plzen','Banik Ostrava','Liberec','Mlada Boleslav','Slovacko','Teplice','Jablonec','Bohemians','Hradec Kralove','Olomouc']}
+    },
+    Switzerland:{
+      'Super League':{rep:72,tier:3,teams:['Young Boys','Basel','Zurich','Servette','Lugano','Luzern','St Gallen','Winterthur','Grasshoppers','Sion','Yverdon','Lausanne-Sport']}
+    },
+    Israel:{
+      'Premier League':{rep:68,tier:3,teams:['Maccabi Tel Aviv','Maccabi Haifa','Hapoel Beer Sheva','Beitar Jerusalem','Hapoel Tel Aviv','Maccabi Petah Tikva','Bnei Yehuda','Hapoel Haifa','Maccabi Netanya','Ashdod FC','Kiryat Shmona','Ironi Kiryat Shmona']}
+    },
+    Denmark:{
+      'Superliga':{rep:72,tier:3,teams:['FC Copenhagen','Brondby','Midtjylland','Randers','AGF Aarhus','Odense','Silkeborg','Viborg','AaB','Nordsjaelland','SonderjyskE','Horsens']}
+    },
+    Sweden:{
+      'Allsvenskan':{rep:68,tier:3,teams:['Malmo','AIK','Djurgarden','Goteborg','Hammarby','Elfsborg','Norrkoping','Sirius','Kalmar','Orebro','Varberg','Hacken']}
+    },
+    Norway:{
+      'Eliteserien':{rep:68,tier:3,teams:['Bodo/Glimt','Molde','Rosenborg','Brann','Viking','Valerenga','Lillestrom','Stabak','Tromso','Kristiansund','HamKam','Stromsgodset']}
+    },
+    Croatia:{
+      'HNL':{rep:70,tier:3,teams:['Dinamo Zagreb','Hajduk Split','Rijeka','Osijek','Sibenik','Varazdin','Gorica','Lokomotiva','Slaven Belupo','NK Istra']}
+    },
+    Ukraine:{
+      'Premier League':{rep:72,tier:3,teams:['Shakhtar Donetsk','Dynamo Kyiv','Metalist','Dnipro-1','Desna','Olimpik Donetsk','Zorya Luhansk','Chornomorets','Karpaty','Lviv']}
+    },
+    Romania:{
+      'Liga 1':{rep:66,tier:4,teams:['FCSB','CFR Cluj','Universitatea Craiova','Rapid Bucharest','Dinamo Bucharest','Petrolul','Sepsi','Farul Constanta','Botosani','Hermannstadt']}
+    },
+    Serbia:{
+      'Super Liga':{rep:68,tier:4,teams:['Red Star Belgrade','Partizan','Vojvodina','Cukaricki','Napredak','Radnik Surdulica','FK Spartak','Radnicki','Proleter','TSC Backa Topola']}
+    },
+    Poland:{
+      'Ekstraklasa':{rep:68,tier:4,teams:['Legia Warsaw','Lech Poznan','Cracovia','Jagiellonia','Widzew Lodz','Wisla Krakow','Gornik Zabrze','Slask Wroclaw','Stal Mielec','Radom','Warta Poznan','Zaglebie Lubin']}
     }
   },
   SouthAmerica:{
@@ -836,6 +965,12 @@ const WORLD_DB = {
     },
     Chile:{
       'Primera Division':{rep:70,tier:4,teams:['Colo-Colo','Universidad de Chile','Universidad Catolica','Antofagasta','Deportes Iquique','OHiggins','Huachipato','Cobresal','Everton','Audax Italiano','Deportes La Serena','Curico Unido','Deportes Temuco','Palestino','Union La Calera']}
+    },
+    Uruguay:{
+      'Primera Division':{rep:74,tier:4,teams:['Nacional','Penarol','Defensor Sporting','Danubio','Liverpool Montevideo','Fenix','Rentistas','Wanderers','River Plate','Boston River','Cerro','CA Torque']}
+    },
+    Ecuador:{
+      'Serie A':{rep:68,tier:4,teams:['Barcelona SC','Emelec','Liga de Quito','Independiente del Valle','Aucas','Deportivo Cuenca','El Nacional','Tecnico Universitario','Delfin','Universidad Catolica','Orense','Guayaquil City']}
     }
   },
   NorthAmerica:{
@@ -843,7 +978,11 @@ const WORLD_DB = {
       'MLS':{rep:74,tier:3,teams:['NYCFC','LA Galaxy','Atlanta United','Inter Miami','Seattle Sounders','Portland Timbers','Colorado Rapids','Philadelphia Union','New York Red Bulls','Chicago Fire','Toronto FC','CF Montreal','Columbus Crew','Orlando City','DC United','Vancouver Whitecaps','San Jose Earthquakes','FC Dallas','Houston Dynamo','Real Salt Lake']}
     },
     Mexico:{
-      'Liga MX':{rep:80,tier:3,teams:['Club America','Guadalajara','Tigres UANL','Monterrey','Cruz Azul','UNAM Pumas','Atlas','Toluca','Santos Laguna','Leon','Pachuca','Tijuana','Queretaro','FC Juarez','Necaxa','Atletico San Luis','Puebla','Mazatlan FC','Bravos FC','Club Tijuana']}
+      'Liga MX':{rep:80,tier:3,teams:['Club America','Guadalajara','Tigres UANL','Monterrey','Cruz Azul','UNAM Pumas','Atlas','Toluca','Santos Laguna','Leon','Pachuca','Tijuana','Queretaro','FC Juarez','Necaxa','Atletico San Luis','Puebla','Mazatlan FC','Bravos FC','Atletico de San Luis']},
+      'Liga de Expansion':{rep:58,tier:4,teams:['Atletico Morelia','Celaya','Venados','Tampico Madero','Mineros de Zacatecas','Alebrijes','Cimarrones','Raya2','Cancun FC','Dorados','San Luis','Correcaminos']}
+    },
+    Canada:{
+      'Canadian Premier League':{rep:60,tier:4,teams:['Forge FC','HFX Wanderers','Pacific FC','Valour FC','York United','Atletico Ottawa','Cavalry FC','FC Edmonton']}
     }
   },
   Asia:{
@@ -857,7 +996,18 @@ const WORLD_DB = {
       'Saudi Pro League':{rep:82,tier:3,teams:['Al-Hilal','Al-Nassr','Al-Ittihad','Al-Ahli','Al-Qadsiah','Al-Ittifaq','Al-Fayha','Al-Wehda','Abha Club','Al-Hazem','Al-Akhdoud','Al-Riyadh','Al-Shabab','Al-Tai','Al-Khaleej','Al-Okhdood']}
     },
     China:{
-      'Chinese Super League':{rep:68,tier:4,teams:['Shanghai Port','Beijing Guoan','Shandong Taishan','Guangzhou FC','Tianjin Jinmen Tiger','Shenzhen FC','Wuhan Three Towns','Chengdu Rongcheng','Dalian Pro','Qingdao FC','Chongqing Liangjiang','Henan FC','Hebei FC','Meizhou Hakka','Changchun Yatai','Nanjing City','Zhejiang FC','Sichuan Jiuniu']}
+      'Chinese Super League':{rep:66,tier:4,teams:['Shanghai Port','Beijing Guoan','Shandong Taishan','Guangzhou FC','Tianjin Jinmen Tiger','Shenzhen FC','Wuhan Three Towns','Chengdu Rongcheng','Dalian Pro','Qingdao FC','Chongqing Liangjiang','Henan FC','Hebei FC','Meizhou Hakka','Changchun Yatai','Nanjing City']}
+    },
+    Australia:{
+      'A-League':{rep:68,tier:4,teams:['Melbourne City','Sydney FC','Melbourne Victory','Perth Glory','Adelaide United','Brisbane Roar','Western Sydney Wanderers','Wellington Phoenix','Western United','Macarthur FC','Central Coast Mariners','Newcastle Jets']}
+    }
+  },
+  Africa:{
+    Egypt:{
+      'Egyptian Premier League':{rep:66,tier:4,teams:['Al Ahly','Zamalek','Pyramids FC','Al Masry','ENPPI','El Gouna','Ismaily','El Dakhleya','Misr El Maqasa','Haras El Hodood']}
+    },
+    Morocco:{
+      'Botola Pro':{rep:65,tier:4,teams:['Wydad Casablanca','Raja Casablanca','FUS Rabat','FAR Rabat','Moghreb Tetouan','Hassania Agadir','Difaa El Jadidi','ASFAR','KAC Kenitra','Chabab Rif']}
     }
   }
 };
@@ -1091,19 +1241,21 @@ function mkPlayer(opts={}) {
   const ageBase = age<20 ? ovrRange[0]-rand(5,10) : age>32 ? ovrRange[0]-rand(0,6) : ovrRange[0];
   const ovrTarget = clamp(rand(ageBase, ovrRange[1]), 35, 98);
 
-  // Potential
+  // Potential - should be close to OVR with a realistic spread
+  // Most players: pot = ovr + 0-8 (peaked or near-peak)
+  // Some players: pot = ovr + 9-15 (room to grow)
+  // Rare: pot = ovr + 16+ (high prospect) - only for young players
   let pot;
   const potRoll = Math.random();
-  if(potRoll < 0.05) {
-    const r = tierPot.high; pot = rand(r[0], r[1]);
-  } else if(potRoll < 0.3) {
-    const r = tierPot.mid; pot = rand(r[0], r[1]);
-  } else {
-    const r = tierPot.low; pot = rand(r[0], r[1]);
-  }
-  // Potential must be >= current OVR
-  pot = Math.max(pot, ovrTarget);
-  if(age>30) pot = Math.min(pot, ovrTarget+3);
+  const potBonus = age < 21 
+    ? (potRoll < 0.05 ? rand(16,22) : potRoll < 0.25 ? rand(9,15) : rand(2,8))
+    : age < 25
+    ? (potRoll < 0.03 ? rand(12,18) : potRoll < 0.2 ? rand(6,11) : rand(0,5))
+    : age < 28
+    ? (potRoll < 0.05 ? rand(4,8) : rand(0,3))
+    : rand(0, 2);
+  pot = clamp(ovrTarget + potBonus, ovrTarget, 94);
+  if(age > 30) pot = clamp(pot, ovrTarget, ovrTarget + 2);
 
   // Generate attributes
   const sp = (lo,hi) => clamp(rand(ovrTarget-hi, ovrTarget+lo), 28, 99);
@@ -1188,8 +1340,9 @@ function generateWorld() {
             const cat = pi<2?'star':pi<12?'starter':'bench';
             const isYouth = pi>=18;
             const age = isYouth?rand(17,22):(cat==='star'?rand(22,30):rand(18,35));
-            // 60% home country, 40% foreign
-            const nat = Math.random()<0.6?countryNat:pick(NATS);
+            // Use realistic nationality distribution based on league region
+            const ovrEst = TIER_OVR[tier]?.[cat]?.[0] || 65;
+            const nat = pickNatForLeague(countryNat, continent, ovrEst);
             const p = mkPlayer({pos, age, teamId:teamIdx, cat, tier, leagueRep, nationality:nat, youth:isYouth});
             squad.push(p.id);
             G.players.push(p);
@@ -2796,7 +2949,7 @@ function renderPlayerPage(pid) {
 </div>
 <div class="card" style="margin-bottom:14px">
   <div style="display:flex;gap:20px;flex-wrap:wrap">
-    <div style="width:120px;height:120px;border-radius:12px;overflow:hidden;flex-shrink:0;border:2px solid var(--border);background:var(--bg4)">${genFaceSvg(p.id,p.nationality)}</div>
+    <div id="player-photo-${pid}" style="width:120px;height:120px;border-radius:12px;overflow:hidden;flex-shrink:0;border:2px solid var(--border);background:var(--bg4)">${G.playerImages[p.id]?'<img src="'+G.playerImages[p.id]+'" style="width:100%;height:100%;object-fit:cover">':genFaceSvg(p.id,p.nationality)}</div>
     <div style="flex:1;min-width:200px">
       <div style="font-family:var(--fd);font-size:32px;font-weight:800;color:var(--text);margin-bottom:6px">${p.name}</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
@@ -2814,7 +2967,11 @@ function renderPlayerPage(pid) {
         <span>💸 £${p.contract.salary.toLocaleString()}pw</span><span>${p.personality}</span>
       </div>
       <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:4px">
-        <div style="height:100%;width:${p.overall}%;background:var(--accent);border-radius:3px"></div>
+        <div style="height:100%;width:${Math.round((p.overall-40)/54*100)}%;background:var(--accent);border-radius:3px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px"><span>OVR 40</span><span>OVR 99</span></div>
+      <div style="height:4px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:4px">
+        <div style="height:100%;width:${Math.round((p.potential-40)/54*100)}%;background:var(--gold);border-radius:3px"></div>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:10px"><span>${potLabel}</span><span>${p.overall} → ${p.potential}</span></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -2918,7 +3075,17 @@ function showMatchModal(rid){
 function uploadPlayerPhoto(event,pid){
   const file=event.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=e=>{G.playerImages[pid]=e.target.result;toast('Photo uploaded!','s');showPlayerModal(pid);};
+  reader.onload=function(e){
+    G.playerImages[pid]=e.target.result;
+    toast('Photo uploaded!','s');
+    // Update the photo element directly without full page reload
+    const photoEl=document.getElementById('player-photo-'+pid);
+    if(photoEl){
+      photoEl.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover">';
+    } else {
+      nav('player',pid);
+    }
+  };
   reader.readAsDataURL(file);
 }
 
@@ -4494,55 +4661,88 @@ function toggleLivePause() {
 }
 
 // -- Override renderFixtures to add "Watch" button -------
-function renderFixtures(){
-  const team=G.teams.find(t=>t.id===G.playerTeam);if(!team)return '';
-  const myFix=G.fixtures.filter(f=>f.homeId===G.playerTeam||f.awayId===G.playerTeam);
-  const myRes=G.results.filter(r=>r.homeId===G.playerTeam||r.awayId===G.playerTeam);
-  // Separate upcoming from played
-  const upcoming = myFix.filter(f=>!f.played).slice(0,5);
-  const played   = myFix.filter(f=> f.played).slice(-10).reverse();
+// Calculate match odds based on team strengths
+function calcOdds(homeId, awayId) {
+  var hTeam=G.teams.find(function(t){return t.id===homeId;});
+  var aTeam=G.teams.find(function(t){return t.id===awayId;});
+  if(!hTeam||!aTeam) return {h:2.0,d:3.4,a:3.5};
+  var hPlayers=hTeam.squad.map(function(id){return G.players.find(function(p){return p.id===id;});}).filter(Boolean);
+  var aPlayers=aTeam.squad.map(function(id){return G.players.find(function(p){return p.id===id;});}).filter(Boolean);
+  var hOvr=hPlayers.length?hPlayers.slice(0,11).reduce(function(s,p){return s+p.overall;},0)/Math.min(11,hPlayers.length):65;
+  var aOvr=aPlayers.length?aPlayers.slice(0,11).reduce(function(s,p){return s+p.overall;},0)/Math.min(11,aPlayers.length):65;
+  var diff=(hOvr+3)-aOvr;
+  var hWin=clamp(0.5+diff*0.022,0.08,0.88);
+  var aWin=clamp(0.5-diff*0.022,0.08,0.88);
+  var draw=clamp(1-hWin-aWin,0.15,0.38);
+  var norm=hWin+draw+aWin;
+  var margin=1.10;
+  return {
+    h:parseFloat((margin/(hWin/norm)).toFixed(2)),
+    d:parseFloat((margin/(draw/norm)).toFixed(2)),
+    a:parseFloat((margin/(aWin/norm)).toFixed(2)),
+  };
+}
 
-  const fixRow = f => {
-    const res=myRes.find(r=>r.id===f.id);
-    const hn=G.teams.find(t=>t.id===f.homeId)?.name||'?';
-    const an=G.teams.find(t=>t.id===f.awayId)?.name||'?';
-    const isH=f.homeId===G.playerTeam;
-    let badge='';
-    let action='';
-    if(res){
-      const won=isH?res.hg>res.ag:res.ag>res.hg,draw=res.hg===res.ag;
-      badge=`<span class="badge badge-${draw?'y':won?'g':'r'}">${draw?'D':won?'W':'L'}</span>`;
-      action=`<button class="btn btn-secondary" style="padding:2px 8px;font-size:10px" onclick="showMatchModal(${f.id})">📊</button>`;
-    } else {
-      action=`<button class="btn btn-primary" style="padding:3px 10px;font-size:10px;background:var(--green);color:#000;border:none" onclick="nav('prematch',${f.id})">▶ Pre-Match</button>
-              <button class="btn btn-secondary" style="padding:3px 8px;font-size:10px" onclick="quickSimMatch(${f.id})">⚡ Quick</button>`;
-    }
-    const scoreCell = res ? badge+' '+res.hg+'\u2013'+res.ag : '<span style="color:var(--text3)">vs</span>';
-    const xgCell = res ? res.stats.hXg+'\u2013'+res.stats.aXg : '\u2014';
-    return `<tr>
-      <td class="tr">${f.matchday}</td>
-      <td><span class="tsub">${fmtDate(f.date)}</span></td>
-      <td><span class="tname" style="${f.homeId===G.playerTeam?'color:var(--accent)':''}">${hn}</span></td>
-      <td style="text-align:center;font-family:var(--fm);font-weight:700">${scoreCell}</td>
-      <td><span class="tname" style="${f.awayId===G.playerTeam?'color:var(--accent)':''}">${an}</span></td>
-      <td class="tn" style="color:var(--text3)">${xgCell}</td>
-      <td>${action}</td>
-    </tr>`;
+function renderFixtures(){
+  var team=G.teams.find(function(t){return t.id===G.playerTeam;});if(!team)return '';
+  var myFix=G.fixtures.filter(function(f){return f.homeId===G.playerTeam||f.awayId===G.playerTeam;});
+  var myRes=G.results.filter(function(r){return r.homeId===G.playerTeam||r.awayId===G.playerTeam;});
+  var upcoming=myFix.filter(function(f){return !f.played;}).slice(0,8);
+  var played=myFix.filter(function(f){return f.played;}).slice(-15).reverse();
+
+  var upcomingRow=function(f){
+    var hn=G.teams.find(function(t){return t.id===f.homeId;})?.name||'?';
+    var an=G.teams.find(function(t){return t.id===f.awayId;})?.name||'?';
+    var odds=calcOdds(f.homeId,f.awayId);
+    var isMyHome=f.homeId===G.playerTeam;
+    var myOdds=isMyHome?odds.h:odds.a;
+    var oc=myOdds<=1.8?'var(--green)':myOdds<=2.5?'var(--gold)':'var(--red)';
+    return '<tr>'+
+      '<td style="color:var(--text3);font-size:10px;font-family:var(--fm)">'+fmtDate(f.date)+'</td>'+
+      '<td class="tr" style="color:var(--text3)">MD'+f.matchday+'</td>'+
+      '<td><span class="tname" style="'+(f.homeId===G.playerTeam?'color:var(--accent)':'')+'">'+hn+'</span></td>'+
+      '<td style="text-align:center;color:var(--text3);padding:0 8px;font-size:11px">vs</td>'+
+      '<td><span class="tname" style="'+(f.awayId===G.playerTeam?'color:var(--accent)':'')+'">'+an+'</span></td>'+
+      '<td style="font-size:10px;font-family:var(--fm)">'+
+        '<span style="color:'+(f.homeId===G.playerTeam?oc:'var(--text3)')+'">'+odds.h+'</span>'+
+        '<span style="color:var(--text3);margin:0 4px">/'+odds.d+'/</span>'+
+        '<span style="color:'+(f.awayId===G.playerTeam?oc:'var(--text3)')+'">'+odds.a+'</span>'+
+      '</td>'+
+      '<td style="text-align:right">'+
+        '<button class="btn btn-primary" style="padding:2px 10px;font-size:10px;background:var(--green);color:#000;border:none" onclick="nav(&quot;prematch&quot;,'+f.id+')">Play</button> '+
+        '<button class="btn btn-secondary" style="padding:2px 8px;font-size:10px" onclick="quickSimMatch('+f.id+')">Sim</button>'+
+      '</td>'+
+    '</tr>';
   };
 
-  return `
-<div class="card" style="margin-bottom:14px">
-  <div class="ch"><span class="ct">Upcoming Fixtures</span></div>
-  <div class="tw"><table><thead><tr><th>MD</th><th>Date</th><th>Home</th><th>Score</th><th>Away</th><th>xG</th><th>Action</th></tr></thead><tbody>
-  ${upcoming.length?upcoming.map(fixRow).join(''):'<tr><td colspan="7" style="color:var(--text3);text-align:center;padding:20px">No upcoming fixtures</td></tr>'}
-  </tbody></table></div>
-</div>
-<div class="card">
-  <div class="ch"><span class="ct">Recent Results</span></div>
-  <div class="tw"><table><thead><tr><th>MD</th><th>Date</th><th>Home</th><th>Score</th><th>Away</th><th>xG</th><th></th></tr></thead><tbody>
-  ${played.length?played.map(fixRow).join(''):'<tr><td colspan="7" style="color:var(--text3);text-align:center;padding:20px">No results yet</td></tr>'}
-  </tbody></table></div>
-</div>`;
+  var playedRow=function(f){
+    var res=myRes.find(function(r){return r.id===f.id;});if(!res)return '';
+    var hn=G.teams.find(function(t){return t.id===f.homeId;})?.name||'?';
+    var an=G.teams.find(function(t){return t.id===f.awayId;})?.name||'?';
+    var isH=f.homeId===G.playerTeam;
+    var won=isH?res.hg>res.ag:res.ag>res.hg,draw=res.hg===res.ag;
+    var badge='<span class="badge badge-'+(draw?'y':won?'g':'r')+'">'+(draw?'D':won?'W':'L')+'</span>';
+    return '<tr onclick="showMatchModal('+f.id+')" style="cursor:pointer">'+
+      '<td style="color:var(--text3);font-size:10px;font-family:var(--fm)">'+fmtDate(f.date)+'</td>'+
+      '<td class="tr" style="color:var(--text3)">MD'+f.matchday+'</td>'+
+      '<td><span class="tname" style="'+(f.homeId===G.playerTeam?'color:var(--accent)':'')+'">'+hn+'</span></td>'+
+      '<td style="text-align:center;font-family:var(--fm);font-weight:700;padding:0 8px">'+badge+' '+res.hg+'-'+res.ag+'</td>'+
+      '<td><span class="tname" style="'+(f.awayId===G.playerTeam?'color:var(--accent)':'')+'">'+an+'</span></td>'+
+      '<td style="text-align:center;color:var(--text3);font-size:10px">'+res.stats.hXg+'-'+res.stats.aXg+' xG</td>'+
+      '<td style="text-align:right"><button class="btn btn-secondary" style="padding:2px 8px;font-size:10px" onclick="event.stopPropagation();showMatchModal('+f.id+')">Stats</button></td>'+
+    '</tr>';
+  };
+
+  return '<div class="card" style="margin-bottom:14px">'+
+    '<div class="ch"><span class="ct">Upcoming Fixtures</span><span class="ct-sm">'+upcoming.length+' shown</span></div>'+
+    '<div class="tw"><table><thead><tr><th>Date</th><th>MD</th><th>Home</th><th></th><th>Away</th><th>Odds H/D/A</th><th></th></tr></thead><tbody>'+
+    (upcoming.length?upcoming.map(upcomingRow).join(''):'<tr><td colspan="7" style="color:var(--text3);text-align:center;padding:20px">No upcoming fixtures</td></tr>')+
+    '</tbody></table></div></div>'+
+    '<div class="card">'+
+    '<div class="ch"><span class="ct">Recent Results</span></div>'+
+    '<div class="tw"><table><thead><tr><th>Date</th><th>MD</th><th>Home</th><th>Score</th><th>Away</th><th>xG</th><th></th></tr></thead><tbody>'+
+    (played.length?played.map(playedRow).join(''):'<tr><td colspan="7" style="color:var(--text3);text-align:center;padding:20px">No results yet</td></tr>')+
+    '</tbody></table></div></div>';
 }
 </script>
 </body>
