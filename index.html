@@ -454,7 +454,8 @@ input[type=number]:focus{border-color:var(--accent)}
       <span class="tb-chip gold" id="tb-pos">— </span>
       <span class="tb-chip" id="tb-budget">£0M</span>
       <span class="tb-chip" id="tb-morale">Morale —</span>
-      <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="exportSave()">💾 Export Save</button>
+      <button id="save-btn" class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="saveGame()">Save</button>
+      <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="exportSave()">Export</button>
     </div>
     <div id="content"></div>
   </div>
@@ -1010,7 +1011,7 @@ let G = {
   playerImages:{}, scoutReports:[], transfers:[],
   dbMode:'default', currentPage:'dashboard',
   transferRumors:[], leagueCoefficients:{},
-  intlResults:[],
+  intlResults:[], seasonAwards:[],
 };
 
 // -- UTILS --------------------------------------
@@ -1692,8 +1693,33 @@ function endSeason(lid){
   if(champ){
     champ.trophies.league++;
     G.history.push({season:G.season,league:lg.name,champion:champ.name,pts:lg.table[0]?.pts||0,date:new Date(G.date)});
-    toast(`🏆 ${champ.name} win ${lg.name}!`,'i');
+    toast(champ.name+' win '+lg.name+'!','i');
   }
+
+  // Compute season awards for this league
+  const leaguePlayers = G.players.filter(p=>{
+    const t=G.teams.find(x=>x.id===p.teamId);
+    return t && t.leagueId===lid && p.stats.apps>=5;
+  });
+  if(leaguePlayers.length){
+    const topScorer = [...leaguePlayers].sort((a,b)=>b.stats.goals-a.stats.goals)[0];
+    const bestRating = [...leaguePlayers].filter(p=>p.stats.apps>=8).sort((a,b)=>b.stats.rating-a.stats.rating)[0];
+    const bestGK = [...leaguePlayers].filter(p=>p.pos==='GK'&&p.stats.apps>=5).sort((a,b)=>b.stats.cleanSheets-a.stats.cleanSheets)[0];
+    const bestYoung = [...leaguePlayers].filter(p=>p.age<=23&&p.stats.apps>=8).sort((a,b)=>b.stats.rating-a.stats.rating)[0];
+    const awards = {
+      season:G.season, league:lg.name,
+      topScorer: topScorer ? {name:topScorer.name,id:topScorer.id,goals:topScorer.stats.goals,team:G.teams.find(t=>t.id===topScorer.teamId)?.name||'?'} : null,
+      playerOfSeason: bestRating ? {name:bestRating.name,id:bestRating.id,rating:parseFloat(bestRating.stats.rating.toFixed(2)),team:G.teams.find(t=>t.id===bestRating.teamId)?.name||'?'} : null,
+      bestKeeper: bestGK ? {name:bestGK.name,id:bestGK.id,cleanSheets:bestGK.stats.cleanSheets,team:G.teams.find(t=>t.id===bestGK.teamId)?.name||'?'} : null,
+      youngPlayer: bestYoung ? {name:bestYoung.name,id:bestYoung.id,rating:parseFloat(bestYoung.stats.rating.toFixed(2)),age:bestYoung.age,team:G.teams.find(t=>t.id===bestYoung.teamId)?.name||'?'} : null,
+    };
+    G.seasonAwards.push(awards);
+    // Notify player if their team won an award
+    const myTeamId = G.playerTeam;
+    if(awards.topScorer && G.players.find(p=>p.id===awards.topScorer.id&&p.teamId===myTeamId)) toast(awards.topScorer.name+' wins Golden Boot!','i');
+    if(awards.playerOfSeason && G.players.find(p=>p.id===awards.playerOfSeason.id&&p.teamId===myTeamId)) toast(awards.playerOfSeason.name+' is Player of the Season!','i');
+  }
+
   runDevelopment();runAI();G.season++;
   G.teams.forEach(t=>{t.stats={w:0,d:0,l:0,gf:0,ga:0,pts:0};t.form=[];});
   lg.table.forEach(r=>{r.w=0;r.d=0;r.l=0;r.gf=0;r.ga=0;r.pts=0;r.form=[];});
@@ -2604,9 +2630,10 @@ function renderHistory(){
   return `
 <div class="tabs">
   <div class="tab active" id="ht-0" onclick="switchHTab(0)">Champions</div>
-  <div class="tab" id="ht-1" onclick="switchHTab(1)">Top Scorers</div>
-  <div class="tab" id="ht-2" onclick="switchHTab(2)">League Coefficients</div>
-  <div class="tab" id="ht-3" onclick="switchHTab(3)">Transfers</div>
+  <div class="tab" id="ht-1" onclick="switchHTab(1)">Awards</div>
+  <div class="tab" id="ht-2" onclick="switchHTab(2)">Top Scorers</div>
+  <div class="tab" id="ht-3" onclick="switchHTab(3)">Coefficients</div>
+  <div class="tab" id="ht-4" onclick="switchHTab(4)">Transfers</div>
 </div>
 <div id="h-content">
 ${G.history.length?`<div class="card"><table><thead><tr><th>Season</th><th>League</th><th>Champion</th><th>Points</th><th>Date</th></tr></thead><tbody>
@@ -2614,7 +2641,7 @@ ${[...G.history].reverse().map(h=>`<tr>
   <td class="tn">S${h.season}</td><td>${h.league}</td>
   <td><span class="tname" style="${G.teams.find(t=>t.name===h.champion)?.id===G.playerTeam?'color:var(--accent)':''}">${h.champion}</span></td>
   <td class="tn">${h.pts}</td>
-  <td class="tsub">${fmtDate(h.date)}</td>
+  <td class="tsub">${h.date?fmtDate(new Date(h.date)):'—'}</td>
 </tr>`).join('')}
 </tbody></table></div>`:'<div class="card"><p style="color:var(--text3)">Complete a season to see history</p></div>'}
 </div>`;
@@ -2622,13 +2649,27 @@ ${[...G.history].reverse().map(h=>`<tr>
 function switchHTab(i){
   document.querySelectorAll('[id^="ht-"]').forEach((t,j)=>t.classList.toggle('active',i===j));
   const c=document.getElementById('h-content');
-  if(i===0) c.innerHTML=G.history.length?`<div class="card"><table><thead><tr><th>Season</th><th>League</th><th>Champion</th><th>Points</th></tr></thead><tbody>${[...G.history].reverse().map(h=>`<tr><td class="tn">S${h.season}</td><td>${h.league}</td><td><span class="tname">${h.champion}</span></td><td class="tn">${h.pts}</td></tr>`).join('')}</tbody></table></div>`:'<div class="card"><p style="color:var(--text3)">No history yet</p></div>';
-  else if(i===1){
-    const t=[...G.players].sort((a,b)=>b.careerStats.goals-a.careerStats.goals).slice(0,30);
-    c.innerHTML=`<div class="card"><table><thead><tr><th>#</th><th>Name</th><th>Nat</th><th>Pos</th><th>Club</th><th>Goals</th><th>Assists</th><th>Apps</th></tr></thead><tbody>${t.map((p,i)=>`<tr onclick="showPlayerModal(${p.id})" style="cursor:pointer"><td class="tr">${i+1}</td><td><span class="tname">${p.name}</span></td><td>${NAT_FLAGS[p.nationality]||'🏳️'}</td><td><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></td><td class="tsub">${G.teams.find(t=>t.id===p.teamId)?.name||'—'}</td><td class="tn" style="color:var(--green);font-weight:700">${p.careerStats.goals}</td><td class="tn">${p.careerStats.assists}</td><td class="tn">${p.careerStats.apps}</td></tr>`).join('')}</tbody></table></div>`;
+  if(i===0){
+    c.innerHTML=G.history.length?`<div class="card"><table><thead><tr><th>Season</th><th>League</th><th>Champion</th><th>Points</th></tr></thead><tbody>${[...G.history].reverse().map(h=>`<tr><td class="tn">S${h.season}</td><td>${h.league}</td><td><span class="tname">${h.champion}</span></td><td class="tn">${h.pts}</td></tr>`).join('')}</tbody></table></div>`:'<div class="card"><p style="color:var(--text3)">No history yet</p></div>';
+  } else if(i===1){
+    const awards = [...(G.seasonAwards||[])].reverse().slice(0,20);
+    c.innerHTML = awards.length ? awards.map(a=>`
+    <div class="card" style="margin-bottom:12px">
+      <div class="ch"><span class="ct" style="font-size:16px">Season ${a.season} — ${a.league}</span></div>
+      <div class="g4">
+        ${a.topScorer?`<div class="sbox"><div class="ct-sm" style="margin-bottom:6px">Golden Boot</div><div style="font-weight:700;color:var(--gold)">${a.topScorer.name}</div><div class="tsub">${a.topScorer.team}</div><div style="font-size:18px;font-weight:700;color:var(--green);margin-top:4px">${a.topScorer.goals} goals</div></div>`:''}
+        ${a.playerOfSeason?`<div class="sbox"><div class="ct-sm" style="margin-bottom:6px">Player of Season</div><div style="font-weight:700;color:var(--accent)" onclick="showPlayerModal(${a.playerOfSeason.id})" class="tname">${a.playerOfSeason.name}</div><div class="tsub">${a.playerOfSeason.team}</div><div style="font-size:18px;font-weight:700;color:var(--accent);margin-top:4px">${a.playerOfSeason.rating} avg</div></div>`:''}
+        ${a.bestKeeper?`<div class="sbox"><div class="ct-sm" style="margin-bottom:6px">Best Goalkeeper</div><div style="font-weight:700;color:var(--purple)">${a.bestKeeper.name}</div><div class="tsub">${a.bestKeeper.team}</div><div style="font-size:18px;font-weight:700;color:var(--purple);margin-top:4px">${a.bestKeeper.cleanSheets} CS</div></div>`:''}
+        ${a.youngPlayer?`<div class="sbox"><div class="ct-sm" style="margin-bottom:6px">Young Player</div><div style="font-weight:700;color:var(--orange)">${a.youngPlayer.name}</div><div class="tsub">${a.youngPlayer.team} · Age ${a.youngPlayer.age}</div><div style="font-size:18px;font-weight:700;color:var(--orange);margin-top:4px">${a.youngPlayer.rating} avg</div></div>`:''}
+      </div>
+    </div>`).join('')
+    : '<div class="card"><p style="color:var(--text3)">No awards yet — complete a season to see them</p></div>';
   } else if(i===2){
+    const t=[...G.players].sort((a,b)=>b.careerStats.goals-a.careerStats.goals).slice(0,30);
+    c.innerHTML=`<div class="card"><table><thead><tr><th>#</th><th>Name</th><th>Nat</th><th>Pos</th><th>Club</th><th>Goals</th><th>Assists</th><th>Apps</th></tr></thead><tbody>${t.map((p,i)=>`<tr onclick="showPlayerModal(${p.id})" style="cursor:pointer"><td class="tr">${i+1}</td><td><span class="tname">${p.name}</span></td><td>${NAT_FLAGS[p.nationality]||''}</td><td><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></td><td class="tsub">${G.teams.find(t=>t.id===p.teamId)?.name||'—'}</td><td class="tn" style="color:var(--green);font-weight:700">${p.careerStats.goals}</td><td class="tn">${p.careerStats.assists}</td><td class="tn">${p.careerStats.apps}</td></tr>`).join('')}</tbody></table></div>`;
+  } else if(i===3){
     const sorted=Object.entries(G.leagueCoefficients).map(([id,coeff])=>{const lg=G.leagues[id];return {id,name:lg?.name||id,country:lg?.country||'',coeff,tier:lg?.tier||'?'};}).sort((a,b)=>b.coeff-a.coeff);
-    c.innerHTML=`<div class="card"><table><thead><tr><th>#</th><th>League</th><th>Country</th><th>Tier</th><th>Coefficient</th></tr></thead><tbody>${sorted.map((r,i)=>`<tr><td class="tr">${i+1}</td><td><span class="tname">${r.name}</span></td><td class="tsub">${r.country}</td><td class="tn" style="color:${r.tier===1?'var(--accent)':r.tier===2?'var(--green)':r.tier===3?'var(--gold)':'var(--text3)'}">T${r.tier}</td><td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:4px;background:var(--bg4);border-radius:2px"><div style="height:100%;background:var(--accent);border-radius:2px;width:${r.coeff}%"></div></div><span class="tn">${r.coeff}</span></div></td></tr>`).join('')}</tbody></table></div>`;
+    c.innerHTML=`<div class="card"><table><thead><tr><th>#</th><th>League</th><th>Country</th><th>Tier</th><th>Coeff</th></tr></thead><tbody>${sorted.map((r,i)=>`<tr><td class="tr">${i+1}</td><td><span class="tname">${r.name}</span></td><td class="tsub">${r.country}</td><td class="tn" style="color:${r.tier===1?'var(--accent)':r.tier===2?'var(--green)':r.tier===3?'var(--gold)':'var(--text3)'}">T${r.tier}</td><td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden"><div style="height:100%;background:var(--accent);width:${r.coeff}%"></div></div><span class="tn">${r.coeff}</span></div></td></tr>`).join('')}</tbody></table></div>`;
   } else c.innerHTML=tLog();
 }
 
@@ -3204,117 +3245,183 @@ async function startGame(){
   document.getElementById('app').style.display='flex';
   nav('dashboard');
   const teamName=G.teams.find(t=>t.id===G.playerTeam)?.name||'Your Club';
-  toast(`⚽ Welcome, ${mgr}! Managing ${teamName}`,'s');
+  toast('Welcome, '+mgr+'! Managing '+teamName,'s');
+  startAutoSave();
   saveGame();
 }
 
-// -- PERSISTENCE -------------------------------
-function exportSave(){
+// -- PERSISTENCE (IndexedDB primary, file export backup) ------
+
+const DB_NAME = 'PitchGame', DB_VER = 1, STORE = 'saves';
+let _idb = null;
+
+function openIDB() {
+  return new Promise((res, rej) => {
+    if(_idb){ res(_idb); return; }
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(STORE, {keyPath:'slot'});
+    req.onsuccess = e => { _idb = e.target.result; res(_idb); };
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function buildSaveObj() {
+  return {
+    slot: 'main',
+    version: '3.3',
+    savedAt: new Date().toISOString(),
+    G: {
+      mgr:G.mgr, mgrNat:G.mgrNat, playerTeam:G.playerTeam,
+      season:G.season, date:G.date.getTime(),
+      formation:G.formation, tactic:G.tactic, nextId:G.nextId,
+      history:G.history, transfers:G.transfers,
+      scoutReports:G.scoutReports, playerImages:G.playerImages,
+      leagueCoefficients:G.leagueCoefficients,
+      transferRumors:G.transferRumors,
+      continental:G.continental, dbMode:G.dbMode,
+      seasonAwards: G.seasonAwards||[],
+    },
+    teams: G.teams,
+    leagues: G.leagues,
+    players: G.players,
+    fixtures: G.fixtures.map(f => Object.assign({},f,{date:f.date instanceof Date?f.date.getTime():f.date})),
+    results: G.results.map(r => Object.assign({},r,{date:r.date instanceof Date?r.date.getTime():r.date})),
+  };
+}
+
+async function saveGame() {
   try {
-    const save = {
-      version: '3.2',
-      savedAt: new Date().toISOString(),
-      G: {
-        mgr:G.mgr, mgrNat:G.mgrNat, playerTeam:G.playerTeam,
-        season:G.season, date:G.date.getTime(),
-        formation:G.formation, tactic:G.tactic, nextId:G.nextId,
-        history:G.history, transfers:G.transfers,
-        scoutReports:G.scoutReports, playerImages:G.playerImages,
-        leagueCoefficients:G.leagueCoefficients,
-        transferRumors:G.transferRumors,
-        continental:G.continental, dbMode:G.dbMode,
-      },
-      teams: G.teams,
-      leagues: G.leagues,
-      players: G.players,
-      fixtures: G.fixtures.map(f => Object.assign({}, f, {date: f.date instanceof Date ? f.date.getTime() : f.date})),
-      results: G.results.map(r => Object.assign({}, r, {date: r.date instanceof Date ? r.date.getTime() : r.date})),
-    };
-    const json = JSON.stringify(save);
-    const blob = new Blob([json], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const team = G.teams.find(t=>t.id===G.playerTeam);
-    const name = (team ? team.name.replace(/\s+/g,'_') : 'save') + '_S' + G.season + '.pitch';
-    a.href = url; a.download = name; a.click();
-    URL.revokeObjectURL(url);
-    toast('Save exported: ' + name, 's');
+    const save = buildSaveObj();
+    const db = await openIDB();
+    await new Promise((res,rej) => {
+      const tx = db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put(save);
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+    // Update topbar indicator
+    const btn = document.getElementById('save-btn');
+    if(btn){ btn.textContent = 'Saved'; btn.style.color='var(--green)'; setTimeout(()=>{btn.textContent='Save';btn.style.color='';},1500); }
+    console.log('Game saved to IndexedDB');
   } catch(e) {
-    console.error('Export failed:', e);
-    toast('Export failed: ' + e.message, 'e');
+    console.warn('IDB save failed, trying localStorage fallback:', e);
+    try { localStorage.setItem('pitch_save', JSON.stringify(buildSaveObj())); }
+    catch(e2) { toast('Save failed: '+e2.message,'e'); }
   }
 }
 
+async function loadGame() {
+  try {
+    const db = await openIDB();
+    const save = await new Promise((res,rej) => {
+      const tx = db.transaction(STORE,'readonly');
+      const req = tx.objectStore(STORE).get('main');
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+    });
+    if(save && save.teams && save.teams.length) {
+      applyLoadedSave(save);
+      return true;
+    }
+  } catch(e) { console.warn('IDB load failed:', e); }
+  // Fallback to localStorage
+  try {
+    const raw = localStorage.getItem('pitch_save');
+    if(raw) { const save = JSON.parse(raw); if(save&&save.teams) { applyLoadedSave(save); return true; } }
+  } catch(e) { console.warn('localStorage load failed:', e); }
+  return false;
+}
+
+function exportSave() {
+  try {
+    const save = buildSaveObj();
+    const json = JSON.stringify(save);
+    const blob = new Blob([json],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const team = G.teams.find(t=>t.id===G.playerTeam);
+    const name = (team?team.name.replace(/\s+/g,'_'):'save')+'_S'+G.season+'.pitch';
+    a.href=url; a.download=name; a.click();
+    URL.revokeObjectURL(url);
+    toast('Exported: '+name,'s');
+  } catch(e) { toast('Export failed: '+e.message,'e'); }
+}
+
 function loadSaveFile(input) {
-  const file = input.files[0];
-  if(!file) return;
+  const file = input.files[0]; if(!file) return;
   const status = document.getElementById('load-save-status');
-  if(status) status.textContent = 'Reading file...';
+  if(status) status.textContent = 'Reading...';
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
       const save = JSON.parse(e.target.result);
-      if(!save || !save.G || !save.teams) throw new Error('Invalid save file format');
+      if(!save||!save.G||!save.teams) throw new Error('Invalid save file');
       applyLoadedSave(save);
-      if(status) status.textContent = 'Loaded! Starting game...';
-      setTimeout(() => {
-        document.getElementById('setup').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
+      saveGame(); // persist to IDB too
+      if(status) status.textContent = 'Loaded!';
+      setTimeout(()=>{
+        document.getElementById('setup').style.display='none';
+        document.getElementById('app').style.display='flex';
         nav('dashboard');
-        const team = G.teams.find(t=>t.id===G.playerTeam);
-        toast('Welcome back, ' + G.mgr + '! Managing ' + (team?team.name:'your club'), 's');
-      }, 200);
+        toast('Welcome back, '+G.mgr+'!','s');
+      },200);
     } catch(err) {
-      console.error('Load failed:', err);
-      if(status) status.textContent = 'Error: ' + err.message;
-      toast('Failed to load save: ' + err.message, 'e');
+      if(status) status.textContent='Error: '+err.message;
+      toast('Load failed: '+err.message,'e');
     }
-  };
-  reader.onerror = function() {
-    if(status) status.textContent = 'Could not read file';
-    toast('Could not read file', 'e');
   };
   reader.readAsText(file);
 }
 
 function applyLoadedSave(save) {
   const sg = save.G;
-  G.mgr = sg.mgr || 'Manager';
-  G.mgrNat = sg.mgrNat || 'English';
-  G.playerTeam = sg.playerTeam;
-  G.season = sg.season || 1;
-  G.date = new Date(sg.date || Date.now());
-  G.formation = sg.formation || '4-3-3';
-  G.tactic = sg.tactic || {pressing:6,tempo:5,width:5,style:'balanced',dline:'balanced'};
-  G.nextId = sg.nextId || 1;
-  G.history = sg.history || [];
-  G.transfers = sg.transfers || [];
-  G.scoutReports = sg.scoutReports || [];
-  G.playerImages = sg.playerImages || {};
-  G.leagueCoefficients = sg.leagueCoefficients || {};
-  G.transferRumors = sg.transferRumors || [];
-  G.continental = sg.continental || {cl:[],el:[],ec:[],lib:[],suda:[],acl:[]};
-  G.dbMode = sg.dbMode || 'default';
-  G.teams = save.teams || [];
-  G.leagues = save.leagues || {};
-  G.players = save.players || [];
-  G.fixtures = (save.fixtures || []).map(f => Object.assign({}, f, {date: new Date(f.date)}));
-  G.results = (save.results || []).map(r => Object.assign({}, r, {date: new Date(r.date)}));
-  if(!G.teams.length || G.playerTeam === null || G.playerTeam === undefined) {
+  G.mgr=sg.mgr||'Manager'; G.mgrNat=sg.mgrNat||'English';
+  G.playerTeam=sg.playerTeam; G.season=sg.season||1;
+  G.date=new Date(sg.date||Date.now());
+  G.formation=sg.formation||'4-3-3';
+  G.tactic=sg.tactic||{pressing:6,tempo:5,width:5,style:'balanced',dline:'balanced'};
+  G.nextId=sg.nextId||1; G.history=sg.history||[];
+  G.transfers=sg.transfers||[]; G.scoutReports=sg.scoutReports||[];
+  G.playerImages=sg.playerImages||{}; G.leagueCoefficients=sg.leagueCoefficients||{};
+  G.transferRumors=sg.transferRumors||[];
+  G.continental=sg.continental||{cl:[],el:[],ec:[],lib:[],suda:[],acl:[]};
+  G.dbMode=sg.dbMode||'default'; G.seasonAwards=sg.seasonAwards||[];
+  G.teams=save.teams||[]; G.leagues=save.leagues||{};
+  G.players=save.players||[];
+  G.fixtures=(save.fixtures||[]).map(f=>Object.assign({},f,{date:new Date(f.date)}));
+  G.results=(save.results||[]).map(r=>Object.assign({},r,{date:new Date(r.date)}));
+  if(!G.teams.length||G.playerTeam===null||G.playerTeam===undefined)
     throw new Error('Save data is incomplete or corrupted');
-  }
-  console.log('Save loaded: ' + G.teams.length + ' teams, ' + G.players.length + ' players, S' + G.season);
+  console.log('Loaded: '+G.teams.length+' teams, '+G.players.length+' players, S'+G.season);
 }
 
-// Keep saveGame as alias for exportSave for any internal calls
-function saveGame(){ exportSave(); }
-function loadGame(){ return false; } // No longer used - file-based only
-
 // -- INIT -------------------------------------
+// Auto-save to IDB every 3 minutes while in-game
+let _autoSaveInterval = null;
+function startAutoSave(){ 
+  if(_autoSaveInterval) clearInterval(_autoSaveInterval);
+  _autoSaveInterval = setInterval(()=>{ if(G.playerTeam!==null) saveGame(); }, 180000); 
+}
+
 try{document.getElementById('moverlay').addEventListener('click',e=>{if(e.target===document.getElementById('moverlay'))closeModal();});}catch(e){}
 
-window.addEventListener('load',()=>{
-  try{ populateSetupLeagues(); }catch(e){ console.error('Init error:',e); }
+window.addEventListener('load', async ()=>{
+  try {
+    const loaded = await loadGame();
+    if(loaded && G.playerTeam!==null){
+      document.getElementById('setup').style.display='none';
+      document.getElementById('app').style.display='flex';
+      nav('dashboard');
+      updateTopbar();
+      startAutoSave();
+      toast('Welcome back, '+G.mgr+'!','s');
+    } else {
+      populateSetupLeagues();
+    }
+  } catch(e) {
+    console.error('Init error:',e);
+    populateSetupLeagues();
+  }
 });
 
 function populateSetupLeagues(){
