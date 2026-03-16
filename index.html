@@ -293,118 +293,155 @@ input[type=number]:focus{border-color:var(--accent)}
 </head>
 <body>
 
-<!-- ══════════════════════ SETUP ══════════════════════ -->
+<!-- ══════════════════════ SETUP / MAIN MENU ══════════════════════ -->
 <div id="setup">
-<div class="setup-wrap">
-  <div class="setup-logo">PITCH</div>
-  <div class="setup-tag">Global Football Simulation Engine v5.0</div>
+<div class="setup-wrap" style="width:860px">
+  <!-- MAIN MENU (shown by default) -->
+  <div id="main-menu">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:4px">
+      <div class="setup-logo" style="font-size:64px;margin-bottom:0">PITCH</div>
+      <div style="font-size:10px;letter-spacing:4px;color:var(--text3);text-transform:uppercase">Football Simulation</div>
+    </div>
 
-  <!-- Step indicator -->
-  <div class="setup-steps" id="setup-steps">
-    <div class="step-pill active" onclick="goStep(1)">1 · Manager</div>
-    <div class="step-pill" onclick="goStep(2)">2 · World</div>
-    <div class="step-pill" onclick="goStep(3)">3 · League</div>
-    <div class="step-pill" onclick="goStep(4)">4 · Team</div>
+    <!-- Action buttons row -->
+    <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
+      <button class="btn btn-primary" style="font-size:14px;padding:12px 24px;letter-spacing:.5px" onclick="showNewCareer()">+ New Career</button>
+      <button class="btn btn-secondary" style="font-size:13px;padding:12px 20px" onclick="document.getElementById('load-save-input-mm').click()">📂 Load Save File</button>
+      <input type="file" accept=".pitch,.json" id="load-save-input-mm" style="display:none" onchange="loadSaveFile(this)">
+    </div>
+
+    <!-- Saved careers table -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:var(--fd);font-size:18px;font-weight:700;letter-spacing:.5px">Your Careers</span>
+        <span style="font-size:10px;color:var(--text3)" id="mm-career-count">—</span>
+      </div>
+      <table style="margin:0">
+        <thead>
+          <tr>
+            <th style="width:100px"></th>
+            <th>Team</th>
+            <th>League</th>
+            <th>Season</th>
+            <th>Record</th>
+            <th>Last Saved</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="mm-career-list">
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3);font-size:12px">No saved careers yet. Start a new one!</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Step 1: Manager -->
-  <div id="step-1" class="card" style="margin-bottom:14px">
-    <div class="ch"><span class="ct">New Manager</span></div>
-    <div class="frow">
-      <div class="fgroup"><label class="flabel">Manager Name</label><input class="finput" id="s-mgr" value="Alex Ferguson Jr"></div>
-      <div class="fgroup"><label class="flabel">Nationality</label>
-        <select class="fselect" id="s-nat">
-          <option>English</option><option>Spanish</option><option>German</option><option>French</option>
-          <option>Brazilian</option><option>Argentine</option><option>Italian</option><option>Portuguese</option>
-        </select>
+  <!-- NEW CAREER WIZARD (hidden by default) -->
+  <div id="new-career-wizard" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <button class="btn btn-secondary" style="padding:4px 12px;font-size:11px" onclick="showMainMenu()">← Main Menu</button>
+      <div class="setup-logo" style="font-size:40px;margin-bottom:0">New Career</div>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="setup-steps" id="setup-steps" style="margin-bottom:20px">
+      <div class="step-pill active" onclick="goStep(1)">1 · Manager</div>
+      <div class="step-pill" onclick="goStep(2)">2 · World</div>
+      <div class="step-pill" onclick="goStep(3)">3 · League</div>
+      <div class="step-pill" onclick="goStep(4)">4 · Team</div>
+    </div>
+
+    <!-- Step 1: Manager -->
+    <div id="step-1" class="card" style="margin-bottom:14px">
+      <div class="ch"><span class="ct">Manager Details</span></div>
+      <div class="frow">
+        <div class="fgroup"><label class="flabel">Manager Name</label><input class="finput" id="s-mgr" value="Alex Ferguson Jr"></div>
+        <div class="fgroup"><label class="flabel">Nationality</label>
+          <select class="fselect" id="s-nat">
+            <option>English</option><option>Spanish</option><option>German</option><option>French</option>
+            <option>Brazilian</option><option>Argentine</option><option>Italian</option><option>Portuguese</option>
+            <option>Dutch</option><option>American</option><option>Japanese</option><option>Colombian</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="goStep(2)" style="margin-top:4px">Next →</button>
+    </div>
+
+    <!-- Step 2: World DB -->
+    <div id="step-2" class="card" style="margin-bottom:14px;display:none">
+      <div class="ch"><span class="ct">World Database</span></div>
+      <div class="db-opts">
+        <div class="db-opt sel" id="db-default" onclick="selectDb('default')">
+          <div class="db-opt-title">🌍 Default World</div>
+          <div class="db-opt-desc">40+ leagues, 600+ clubs, 12,000+ players with tiered quality</div>
+        </div>
+        <div class="db-opt" id="db-custom" onclick="selectDb('custom')">
+          <div class="db-opt-title">📂 Custom Database</div>
+          <div class="db-opt-desc">Import a community JSON database</div>
+        </div>
+      </div>
+      <div id="custom-db-upload" style="display:none;margin-bottom:12px">
+        <div class="drop-zone" onclick="document.getElementById('db-file').click()" id="db-dropzone">
+          Drop JSON here or click to browse
+          <input type="file" id="db-file" accept=".json" style="display:none" onchange="loadCustomDb(this)">
+        </div>
+        <p id="db-file-status" style="font-size:11px;color:var(--text3);margin-top:6px"></p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Next →</button>
       </div>
     </div>
-    <button class="btn btn-primary" onclick="goStep(2)" style="margin-top:4px">Next →</button>
-  </div>
 
-  <!-- Step 2: World DB -->
-  <div id="step-2" class="card" style="margin-bottom:14px;display:none">
-    <div class="ch"><span class="ct">World Database</span></div>
-    <div class="db-opts">
-      <div class="db-opt sel" id="db-default" onclick="selectDb('default')">
-        <div class="db-opt-title">🌍 Default World</div>
-        <div class="db-opt-desc">30+ leagues across 4 tiers, 500+ clubs, 10,000+ players with tiered quality</div>
+    <!-- Step 3: League Selection -->
+    <div id="step-3" class="card" style="margin-bottom:14px;display:none">
+      <div class="ch">
+        <span class="ct">Select Your League</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:10px;color:var(--text3)">Filter:</span>
+          <select class="fselect" id="tier-filter" style="width:100px" onchange="renderLeagueChips()">
+            <option value="">All Tiers</option>
+            <option value="1">Tier 1</option>
+            <option value="2">Tier 2</option>
+            <option value="3">Tier 3</option>
+            <option value="4">Tier 4</option>
+          </select>
+        </div>
       </div>
-      <div class="db-opt" id="db-custom" onclick="selectDb('custom')">
-        <div class="db-opt-title">📂 Custom Database</div>
-        <div class="db-opt-desc">Import a community JSON database</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:10px;display:flex;gap:14px">
+        <span><span style="color:var(--accent)">●</span> Tier 1 · Elite</span>
+        <span><span style="color:var(--green)">●</span> Tier 2 · Strong</span>
+        <span><span style="color:var(--gold)">●</span> Tier 3 · Mid</span>
+        <span><span style="color:var(--text3)">●</span> Tier 4 · Lower</span>
       </div>
-    </div>
-    <div id="custom-db-upload" style="display:none;margin-bottom:12px">
-      <div class="drop-zone" onclick="document.getElementById('db-file').click()" id="db-dropzone">
-        Drop JSON here or click to browse
-        <input type="file" id="db-file" accept=".json" style="display:none" onchange="loadCustomDb(this)">
-      </div>
-      <p id="db-file-status" style="font-size:11px;color:var(--text3);margin-top:6px"></p>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(3)">Next →</button>
-    </div>
-  </div>
-
-  <!-- Step 3: League Selection -->
-  <div id="step-3" class="card" style="margin-bottom:14px;display:none">
-    <div class="ch">
-      <span class="ct">Select Your League</span>
-      <div style="display:flex;gap:6px;align-items:center">
-        <span style="font-size:10px;color:var(--text3)">Filter:</span>
-        <select class="fselect" id="tier-filter" style="width:100px" onchange="renderLeagueChips()">
-          <option value="">All Tiers</option>
-          <option value="1">Tier 1</option>
-          <option value="2">Tier 2</option>
-          <option value="3">Tier 3</option>
-          <option value="4">Tier 4</option>
-        </select>
+      <div class="league-chips" id="league-chips"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(4)">Next →</button>
       </div>
     </div>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:10px;display:flex;gap:14px">
-      <span><span style="color:var(--accent)">●</span> Tier 1 · Elite</span>
-      <span><span style="color:var(--green)">●</span> Tier 2 · Strong</span>
-      <span><span style="color:var(--gold)">●</span> Tier 3 · Mid</span>
-      <span><span style="color:var(--text3)">●</span> Tier 4 · Lower</span>
-    </div>
-    <div class="league-chips" id="league-chips"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(4)">Next →</button>
-    </div>
-  </div>
 
-  <!-- Step 4: Team Selection -->
-  <div id="step-4" class="card" style="margin-bottom:14px;display:none">
-    <div class="ch">
-      <span class="ct">Pick Your Club</span>
-      <span id="sel-league-name" style="font-size:12px;color:var(--text3)"></span>
+    <!-- Step 4: Team Selection -->
+    <div id="step-4" class="card" style="margin-bottom:14px;display:none">
+      <div class="ch">
+        <span class="ct">Pick Your Club</span>
+        <span id="sel-league-name" style="font-size:12px;color:var(--text3)"></span>
+      </div>
+      <div class="team-grid" id="team-picker"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
+        <button class="btn btn-primary btn-block" style="font-size:14px;padding:12px;letter-spacing:1px" onclick="startGame()">▶ KICK OFF</button>
+      </div>
+      <div id="s-loading" style="display:none;margin-top:12px">
+        <div class="load-bar"><div class="load-fill" id="lf"></div></div>
+        <p style="font-size:10px;color:var(--text3);margin-top:8px;text-align:center;letter-spacing:2px">GENERATING WORLD...</p>
+      </div>
     </div>
-    <div class="team-grid" id="team-picker"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
-      <button class="btn btn-primary btn-block" style="font-size:14px;padding:12px;letter-spacing:1px" onclick="startGame()">▶ KICK OFF</button>
-    </div>
-    <div id="s-loading" style="display:none;margin-top:12px">
-      <div class="load-bar"><div class="load-fill" id="lf"></div></div>
-      <p style="font-size:10px;color:var(--text3);margin-top:8px;text-align:center;letter-spacing:2px">GENERATING WORLD...</p>
-    </div>
-  </div>
+  </div><!-- end new-career-wizard -->
 
-  <!-- Load existing save -->
-  <div class="card" style="margin-bottom:14px;border-color:var(--bdr2)">
-    <div class="ch"><span class="ct" style="font-size:16px">📂 Load Save</span></div>
-    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Load a previously exported <code>.pitch</code> save file to continue your career.</p>
-    <label class="btn btn-secondary btn-block" style="cursor:pointer;text-align:center;padding:10px">
-      📁 Choose Save File (.pitch)
-      <input type="file" accept=".pitch,.json" id="load-save-input" style="display:none" onchange="loadSaveFile(this)">
-    </label>
-    <p id="load-save-status" style="font-size:10px;color:var(--text3);margin-top:6px;text-align:center"></p>
-  </div>
+  <p id="load-save-status" style="font-size:10px;color:var(--text3);margin-top:6px;text-align:center"></p>
 </div>
 </div>
+
 
 <!-- ══════════════════════ MAIN APP ══════════════════════ -->
 <div id="app" style="display:none">
@@ -456,6 +493,7 @@ input[type=number]:focus{border-color:var(--accent)}
       <span class="tb-chip" id="tb-morale">Morale —</span>
       <button id="save-btn" class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="saveGame()">Save</button>
       <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="exportSave()">Export</button>
+      <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px;color:var(--text3)" onclick="returnToMainMenu()">Menu</button>
     </div>
     <div id="content"></div>
   </div>
@@ -844,26 +882,73 @@ const COUNTRY_QUALITY = {
   Polish:4,Russian:4,Welsh:4,Scottish:4,Ivorian:4,Serbian:4,Chilean:4,Paraguayan:4,Venezuelan:4,Peruvian:4,Ghanaian:4,Honduran:4,Cameroonian:4,Malian:4,Greek:4,Tunisian:4,Congolese:4,Romanian:4,Swedish:4,Hungarian:4,Croatian:4,
 };
 
+// Per-league domestic ratio (from provided data table)
+const LEAGUE_DOMESTIC_RATIO = {
+  // England
+  'England_Premier_League': 0.50, 'England_Championship': 0.60,
+  // Spain
+  'Spain_La_Liga': 0.70, 'Spain_La_Liga_2': 0.65,
+  // Germany
+  'Germany_Bundesliga': 0.50, 'Germany_Bundesliga_2': 0.60,
+  // Italy
+  'Italy_Serie_A': 0.35, 'Italy_Serie_B': 0.55,
+  // France
+  'France_Ligue_1': 0.45, 'France_Ligue_2': 0.55,
+  // Netherlands, Portugal, Belgium
+  'Netherlands_Eredivisie': 0.55, 'Portugal_Primeira_Liga': 0.30,
+  'Belgium_Pro_League': 0.40,
+  // Turkey, Scotland, Russia, Greece, Austria, Czech, Switzerland, Israel
+  'Turkey_Super_Lig': 0.45, 'Scotland_Scottish_Premiership': 0.40,
+  'Russia_Premier_League': 0.50, 'Greece_Super_League': 0.50,
+  'Austria_Bundesliga': 0.60, 'Czech_Fortuna_Liga': 0.60,
+  'Switzerland_Super_League': 0.55, 'Israel_Premier_League': 0.55,
+  // Scandinavia
+  'Denmark_Superliga': 0.60, 'Sweden_Allsvenskan': 0.65,
+  'Norway_Eliteserien': 0.65,
+  // Balkans
+  'Croatia_HNL': 0.70, 'Ukraine_Premier_League': 0.65,
+  'Romania_Liga_1': 0.60, 'Serbia_Super_Liga': 0.70, 'Poland_Ekstraklasa': 0.60,
+  // South America
+  'Brazil_Brasileirao': 0.85, 'Argentina_Primera_Division': 0.80,
+  'Colombia_Liga_BetPlay': 0.85, 'Chile_Primera_Division': 0.80,
+  'Uruguay_Primera_Division': 0.85, 'Ecuador_Serie_A': 0.80,
+  // North America
+  'USA_MLS': 0.50, 'Mexico_Liga_MX': 0.70,
+  'Mexico_Liga_de_Expansion': 0.75, 'Canada_Canadian_Premier_League': 0.70,
+  // Asia
+  'Japan_J-League': 0.75, 'South_Korea_K_League_1': 0.75,
+  'Saudi_Arabia_Saudi_Pro_League': 0.55, 'China_Chinese_Super_League': 0.65,
+  'Australia_A-League': 0.70,
+  // Africa
+  'Egypt_Egyptian_Premier_League': 0.85, 'Morocco_Botola_Pro': 0.80,
+};
+
 // Regional nationality pools for realistic player distribution
 const LEAGUE_NAT_PROFILE = {
   Europe:{
-    domestic:0.30, regional:0.40,
+    domestic:0.40, regional:0.35,
     regional_nats:['Spanish','French','German','Italian','Portuguese','Dutch','Belgian','Croatian','Serbian','Polish','Brazilian','Argentine','Senegalese','Ivorian','Nigerian','Moroccan','Algerian','Ghanaian','Cameroonian','Uruguayan','Colombian'],
-    global:0.30,
+    global:0.25,
   },
-  SouthAmerica:{domestic:0.55,regional:0.35,regional_nats:['Argentine','Brazilian','Colombian','Chilean','Uruguayan','Peruvian','Ecuadorian','Paraguayan','Bolivian','Venezuelan'],global:0.10},
-  NorthAmerica:{domestic:0.45,regional:0.35,regional_nats:['Mexican','American','Colombian','Argentine','Brazilian','Honduran','Guatemalan','Panamanian','Jamaican','Canadian'],global:0.20},
-  Asia:{domestic:0.65,regional:0.25,regional_nats:['Brazilian','Argentine','Moroccan','Nigerian','French','Spanish','Korean','Japanese','Chinese','Australian'],global:0.10},
-  Africa:{domestic:0.60,regional:0.30,regional_nats:['Nigerian','Senegalese','Ivorian','Ghanaian','Cameroonian','Moroccan','Algerian','Egyptian','Malian','Congolese'],global:0.10},
+  SouthAmerica:{domestic:0.82,regional:0.15,regional_nats:['Argentine','Brazilian','Colombian','Chilean','Uruguayan','Peruvian','Ecuadorian','Paraguayan','Bolivian','Venezuelan'],global:0.03},
+  NorthAmerica:{domestic:0.60,regional:0.25,regional_nats:['Mexican','American','Colombian','Argentine','Brazilian','Honduran','Guatemalan','Panamanian','Jamaican','Canadian'],global:0.15},
+  Asia:{domestic:0.68,regional:0.22,regional_nats:['Brazilian','Argentine','Moroccan','Nigerian','French','Spanish','Korean','Japanese','Chinese','Australian'],global:0.10},
+  Africa:{domestic:0.82,regional:0.15,regional_nats:['Nigerian','Senegalese','Ivorian','Ghanaian','Cameroonian','Moroccan','Algerian','Egyptian','Malian','Congolese'],global:0.03},
 };
 
-function pickNatForLeague(countryNat, continent, playerOverall) {
+function pickNatForLeague(countryNat, continent, playerOverall, leagueId) {
   const profile = LEAGUE_NAT_PROFILE[continent] || LEAGUE_NAT_PROFILE.Europe;
+  // Use precise per-league ratio if available
+  const leagueKey = leagueId ? leagueId.replace(/\s+/g,'_') : null;
+  var domesticRatio = leagueKey && LEAGUE_DOMESTIC_RATIO[leagueKey] !== undefined
+    ? LEAGUE_DOMESTIC_RATIO[leagueKey]
+    : profile.domestic;
   const r = Math.random();
-  const eliteBoost = playerOverall >= 78 ? 0.20 : 0;
-  if (r < profile.domestic - eliteBoost) {
+  // Elite players (OVR 78+) more likely to be foreign imports
+  const eliteBoost = playerOverall >= 78 ? 0.15 : 0;
+  if (r < domesticRatio - eliteBoost) {
     return countryNat;
-  } else if (r < profile.domestic + profile.regional) {
+  } else if (r < domesticRatio + profile.regional) {
     const pool = profile.regional_nats.filter(function(n){return n !== countryNat;});
     return pick(pool.length ? pool : NATS);
   } else {
@@ -1340,9 +1425,9 @@ function generateWorld() {
             const cat = pi<2?'star':pi<12?'starter':'bench';
             const isYouth = pi>=18;
             const age = isYouth?rand(17,22):(cat==='star'?rand(22,30):rand(18,35));
-            // Use realistic nationality distribution based on league region
+            // Use realistic nationality distribution based on league region + per-league ratio
             const ovrEst = TIER_OVR[tier]?.[cat]?.[0] || 65;
-            const nat = pickNatForLeague(countryNat, continent, ovrEst);
+            const nat = pickNatForLeague(countryNat, continent, ovrEst, leagueId);
             const p = mkPlayer({pos, age, teamId:teamIdx, cat, tier, leagueRep, nationality:nat, youth:isYouth});
             squad.push(p.id);
             G.players.push(p);
@@ -1782,16 +1867,27 @@ function simToNextMyMatch() {
 }
 
 function simNext(){
-  // Advance exactly one calendar day   do NOT jump to prematch screen
-  const next = getNextMatchDay();
-  if(!next){ checkSeasonEnd(); nav(G.currentPage); return; }
+  // Advance exactly ONE calendar day from current G.date
+  const tomorrow = new Date(G.date.getTime() + 86400000);
+  const tomorrowStr = tomorrow.toDateString();
 
-  const dayStr = next.toDateString();
-  const toSim = G.fixtures.filter(f=>!f.played && f.date.toDateString()===dayStr);
+  // Sim any fixtures scheduled for tomorrow
+  const toSim = G.fixtures.filter(f=>!f.played && f.date.toDateString()===tomorrowStr);
+
+  // If our team has a match tomorrow, go to prematch instead of silently simming
+  const myMatch = toSim.find(f=>f.homeId===G.playerTeam||f.awayId===G.playerTeam);
+  if(myMatch){
+    G.date = tomorrow;
+    updateTopbar();
+    nav('prematch', myMatch.id);
+    return;
+  }
+
+  // Sim other teams' matches for that day
   toSim.forEach(f=>{ const r=simMatch(f); if(r){G.results.push(r);f.played=true;} });
-  G.date = new Date(next.getTime()+86400000);
+  G.date = tomorrow;
   checkSeasonEnd(); updateTopbar(); nav(G.currentPage);
-  if(toSim.length) toast(`Simmed ${toSim.length} match${toSim.length>1?'es':''} on ${fmtDate(next)}`,'i');
+  if(toSim.length) toast('Simmed '+toSim.length+' match'+(toSim.length>1?'es':'')+' on '+fmtDate(tomorrow),'i');
 }
 
 function simWeek(){
@@ -3414,7 +3510,7 @@ async function startGame(){
   const teamName=G.teams.find(t=>t.id===G.playerTeam)?.name||'Your Club';
   toast('Welcome, '+mgr+'! Managing '+teamName,'s');
   startAutoSave();
-  saveGame();
+  saveGame(); // saves to IDB + career slots
 }
 
 // -- PERSISTENCE (IndexedDB primary, file export backup) ------
@@ -3470,6 +3566,7 @@ async function saveGame() {
     const btn = document.getElementById('save-btn');
     if(btn){ btn.textContent = 'Saved'; btn.style.color='var(--green)'; setTimeout(()=>{btn.textContent='Save';btn.style.color='';},1500); }
     console.log('Game saved to IndexedDB');
+    saveCareerToSlots(); // also update career list in localStorage
   } catch(e) {
     console.warn('IDB save failed, trying localStorage fallback:', e);
     try { localStorage.setItem('pitch_save', JSON.stringify(buildSaveObj())); }
@@ -3576,20 +3673,146 @@ window.addEventListener('load', async ()=>{
   try {
     const loaded = await loadGame();
     if(loaded && G.playerTeam!==null){
-      document.getElementById('setup').style.display='none';
-      document.getElementById('app').style.display='flex';
-      nav('dashboard');
-      updateTopbar();
-      startAutoSave();
-      toast('Welcome back, '+G.mgr+'!','s');
+      // Had an active game — go straight to main menu showing their career
+      document.getElementById('setup').style.display='flex';
+      document.getElementById('app').style.display='none';
+      document.getElementById('main-menu').style.display='block';
+      document.getElementById('new-career-wizard').style.display='none';
+      renderCareerList();
     } else {
+      // No save — show main menu (may have career slots from file loads)
+      document.getElementById('main-menu').style.display='block';
+      document.getElementById('new-career-wizard').style.display='none';
+      renderCareerList();
       populateSetupLeagues();
     }
   } catch(e) {
     console.error('Init error:',e);
-    populateSetupLeagues();
+    document.getElementById('main-menu').style.display='block';
+    document.getElementById('new-career-wizard').style.display='none';
+    renderCareerList();
   }
 });
+
+// -- MAIN MENU ---------------------------------
+const CAREER_SLOTS_KEY = 'pitch_careers';
+
+function getCareerSlots() {
+  try { return JSON.parse(localStorage.getItem(CAREER_SLOTS_KEY)||'[]'); }
+  catch(e){ return []; }
+}
+function saveCareerSlots(slots) {
+  try { localStorage.setItem(CAREER_SLOTS_KEY, JSON.stringify(slots)); } catch(e){}
+}
+
+function showMainMenu() {
+  // Save current game first if in-game
+  if(G.playerTeam !== null) {
+    saveGame();
+  }
+  document.getElementById('app').style.display='none';
+  document.getElementById('setup').style.display='flex';
+  document.getElementById('main-menu').style.display='block';
+  document.getElementById('new-career-wizard').style.display='none';
+  renderCareerList();
+}
+
+function showNewCareer() {
+  document.getElementById('main-menu').style.display='none';
+  document.getElementById('new-career-wizard').style.display='block';
+  setupStep=1;
+  [1,2,3,4].forEach(function(i){
+    var el=document.getElementById('step-'+i);
+    if(el) el.style.display=i===1?'block':'none';
+  });
+  document.querySelectorAll('.step-pill').forEach(function(el,i){
+    el.classList.toggle('active',i===0);
+    el.classList.remove('done');
+  });
+  populateSetupLeagues();
+}
+
+function returnToMainMenu() {
+  if(!confirm('Return to Main Menu? Your game will be saved.')) return;
+  showMainMenu();
+}
+
+function renderCareerList() {
+  const slots = getCareerSlots();
+  const tbody = document.getElementById('mm-career-list');
+  const count = document.getElementById('mm-career-count');
+  if(!tbody) return;
+  if(count) count.textContent = slots.length + ' career' + (slots.length===1?'':'s');
+  if(!slots.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3);font-size:12px">No saved careers yet. Start a new one!</td></tr>';
+    return;
+  }
+  tbody.innerHTML = slots.map(function(slot, idx) {
+    const teamName = slot.teamName || 'Unknown';
+    const leagueName = slot.leagueName || '—';
+    const season = slot.season || 1;
+    const record = slot.record || '—';
+    const savedAt = slot.savedAt ? new Date(slot.savedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    const isActive = slot.slot === 'main' && idx === 0;
+    return '<tr style="'+(isActive?'background:rgba(0,212,255,.04)':'')+'">' +
+      '<td style="padding:10px 14px"><button class="btn btn-primary" style="padding:4px 16px;font-size:12px;background:var(--green);color:#000;border:none" onclick="loadCareerSlot('+idx+')">Play</button></td>' +
+      '<td><span class="tname">'+teamName+'</span></td>' +
+      '<td style="color:var(--text3);font-size:11px">'+leagueName+'</td>' +
+      '<td style="font-family:var(--fm);font-size:11px;color:var(--text2)">S'+season+'</td>' +
+      '<td style="font-family:var(--fm);font-size:11px;color:var(--text2)">'+record+'</td>' +
+      '<td style="color:var(--text3);font-size:11px">'+savedAt+'</td>' +
+      '<td style="text-align:right;padding-right:12px"><button class="btn btn-danger" style="padding:2px 8px;font-size:10px" onclick="deleteCareerSlot('+idx+',event)">Delete</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+function loadCareerSlot(idx) {
+  const slots = getCareerSlots();
+  const slot = slots[idx];
+  if(!slot || !slot.data) { toast('Save data missing','e'); return; }
+  try {
+    applyLoadedSave(slot.data);
+    document.getElementById('setup').style.display='none';
+    document.getElementById('app').style.display='flex';
+    nav('dashboard');
+    updateTopbar();
+    startAutoSave();
+    toast('Welcome back, '+G.mgr+'!','s');
+  } catch(e) {
+    toast('Failed to load: '+e.message,'e');
+  }
+}
+
+function deleteCareerSlot(idx, ev) {
+  ev.stopPropagation();
+  if(!confirm('Delete this career? This cannot be undone.')) return;
+  const slots = getCareerSlots();
+  slots.splice(idx, 1);
+  saveCareerSlots(slots);
+  renderCareerList();
+}
+
+function saveCareerToSlots() {
+  if(G.playerTeam===null) return;
+  const team = G.teams.find(function(t){return t.id===G.playerTeam;});
+  const lg = G.leagues[team?.leagueId];
+  const tableRow = lg?.table.find(function(r){return r.id===G.playerTeam;});
+  const slotData = {
+    slot: 'main',
+    teamName: team?.name||'?',
+    leagueName: lg?.name||'?',
+    season: G.season,
+    record: tableRow ? tableRow.w+'-'+tableRow.d+'-'+tableRow.l : '0-0-0',
+    savedAt: new Date().toISOString(),
+    data: buildSaveObj(),
+  };
+  // Update or add
+  const slots = getCareerSlots();
+  const existing = slots.findIndex(function(s){ return s.teamName===slotData.teamName && s.leagueName===slotData.leagueName; });
+  if(existing >= 0) slots[existing] = slotData;
+  else slots.unshift(slotData);
+  saveCareerSlots(slots.slice(0,20)); // max 20 saves
+}
 
 function populateSetupLeagues(){
   renderLeagueChips();
