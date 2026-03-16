@@ -3200,37 +3200,99 @@ async function startGame(){
 // -- PERSISTENCE -------------------------------
 function saveGame(){
   try{
-    const save={version:'3.0',date:Date.now(),G:{mgr:G.mgr,mgrNat:G.mgrNat,playerTeam:G.playerTeam,season:G.season,date:G.date,formation:G.formation,tactic:G.tactic,nextId:G.nextId,history:G.history,transfers:G.transfers,scoutReports:G.scoutReports,playerImages:G.playerImages,leagueCoefficients:G.leagueCoefficients,transferRumors:G.transferRumors}};
-    localStorage.setItem('pitch5_meta',JSON.stringify(save));
-    localStorage.setItem('pitch5_teams',JSON.stringify(G.teams));
-    localStorage.setItem('pitch5_leagues',JSON.stringify(G.leagues));
-    const chunkSize=500;
+    const meta={
+      version:'3.1', date:Date.now(),
+      G:{
+        mgr:G.mgr, mgrNat:G.mgrNat, playerTeam:G.playerTeam,
+        season:G.season, date:G.date.getTime(),
+        formation:G.formation, tactic:G.tactic, nextId:G.nextId,
+        history:G.history, transfers:G.transfers,
+        scoutReports:G.scoutReports, playerImages:G.playerImages,
+        leagueCoefficients:G.leagueCoefficients,
+        transferRumors:G.transferRumors,
+        continental:G.continental,
+        dbMode:G.dbMode,
+      }
+    };
+    localStorage.setItem('pitch5_meta', JSON.stringify(meta));
+    localStorage.setItem('pitch5_teams', JSON.stringify(G.teams));
+    localStorage.setItem('pitch5_leagues', JSON.stringify(G.leagues));
+    const chunkSize=400;
     const chunks=Math.ceil(G.players.length/chunkSize);
-    localStorage.setItem('pitch5_players_chunks',chunks.toString());
-    for(let i=0;i<chunks;i++){localStorage.setItem(`pitch5_players_${i}`,JSON.stringify(G.players.slice(i*chunkSize,(i+1)*chunkSize)));}
-    localStorage.setItem('pitch5_fixtures',JSON.stringify(G.fixtures.slice(-500)));
-    localStorage.setItem('pitch5_results',JSON.stringify(G.results.slice(-200)));
-    toast('💾 Saved','s');
+    localStorage.setItem('pitch5_players_chunks', chunks.toString());
+    for(let i=0;i<chunks;i++){
+      localStorage.setItem('pitch5_players_'+i, JSON.stringify(G.players.slice(i*chunkSize,(i+1)*chunkSize)));
+    }
+    // Save fixtures with date as timestamp
+    const fixturesForSave = G.fixtures.slice(-600).map(f=>Object.assign({},f,{date:f.date instanceof Date?f.date.getTime():f.date}));
+    localStorage.setItem('pitch5_fixtures', JSON.stringify(fixturesForSave));
+    const resultsForSave = G.results.slice(-300).map(r=>Object.assign({},r,{date:r.date instanceof Date?r.date.getTime():r.date}));
+    localStorage.setItem('pitch5_results', JSON.stringify(resultsForSave));
+    toast('Saved','s');
   }catch(e){console.warn('Save failed:',e);}
 }
 
 function loadGame(){
   try{
-    const meta=localStorage.getItem('pitch5_meta');if(!meta)return false;
+    const meta=localStorage.getItem('pitch5_meta');
+    if(!meta) return false;
     const save=JSON.parse(meta);
-    Object.assign(G,save.G);G.date=new Date(G.date);
+    if(!save||!save.G) return false;
+
+    // Restore meta fields
+    const sg=save.G;
+    G.mgr=sg.mgr||'Manager';
+    G.mgrNat=sg.mgrNat||'English';
+    G.playerTeam=sg.playerTeam;
+    G.season=sg.season||1;
+    G.date=new Date(sg.date||Date.now());
+    G.formation=sg.formation||'4-3-3';
+    G.tactic=sg.tactic||{pressing:6,tempo:5,width:5,style:'balanced',dline:'balanced'};
+    G.nextId=sg.nextId||1;
+    G.history=sg.history||[];
+    G.transfers=sg.transfers||[];
+    G.scoutReports=sg.scoutReports||[];
+    G.playerImages=sg.playerImages||{};
+    G.leagueCoefficients=sg.leagueCoefficients||{};
+    G.transferRumors=sg.transferRumors||[];
+    G.continental=sg.continental||{cl:[],el:[],ec:[],lib:[],suda:[],acl:[]};
+    G.dbMode=sg.dbMode||'default';
+
+    // Restore teams
     G.teams=JSON.parse(localStorage.getItem('pitch5_teams')||'[]');
+
+    // Restore leagues
     G.leagues=JSON.parse(localStorage.getItem('pitch5_leagues')||'{}');
+
+    // Restore players in chunks
     const chunks=parseInt(localStorage.getItem('pitch5_players_chunks')||'0');
     G.players=[];
-    for(let i=0;i<chunks;i++){const c=localStorage.getItem(`pitch5_players_${i}`);if(c)G.players.push(...JSON.parse(c));}
-    G.fixtures=JSON.parse(localStorage.getItem('pitch5_fixtures')||'[]');
-    G.results=JSON.parse(localStorage.getItem('pitch5_results')||'[]');
+    for(let i=0;i<chunks;i++){
+      const c=localStorage.getItem('pitch5_players_'+i);
+      if(c) G.players.push(...JSON.parse(c));
+    }
+
+    // Restore fixtures — convert date timestamps back to Date objects
+    const rawFix=JSON.parse(localStorage.getItem('pitch5_fixtures')||'[]');
+    G.fixtures=rawFix.map(f=>Object.assign({},f,{date:new Date(f.date)}));
+
+    // Restore results — convert date timestamps back to Date objects
+    const rawRes=JSON.parse(localStorage.getItem('pitch5_results')||'[]');
+    G.results=rawRes.map(r=>Object.assign({},r,{date:new Date(r.date)}));
+
+    // Validate we have something useful
+    if(!G.teams.length || G.playerTeam===null || G.playerTeam===undefined) return false;
+
+    console.log('Game loaded: '+G.teams.length+' teams, '+G.players.length+' players, '+G.fixtures.length+' fixtures');
     return true;
-  }catch(e){return false;}
+  }catch(e){
+    console.error('Load failed:',e);
+    return false;
+  }
 }
 
 // -- INIT -------------------------------------
+// Auto-save every 2 minutes
 setInterval(()=>{try{if(G.playerTeam!==null)saveGame();}catch(e){}},120000);
 
 try{document.getElementById('moverlay').addEventListener('click',e=>{if(e.target===document.getElementById('moverlay'))closeModal();});}catch(e){}
