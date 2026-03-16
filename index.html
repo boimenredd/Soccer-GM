@@ -392,6 +392,17 @@ input[type=number]:focus{border-color:var(--accent)}
       <p style="font-size:10px;color:var(--text3);margin-top:8px;text-align:center;letter-spacing:2px">GENERATING WORLD...</p>
     </div>
   </div>
+
+  <!-- Load existing save -->
+  <div class="card" style="margin-bottom:14px;border-color:var(--bdr2)">
+    <div class="ch"><span class="ct" style="font-size:16px">📂 Load Save</span></div>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Load a previously exported <code>.pitch</code> save file to continue your career.</p>
+    <label class="btn btn-secondary btn-block" style="cursor:pointer;text-align:center;padding:10px">
+      📁 Choose Save File (.pitch)
+      <input type="file" accept=".pitch,.json" id="load-save-input" style="display:none" onchange="loadSaveFile(this)">
+    </label>
+    <p id="load-save-status" style="font-size:10px;color:var(--text3);margin-top:6px;text-align:center"></p>
+  </div>
 </div>
 </div>
 
@@ -443,7 +454,7 @@ input[type=number]:focus{border-color:var(--accent)}
       <span class="tb-chip gold" id="tb-pos">— </span>
       <span class="tb-chip" id="tb-budget">£0M</span>
       <span class="tb-chip" id="tb-morale">Morale —</span>
-      <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="saveGame()">💾 Save</button>
+      <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="exportSave()">💾 Export Save</button>
     </div>
     <div id="content"></div>
   </div>
@@ -3198,11 +3209,12 @@ async function startGame(){
 }
 
 // -- PERSISTENCE -------------------------------
-function saveGame(){
-  try{
-    const meta={
-      version:'3.1', date:Date.now(),
-      G:{
+function exportSave(){
+  try {
+    const save = {
+      version: '3.2',
+      savedAt: new Date().toISOString(),
+      G: {
         mgr:G.mgr, mgrNat:G.mgrNat, playerTeam:G.playerTeam,
         season:G.season, date:G.date.getTime(),
         formation:G.formation, tactic:G.tactic, nextId:G.nextId,
@@ -3210,107 +3222,99 @@ function saveGame(){
         scoutReports:G.scoutReports, playerImages:G.playerImages,
         leagueCoefficients:G.leagueCoefficients,
         transferRumors:G.transferRumors,
-        continental:G.continental,
-        dbMode:G.dbMode,
-      }
+        continental:G.continental, dbMode:G.dbMode,
+      },
+      teams: G.teams,
+      leagues: G.leagues,
+      players: G.players,
+      fixtures: G.fixtures.map(f => Object.assign({}, f, {date: f.date instanceof Date ? f.date.getTime() : f.date})),
+      results: G.results.map(r => Object.assign({}, r, {date: r.date instanceof Date ? r.date.getTime() : r.date})),
     };
-    localStorage.setItem('pitch5_meta', JSON.stringify(meta));
-    localStorage.setItem('pitch5_teams', JSON.stringify(G.teams));
-    localStorage.setItem('pitch5_leagues', JSON.stringify(G.leagues));
-    const chunkSize=400;
-    const chunks=Math.ceil(G.players.length/chunkSize);
-    localStorage.setItem('pitch5_players_chunks', chunks.toString());
-    for(let i=0;i<chunks;i++){
-      localStorage.setItem('pitch5_players_'+i, JSON.stringify(G.players.slice(i*chunkSize,(i+1)*chunkSize)));
-    }
-    // Save fixtures with date as timestamp
-    const fixturesForSave = G.fixtures.slice(-600).map(f=>Object.assign({},f,{date:f.date instanceof Date?f.date.getTime():f.date}));
-    localStorage.setItem('pitch5_fixtures', JSON.stringify(fixturesForSave));
-    const resultsForSave = G.results.slice(-300).map(r=>Object.assign({},r,{date:r.date instanceof Date?r.date.getTime():r.date}));
-    localStorage.setItem('pitch5_results', JSON.stringify(resultsForSave));
-    toast('Saved','s');
-  }catch(e){console.warn('Save failed:',e);}
-}
-
-function loadGame(){
-  try{
-    const meta=localStorage.getItem('pitch5_meta');
-    if(!meta) return false;
-    const save=JSON.parse(meta);
-    if(!save||!save.G) return false;
-
-    // Restore meta fields
-    const sg=save.G;
-    G.mgr=sg.mgr||'Manager';
-    G.mgrNat=sg.mgrNat||'English';
-    G.playerTeam=sg.playerTeam;
-    G.season=sg.season||1;
-    G.date=new Date(sg.date||Date.now());
-    G.formation=sg.formation||'4-3-3';
-    G.tactic=sg.tactic||{pressing:6,tempo:5,width:5,style:'balanced',dline:'balanced'};
-    G.nextId=sg.nextId||1;
-    G.history=sg.history||[];
-    G.transfers=sg.transfers||[];
-    G.scoutReports=sg.scoutReports||[];
-    G.playerImages=sg.playerImages||{};
-    G.leagueCoefficients=sg.leagueCoefficients||{};
-    G.transferRumors=sg.transferRumors||[];
-    G.continental=sg.continental||{cl:[],el:[],ec:[],lib:[],suda:[],acl:[]};
-    G.dbMode=sg.dbMode||'default';
-
-    // Restore teams
-    G.teams=JSON.parse(localStorage.getItem('pitch5_teams')||'[]');
-
-    // Restore leagues
-    G.leagues=JSON.parse(localStorage.getItem('pitch5_leagues')||'{}');
-
-    // Restore players in chunks
-    const chunks=parseInt(localStorage.getItem('pitch5_players_chunks')||'0');
-    G.players=[];
-    for(let i=0;i<chunks;i++){
-      const c=localStorage.getItem('pitch5_players_'+i);
-      if(c) G.players.push(...JSON.parse(c));
-    }
-
-    // Restore fixtures — convert date timestamps back to Date objects
-    const rawFix=JSON.parse(localStorage.getItem('pitch5_fixtures')||'[]');
-    G.fixtures=rawFix.map(f=>Object.assign({},f,{date:new Date(f.date)}));
-
-    // Restore results — convert date timestamps back to Date objects
-    const rawRes=JSON.parse(localStorage.getItem('pitch5_results')||'[]');
-    G.results=rawRes.map(r=>Object.assign({},r,{date:new Date(r.date)}));
-
-    // Validate we have something useful
-    if(!G.teams.length || G.playerTeam===null || G.playerTeam===undefined) return false;
-
-    console.log('Game loaded: '+G.teams.length+' teams, '+G.players.length+' players, '+G.fixtures.length+' fixtures');
-    return true;
-  }catch(e){
-    console.error('Load failed:',e);
-    return false;
+    const json = JSON.stringify(save);
+    const blob = new Blob([json], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const team = G.teams.find(t=>t.id===G.playerTeam);
+    const name = (team ? team.name.replace(/\s+/g,'_') : 'save') + '_S' + G.season + '.pitch';
+    a.href = url; a.download = name; a.click();
+    URL.revokeObjectURL(url);
+    toast('Save exported: ' + name, 's');
+  } catch(e) {
+    console.error('Export failed:', e);
+    toast('Export failed: ' + e.message, 'e');
   }
 }
 
-// -- INIT -------------------------------------
-// Auto-save every 2 minutes
-setInterval(()=>{try{if(G.playerTeam!==null)saveGame();}catch(e){}},120000);
+function loadSaveFile(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const status = document.getElementById('load-save-status');
+  if(status) status.textContent = 'Reading file...';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const save = JSON.parse(e.target.result);
+      if(!save || !save.G || !save.teams) throw new Error('Invalid save file format');
+      applyLoadedSave(save);
+      if(status) status.textContent = 'Loaded! Starting game...';
+      setTimeout(() => {
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        nav('dashboard');
+        const team = G.teams.find(t=>t.id===G.playerTeam);
+        toast('Welcome back, ' + G.mgr + '! Managing ' + (team?team.name:'your club'), 's');
+      }, 200);
+    } catch(err) {
+      console.error('Load failed:', err);
+      if(status) status.textContent = 'Error: ' + err.message;
+      toast('Failed to load save: ' + err.message, 'e');
+    }
+  };
+  reader.onerror = function() {
+    if(status) status.textContent = 'Could not read file';
+    toast('Could not read file', 'e');
+  };
+  reader.readAsText(file);
+}
 
+function applyLoadedSave(save) {
+  const sg = save.G;
+  G.mgr = sg.mgr || 'Manager';
+  G.mgrNat = sg.mgrNat || 'English';
+  G.playerTeam = sg.playerTeam;
+  G.season = sg.season || 1;
+  G.date = new Date(sg.date || Date.now());
+  G.formation = sg.formation || '4-3-3';
+  G.tactic = sg.tactic || {pressing:6,tempo:5,width:5,style:'balanced',dline:'balanced'};
+  G.nextId = sg.nextId || 1;
+  G.history = sg.history || [];
+  G.transfers = sg.transfers || [];
+  G.scoutReports = sg.scoutReports || [];
+  G.playerImages = sg.playerImages || {};
+  G.leagueCoefficients = sg.leagueCoefficients || {};
+  G.transferRumors = sg.transferRumors || [];
+  G.continental = sg.continental || {cl:[],el:[],ec:[],lib:[],suda:[],acl:[]};
+  G.dbMode = sg.dbMode || 'default';
+  G.teams = save.teams || [];
+  G.leagues = save.leagues || {};
+  G.players = save.players || [];
+  G.fixtures = (save.fixtures || []).map(f => Object.assign({}, f, {date: new Date(f.date)}));
+  G.results = (save.results || []).map(r => Object.assign({}, r, {date: new Date(r.date)}));
+  if(!G.teams.length || G.playerTeam === null || G.playerTeam === undefined) {
+    throw new Error('Save data is incomplete or corrupted');
+  }
+  console.log('Save loaded: ' + G.teams.length + ' teams, ' + G.players.length + ' players, S' + G.season);
+}
+
+// Keep saveGame as alias for exportSave for any internal calls
+function saveGame(){ exportSave(); }
+function loadGame(){ return false; } // No longer used - file-based only
+
+// -- INIT -------------------------------------
 try{document.getElementById('moverlay').addEventListener('click',e=>{if(e.target===document.getElementById('moverlay'))closeModal();});}catch(e){}
 
 window.addEventListener('load',()=>{
-  try{
-    if(loadGame()&&G.playerTeam!==null){
-      document.getElementById('setup').style.display='none';
-      document.getElementById('app').style.display='flex';
-      nav('dashboard');
-      toast('Welcome back, '+G.mgr+'!','s');
-    } else {
-      populateSetupLeagues();
-    }
-  }catch(e){
-    console.error('Init error:',e);
-    populateSetupLeagues();
-  }
+  try{ populateSetupLeagues(); }catch(e){ console.error('Init error:',e); }
 });
 
 function populateSetupLeagues(){
