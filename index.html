@@ -2793,27 +2793,6 @@ function tacSubIn(pid){
   nav('tactics');
 }
 
-  return `
-<div class="g2">
-  <div class="card">
-    <div class="ch">
-      <span class="ct">Formation</span>
-      <select class="fselect" style="width:120px;padding:5px 10px" onchange="G.formation=this.value;nav('tactics')">
-        ${Object.keys(FORMATIONS).map(f=>`<option value="${f}"${f===G.formation?' selected':''}>${f}</option>`).join('')}
-      </select>
-    </div>
-    <div class="pitch" style="margin-bottom:14px">
-      <div class="pitch-inner">
-        <svg class="pitch-svg" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
-          <rect x="5" y="5" width="90" height="140" fill="none" stroke="#fff" stroke-width=".8"/>
-          <line x1="5" y1="75" x2="95" y2="75" stroke="#fff" stroke-width=".5"/>
-          <circle cx="50" cy="75" r="12" fill="none" stroke="#fff" stroke-width=".5"/>
-          <circle cx="50" cy="75" r=".8" fill="#fff"/>
-          <rect x="25" y="5" width="50" height="18" fill="none" stroke="#fff" stroke-width=".5"/>
-          <rect x="35" y="5" width="30" height="9" fill="none" stroke="#fff" stroke-width=".5"/>
-          <rect x="25" y="127" width="50" height="18" fill="none" stroke="#fff" stroke-width=".5"/>
-          <rect x="35" y="136" width="30" height="9" fill="none" stroke="#fff" stroke-width=".5"/>
-
 function renderSlider(label,key,val){
   return `<div style="margin-bottom:14px">
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
