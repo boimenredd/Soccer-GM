@@ -20,7 +20,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #sidebar{width:172px;min-width:172px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 #topbar{height:44px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
-#content{flex:1;overflow-y:auto;padding:16px 20px;scroll-behavior:smooth}
+#content{flex:1;overflow-y:auto;padding:16px 20px;scroll-behavior:smooth;display:flex;flex-direction:column}
 .page-wrap{max-width:1400px;margin-left:auto;margin-right:auto}
 .sb-logo{padding:12px 14px 10px;border-bottom:1px solid var(--border)}
 .sb-logo h1{font-family:var(--fd);font-size:26px;font-weight:800;letter-spacing:2px;color:var(--accent);line-height:1}
@@ -450,9 +450,10 @@ input[type=number]:focus{border-color:var(--accent)}
     <div class="nav-item active" onclick="nav('dashboard')"><span class="nav-icon">🏠</span>Dashboard</div>
     <div class="nav-item" onclick="nav('squad')"><span class="nav-icon">👥</span>Roster</div>
     <div class="nav-item" onclick="nav('tactics')"><span class="nav-icon">🎯</span>Tactics</div>
+    <div class="nav-item" onclick="nav('youth')"><span class="nav-icon">🌱</span>Youth Academy</div>
     <div class="nav-item" onclick="nav('fixtures')"><span class="nav-icon">📅</span>Schedule</div>
     <div class="nav-item" onclick="nav('table')"><span class="nav-icon">📊</span>Standings</div>
-    <div class="nav-item" onclick="nav('transfers')"><span class="nav-icon">🔄</span>Transfers</div>
+    <div class="nav-item" onclick="nav('transfers')"><span class="nav-icon">🔄</span>Transfers <span id="sb-offer-badge" style="display:none;background:var(--red);color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:auto"></span></div>
     <div class="nav-item" onclick="nav('social')"><span class="nav-icon">💬</span>Social</div>
     <div class="nav-item" onclick="nav('players')"><span class="nav-icon">🔎</span>Players</div>
     <div class="nav-item" onclick="nav('history')"><span class="nav-icon">📜</span>History</div>
@@ -779,29 +780,104 @@ const REGIONAL_NAMES = {
   Canadian:   {fn:['Alphonso','Jonathan','Tajon','Stephen','Scott','Cyle','Liam','Richie','Ali','Jonathan'],ln:['Davies','David','Buchanan','Eustaquio','Kennedy','Larin','Millar','Laryea','Ahmed','Osorio']},
 };
 
+// ── MASSIVE EXPANDED NAME POOLS ────────────────
+// Each nationality gets 80+ first names and 80+ surnames for huge variety
+const EXTRA_NAMES = {
+  English:{
+    fn:['Oliver','Noah','George','Freddie','Archie','Alfie','Henry','Charlie','Theodore','Finley','Sebastian','Elliot','Reuben','Jasper','Felix','Barnaby','Rupert','Edmund','Alistair','Montgomery','Tobias','Piers','Crispin','Wilfred','Gideon','Atticus','Lysander','Cornelius','Peregrine','Rafferty','Cillian','Idris','Kofi','Zion','Kai','Ezra','Malachi','Jaxon','Broderick','Nico'],
+    ln:['Armstrong','Bailey','Barrett','Bishop','Blake','Bolton','Boyd','Brady','Burns','Butler','Carr','Carter','Castle','Chapman','Churchill','Clayton','Cole','Coleman','Collins','Cook','Cooper','Cotton','Cox','Craig','Cross','Cunningham','Dawson','Dixon','Douglas','Doyle','Drake','Duncan','Dunn','Edwards','Elliott','Ellis','Emery','Farmer','Ferguson','Field','Ford','Foster','Francis','Franklin','Fraser','Freeman','Frost','Garrett','Gibson']
+  },
+  Spanish:{
+    fn:['Alejandro','Alfonso','Alfredo','Álvaro','Andrés','Antonio','Arturo','Bernardo','César','Cristóbal','Eduardo','Emilio','Enrique','Esteban','Eugenio','Felipe','Fernando','Francisco','Gerardo','Guillermo','Héctor','Ignacio','Isidro','Jacinto','Javier','Joaquín','Jorge','José','Juan','Julio','Leonardo','Lorenzo','Lucas','Luis','Marcos','Mateo','Miguel','Nicolás','Paco','Patricio'],
+    ln:['Aguirre','Alonso','Arroyo','Bautista','Blanco','Bravo','Cabrera','Calvo','Campos','Cano','Carrasco','Castillo','Ceballo','Delgado','Domínguez','Esteban','Estrada','Fuentes','Galán','García','Gil','Gutiérrez','Hidalgo','Iglesias','Jiménez','León','Llorente','Medina','Mena','Méndez','Miranda','Molina','Morales','Moreno','Navarro','Nieto','Núñez','Ortiz','Pacheco','Palma']
+  },
+  German:{
+    fn:['Alexander','Andreas','Anton','Benedikt','Christian','Christoph','Daniel','Dominik','Ernst','Fabian','Felix','Friedrich','Georg','Gregor','Hans','Heinrich','Hermann','Holger','Jochen','Johannes','Jonas','Jürgen','Klaus','Lars','Lukas','Markus','Matthias','Michael','Moritz','Nikolaus','Norbert','Otto','Patrick','Philipp','Roland','Sascha','Simon','Stefan','Tobias','Torsten','Uwe','Valentin','Werner','Wolfgang'],
+    ln:['Abel','Albrecht','Altmann','Bachmann','Baumann','Beck','Becker','Berg','Bergmann','Böhm','Brandt','Braun','Brehm','Bremer','Buchner','Decker','Dietz','Dorf','Dörr','Engel','Erhardt','Ernst','Fink','Förster','Franz','Friedrich','Fritz','Fuchs','Gerber','Gieseke','Graf','Gross','Günther','Haas','Hahn','Hammer','Hartmann','Hauer','Hecht','Heim']
+  },
+  French:{
+    fn:['Alexis','Anatole','Armand','Auguste','Bastien','Benoît','César','Clément','Damien','Dorian','Édouard','Emmanuel','Étienne','Florian','François','Gabriel','Gaël','Gaston','Gautier','Grégoire','Guillaume','Hugues','Jacques','Jérémy','Joachim','Jules','Julien','Laurent','Léon','Léopold','Louis','Luc','Marc','Maxence','Maxime','Nicolas','Noël','Olivier','Pascal','Patrice'],
+    ln:['Allard','Arcand','Aubert','Aubry','Audet','Beaumont','Belanger','Benoît','Berger','Bernard','Bertrand','Blanc','Blanchard','Blondel','Boisvert','Bonnet','Bouchard','Boulanger','Bourgeois','Briand','Caron','Charpentier','Chauvin','Clément','Colin','Collet','Corbin','Côté','Couture','Dagenais','David','Delacroix','Delattre','Denis','Deschamps','Desrochers','Dion','Dorval','Doucet']
+  },
+  Italian:{
+    fn:['Adriano','Agostino','Alberto','Alfredo','Angelo','Antonino','Aurelio','Beniamino','Bruno','Carlo','Claudio','Cosimo','Cristiano','Daniele','Dario','Emanuele','Enrico','Ermenegildo','Ettore','Eugenio','Fausto','Filippo','Flavio','Gabriele','Giacomo','Giancarlo','Gianluca','Gianmarco','Giorgio','Giuseppe','Giulio','Gregorio','Iacopo','Jacopo','Luca','Luigi','Mario','Massimo','Matteo','Maurizio'],
+    ln:['Accardi','Amato','Barbieri','Barone','Bellini','Bianchi','Bianco','Caputo','Carbone','Caruso','Cattaneo','Conti','Coppola','Costa','Costantini','De Angelis','De Luca','De Rosa','Di Maio','Di Marco','Esposito','Fabbri','Ferrara','Ferrari','Ferri','Fontana','Franco','Gallo','Gatti','Gentile','Giordano','Grassi','Greco','Guerra','Leone','Lombardi','Longo','Mancuso','Marchetti']
+  },
+  Portuguese:{
+    fn:['Afonso','Álvaro','Américo','António','Armando','Artur','Augusto','Baltazar','Bartolomeu','Basílio','Bento','Bernardo','Cândido','Carlos','Clemente','Dinis','Domingos','Duarte','Edmundo','Eduardo','Egídio','Emanuel','Ernesto','Estêvão','Eugénio','Filipe','Florentino','Frederico','Gonçalo','Guilherme','Gustavo','Henrique','Hilário','Ivo','Jerónimo','João','Joaquim','Jorge','Júlio','Leandro'],
+    ln:['Abreu','Afonso','Almeida','Alves','Amaral','Andrade','Antunes','Araújo','Azevedo','Baptista','Barbosa','Barros','Bastos','Branco','Brandão','Brites','Cabral','Calixto','Campos','Cardoso','Castro','Cavaleiro','Coelho','Conceição','Correia','Cruz','Cunha','Dias','Domingues','Duarte','Faria','Figueiredo','Filipe','Fonseca','Freitas','Gama','Gaspar','Gomes','Gonçalves']
+  },
+  Brazilian:{
+    fn:['Abner','Adryan','Alan','Anderson','Artur','Augusto','Caio','Cauã','Cleber','Cristian','Daniel','Davi','Diego','Dylan','Erick','Ewerton','Ezequiel','Fabio','Felipe','Fernando','Gabriel','Gustavo','Henrique','Hugo','Italo','João','Jonathan','José','Kaio','Kaique','Kauã','Kayke','Leandrinho','Leandro','Leo','Luan','Luciano','Matheus','Matias','Mauricio'],
+    ln:['Abreu','Aguiar','Albuquerque','Almeida','Alves','Amaral','Andrade','Antunes','Araujo','Barbosa','Barcelos','Barros','Batista','Bento','Borges','Braga','Brandão','Bueno','Camargo','Campos','Cardoso','Carvalho','Castro','Cavalcanti','Conceição','Correia','Costa','Couto','Cunha','Dantas','Dias','Diniz','Duarte','Farias','Fé','Feitosa','Ferreira','Figueiredo','Filho','Fontes']
+  },
+  Argentine:{
+    fn:['Abel','Abelardo','Abraham','Adán','Agustín','Álvaro','Amado','Anastasio','Andrés','Aquiles','Armando','Arnaldo','Arturo','Asdrúbal','Augusto','Aurelio','Aureliano','Axel','Ayrton','Azael','Báltazar','Bautista','Benicio','Benjamín','Bernardo','Boris','Braulio','Caetano','Camilo','Carmelo','Cayetano','Cipriano','Clemente','Constantino','Cornelio','Cristóbal','Darío','Dario'],
+    ln:['Acosta','Aguilar','Aguirre','Albarracín','Alcoba','Alegre','Alfonzo','Almada','Alonso','Álvarez','Amarilla','Amaya','Amézquita','Amin','Amistad','Andrade','Antelo','Anzola','Aranda','Araneda','Arcas','Arce','Arcos','Aréstegui','Argüello','Arias','Arizaga','Armoa','Arnedo','Arredondo','Arregui','Arriola','Arroyo','Arteaga','Arvizu','Asad','Asencio']
+  },
+  Mexican:{
+    fn:['Aaron','Abraham','Adrián','Agustín','Alejandro','Alfonso','Alfredo','Ángel','Antonio','Armando','Arturo','Aurelio','Baldomero','Benigno','Benjamín','Bladimir','Braulio','Brayan','Calixto','Camilo','Candelario','Carlos','Carmelo','César','Cirilo','Claudio','Constantino','Cornelio','Cosme','Cristóbal','Dámaso','Darío','Desiderio','Dionisio','Domingo','Donato','Edgar','Eduardo','Efraín','Eliseo'],
+    ln:['Abad','Abarca','Abrego','Acedo','Aceves','Acosta','Acuña','Adame','Aguilar','Aguilera','Aguirre','Alarcón','Alba','Alcalá','Alcántara','Alcocer','Alday','Alegría','Alejandre','Alemán','Alfaro','Almaraz','Almaza','Almazán','Almeida','Almendarez','Alonso','Altamirano','Alvarado','Álvarez','Amador','Amaya','Amescua','Amézquita','Amores','Amparo','Anaya','Andrade','Angeles']
+  },
+  Colombian:{
+    fn:['Aarón','Abdiel','Abelino','Abraham','Aceneth','Adalberto','Adalid','Adán','Adiel','Adolfo','Adrián','Agustín','Airan','Albeiro','Alberto','Alcibíades','Alejandro','Alexánder','Alfonso','Alfredo','Alirio','Alonso','Álvaro','Amilcar','Amílkar','Andrés','Ángel','Anibal','Antonio','Aquiles','Arcadio','Arcangel','Argemiro','Aristides','Armando','Arnobio','Arnulfo','Arsenio','Arturo','Asdrúbal'],
+    ln:['Acero','Acevedo','Acosta','Agudelo','Aguilar','Aguirre','Alarcón','Albarracín','Alberto','Alcázar','Alcócer','Alegría','Aleman','Aley','Alfaro','Alomía','Alonso','Alvarado','Álvarez','Amaya','Amórtegui','Andrade','Angarita','Angulo','Arias','Ariza','Arjona','Armenta','Arrieta','Arteaga','Artunduaga','Astudillo','Avendaño','Ávila','Avila','Ayala','Azuero']
+  },
+  Japanese:{
+    fn:['Akihiko','Akio','Akira','Atsushi','Daigo','Daiki','Daisuke','Eiji','Fumiya','Genki','Haruki','Haruto','Hayato','Hibiki','Hiroaki','Hiroki','Hiroshi','Hiroto','Hisashi','Issei','Itsuki','Jun','Junichi','Junpei','Junsei','Kanta','Kaoru','Katsuya','Keigo','Keiji','Keisuke','Kenta','Kenzo','Kenji','Koki','Kota','Kotaro','Kouhei','Kouji','Kousei'],
+    ln:['Aoki','Fujii','Fujimoto','Fujita','Fujiwara','Fukuda','Goto','Harada','Hashimoto','Hayashi','Imai','Inoue','Ishida','Ishii','Ishikawa','Ito','Iwata','Kato','Kawamoto','Kawashima','Kimura','Kobayashi','Kondo','Kuroda','Makino','Matsuda','Matsumoto','Matsuo','Minami','Mizuno','Mori','Morishita','Moriwaki','Motoki','Murata','Nagai','Naka','Nakagawa','Nakamura']
+  },
+  Korean:{
+    fn:['Junho','Jinwoo','Jaeho','Sungmin','Hyunwoo','Jeonghoon','Minhyuk','Seungwoo','Taehyun','Junseok','Daehyun','Yoonkang','Sungjin','Jiwon','Hyunsoo','Seunghyun','Doyoung','Jeongho','Minjun','Sangwoo','Kyunghwan','Wonseok','Minsu','Hanjun','Taejun','Seokhyun','Byungjun','Kyungmin','Junhyuk','Minwoo'],
+    ln:['Ahn','Bae','Bang','Baek','Byeon','Cha','Cho','Choe','Choi','Chon','Chun','Dong','Eom','Gong','Ha','Han','Hong','Hwang','Im','Jang','Jeon','Jeong','Jo','Ju','Jun','Kang','Ko','Kwak','Kwon','Lim','Moon','Nam','No','Oh','Ok','Paik','Park','Shin','Shim','Seo','Seok','Sim','Sin','Song','Suh','Um','Woo','Yang','Yeon','Yi','Yim','Yoo','Yoon','Yu','Yun']
+  },
+  Saudi:{
+    fn:['Abdulaziz','Abdulrahman','Abdullah','Abdulmalik','Abdulmajeed','Abdulwahab','Abdulhamid','Abdulkarim','Abdulelah','Abdullateef','Abdulmuhsen','Abdulnaser','Abdulqader','Abdulrazzaq','Abdulsalam','Adel','Ahmad','Ahmed','Aiman','Akhtar','Alaa','Albaraa','Ali','Amir','Amjad','Amr','Anas','Anwar','Arabi','Arfan','Ashraf','Atef','Awad','Ayad','Ayham','Ayman','Azzam','Badr','Bahaa','Bakr'],
+    ln:['Al-Abbasi','Al-Abidi','Al-Aboud','Al-Aboudi','Al-Ahmad','Al-Ali','Al-Ameri','Al-Anazi','Al-Anizi','Al-Anqari','Al-Ansari','Al-Aoun','Al-Aqeel','Al-Aqeeli','Al-Aqili','Al-Arabawi','Al-Arabi','Al-Arifi','Al-Asiri','Al-Asmari','Al-Asmi','Al-Atawi','Al-Ateeqi','Al-Azmi','Al-Azzi','Al-Babtain','Al-Bakri','Al-Balawi','Al-Barrak','Al-Bishi']
+  },
+  Turkish:{
+    fn:['Abdullah','Abdurrahman','Ahmet','Akin','Alican','Alp','Alparslan','Alper','Altan','Arda','Asaf','Aslan','Atakan','Aykut','Aytekin','Aziz','Baran','Baris','Batuhan','Bayram','Behzat','Berk','Berkan','Berke','Berkay','Boran','Bulent','Burak','Burhan','Busra','Cagatay','Cahit','Caner','Cemal','Cengizhan','Cenk','Ceren','Ceyhun','Cihan','Cihangir'],
+    ln:['Akbas','Akbulut','Akdag','Akdemir','Akdogan','Akgun','Akinci','Akman','Aksoy','Aktaş','Aktaş','Aktürk','Akyildiz','Akyol','Akyüz','Alataş','Alatan','Albayrak','Algin','Alhan','Alici','Alp','Alpay','Altan','Altay','Altinok','Altuntas','Amac','Ambarcioğlu','Anaç','Anar','Anber','Andaç','Andiç','Anık','Anil','Aniş','Ankaralı']
+  },
+};
+
+// Common everyday surname pools by region (not just famous players)
+const COMMON_SURNAMES = {
+  English:['Abbott','Adams','Alexander','Allen','Andrews','Arnold','Atkins','Austin','Bailey','Baker','Ball','Banks','Barker','Barnes','Barnett','Barrett','Barry','Barton','Bell','Bennett','Berry','Bishop','Black','Blackwell','Bolton','Bond','Booth','Bowman','Boyd','Bradford','Bradley','Briggs','Brooks','Bryan','Burke','Burton','Bush','Butler','Byrne','Campbell'],
+  German:['Abel','Abt','Adam','Adams','Adler','Adrian','Ahlers','Ahrens','Albrecht','Alt','Altmann','Ammann','Anders','Andres','Antes','Appel','Arnold','Aue','Auer','Augustin','Bach','Bauer','Baum','Baumann','Becker','Beer','Berg','Bergmann','Berger','Berndt','Berger','Bernhard','Besser','Betz','Biegler','Binder','Bittner','Blau','Bloch','Blum'],
+  French:['Adam','André','Aubert','Barbier','Barré','Baudouin','Beaumont','Bernard','Bertin','Blanc','Bonnet','Boulanger','Briand','Brochard','Bureau','Cambon','Carpentier','Chapon','Charles','Chartier','Clément','Colin','Collin','Cornu','Coulon','Courtin','Cousin','Coutin','Cresson','Croix','Daval','Delalande','Delmas','Denis','Desbois','Deshayes','Dessert','Devaux','Diot','Duclos'],
+  Spanish:['Acevedo','Aguilar','Alarcón','Albaladejo','Albornoz','Alcalde','Alcalá','Aldana','Alejandre','Alfaro','Almansa','Alonso','Alosete','Altamirano','Alvarado','Amaro','Amparo','Amores','Anaya','Andrade','Andújar','Anguita','Antúnez','Arce','Arcila','Arcos','Ardila','Arenas','Arias','Arjona','Armenta','Arriaga','Arrieta','Arroyo','Arteaga'],
+};
+
 const NAME_FALLBACK = {
-  fn:['Omar','Ibrahim','Yusuf','Ahmed','Kwame','Nnamdi','Moussa','Enzo','Mateo','Diego','Alexis','Rafael','Lucas','Felipe','Marco','Ivan','Toni','Stefan','Andre','Leandro','Hassan','Samir','Karim','Fabio','Victor'],
-  ln:['Diallo','Toure','Kone','Ibrahim','Okafor','Diatta','Traore','Silva','Santos','Garcia','Fernandez','Torres','Rodrigues','Martins','Costa','Petrov','Novak','Popov','Hansen','Lindqvist','Al-Rashid','Benali','Osei','Nkosi','Ferreira']
+  fn:['Omar','Ibrahim','Yusuf','Ahmed','Kwame','Nnamdi','Moussa','Enzo','Mateo','Diego','Alexis','Rafael','Lucas','Felipe','Marco','Ivan','Toni','Stefan','Andre','Leandro','Hassan','Samir','Karim','Fabio','Victor','Paulo','Ricardo','Eduardo','Manuel','Miguel','Antonio','Carlos','Luis','Jorge','Fernando','Sergio','David','Daniel','Juan','Roberto'],
+  ln:['Diallo','Toure','Kone','Ibrahim','Okafor','Diatta','Traore','Silva','Santos','Garcia','Fernandez','Torres','Rodrigues','Martins','Costa','Petrov','Novak','Popov','Hansen','Lindqvist','Al-Rashid','Benali','Osei','Nkosi','Ferreira','Pereira','Oliveira','Alves','Cardoso','Gomes','Sousa','Castro','Neves','Rocha','Cruz','Lima','Carvalho','Fonseca','Monteiro','Andrade']
 };
 
 function getNameForNat(nat) {
-  // Mix star footballer names (60%) with common regional names (40%)
+  // Pick from 4 sources: star pool, regional pool, extra pool, common surnames - for massive variety
   const starPool = NAT_NAMES[nat];
   const regionPool = REGIONAL_NAMES[nat];
-  let fn, ln;
-  if(starPool && regionPool) {
-    const useStar = Math.random() < 0.6;
-    fn = pick(useStar ? starPool.fn : regionPool.fn);
-    ln = pick(useStar ? starPool.ln : regionPool.ln);
-  } else if(starPool) {
-    fn = pick(starPool.fn); ln = pick(starPool.ln);
-  } else if(regionPool) {
-    fn = pick(regionPool.fn); ln = pick(regionPool.ln);
-  } else {
-    const fb = NAME_FALLBACK;
-    fn = pick(fb.fn); ln = pick(fb.ln);
+  const extraPool = EXTRA_NAMES[nat];
+  const commonSurPool = COMMON_SURNAMES[nat];
+  
+  const allFns = [
+    ...(starPool?.fn||[]),
+    ...(regionPool?.fn||[]),
+    ...(extraPool?.fn||[]),
+  ];
+  const allLns = [
+    ...(starPool?.ln||[]),
+    ...(regionPool?.ln||[]),
+    ...(extraPool?.ln||[]),
+    ...(commonSurPool||[]),
+  ];
+  
+  if(allFns.length && allLns.length) {
+    return `${pick(allFns)} ${pick(allLns)}`;
   }
-  return `${fn} ${ln}`;
+  const fb = NAME_FALLBACK;
+  return `${pick(fb.fn)} ${pick(fb.ln)}`;
 }
 
 // -- SVG FACE GENERATOR ------------------------
@@ -1271,12 +1347,14 @@ const INTL_TEAMS = {
 };
 
 const CONTINENTAL = {
-  cl:  {name:'Champions League',     region:'Europe',       slots:4,color:'var(--accent)',class:'comp-cl'},
-  el:  {name:'Europa League',        region:'Europe',       slots:3,color:'var(--orange)',class:'comp-el'},
-  ec:  {name:'Conference League',    region:'Europe',       slots:2,color:'var(--purple)',class:'comp-ec'},
-  lib: {name:'Copa Libertadores',    region:'SouthAmerica', slots:4,color:'var(--green)', class:'comp-lib'},
-  suda:{name:'Copa Sudamericana',    region:'SouthAmerica', slots:3,color:'var(--gold)',  class:'comp-dom'},
-  acl: {name:'Asian Champions Elite',region:'Asia',         slots:2,color:'var(--green)', class:'comp-lib'},
+  cl:  {name:'Champions League',         region:'Europe',       slots:4,color:'var(--accent)',class:'comp-cl'},
+  el:  {name:'Europa League',            region:'Europe',       slots:3,color:'var(--orange)',class:'comp-el'},
+  ec:  {name:'Conference League',        region:'Europe',       slots:2,color:'var(--purple)',class:'comp-ec'},
+  lib: {name:'Copa Libertadores',        region:'SouthAmerica', slots:4,color:'var(--green)', class:'comp-lib'},
+  suda:{name:'Copa Sudamericana',        region:'SouthAmerica', slots:3,color:'var(--gold)',  class:'comp-dom'},
+  acl: {name:'Asian Champions Elite',   region:'Asia',         slots:2,color:'var(--green)', class:'comp-lib'},
+  leaguesCup:{name:'Leagues Cup',        region:'NorthAmerica', slots:8,color:'var(--accent)',class:'comp-cl'},
+  concacafCL:{name:'CONCACAF Champions Cup',region:'NorthAmerica',slots:4,color:'var(--gold)',class:'comp-dom'},
 };
 
 // -- STATE --------------------------------------
@@ -1284,7 +1362,7 @@ let G = {
   mgr:'', mgrNat:'English', playerTeam:null, season:1,
   date: new Date(2024,7,1),
   teams:[], players:[], leagues:{}, fixtures:[], results:[],
-  continental:{cl:[],el:[],ec:[],lib:[],suda:[],acl:[]},
+  continental:{cl:[],el:[],ec:[],lib:[],suda:[],acl:[],leaguesCup:[],concacafCL:[]},
   continentalResults:[], history:[], youthPipeline:[],
   nextId:1, formation:'4-3-3',
   tactic:{pressing:6,tempo:5,width:5,style:'balanced',dline:'balanced'},
@@ -1294,6 +1372,9 @@ let G = {
   intlResults:[], seasonAwards:[],
   startingXI:null, _tacticSlot:undefined,
   social:[],
+  incomingOffers:[],  // bids from AI clubs for my players
+  scoutRecs:[],       // proactive scout recommendations
+  youthAcademy:[],    // youth intake players
 };
 
 // -- UTILS --------------------------------------
@@ -1574,6 +1655,26 @@ function setupContinental() {
     sorted.slice(0,2).forEach(r=>{if(r)aclClubs.push(r.id);});
   });
   G.continental.acl=aclClubs.slice(0,16);
+
+  // ── LEAGUES CUP (MLS + Liga MX — top half of each league)
+  const mlsLeague=Object.values(G.leagues).find(l=>l.id?.includes('MLS')||l.name==='MLS');
+  const lmxLeague=Object.values(G.leagues).find(l=>l.id?.includes('Liga_MX')||l.name==='Liga MX');
+  const lcClubs=[];
+  [mlsLeague,lmxLeague].forEach(lg=>{
+    if(!lg)return;
+    const sorted=[...lg.table].sort((a,b)=>b.pts-a.pts);
+    sorted.slice(0,8).forEach(r=>{if(r)lcClubs.push(r.id);});
+  });
+  G.continental.leaguesCup=lcClubs.slice(0,16);
+
+  // ── CONCACAF CHAMPIONS CUP (top clubs from MLS, Liga MX, Canadian)
+  const concacafLeagues=Object.values(G.leagues).filter(l=>l.continent==='NorthAmerica');
+  const ccClubs=[];
+  concacafLeagues.forEach(l=>{
+    const sorted=[...l.table].sort((a,b)=>b.pts-a.pts);
+    sorted.slice(0,4).forEach(r=>{if(r)ccClubs.push(r.id);});
+  });
+  G.continental.concacafCL=ccClubs.slice(0,16);
 }
 
 // -- TRANSFER RUMORS ---------------------------
@@ -2164,15 +2265,20 @@ function simDay() {
 }
 
 function simToNextMyMatch() {
-  // Advance days until we hit our team's next fixture
+  // Autosim all days UP TO (but not including) our next fixture, then show prematch
   let safety=0;
-  while(safety++<200){
+  while(safety++<400){
+    const allUnplayed = G.fixtures.filter(f=>!f.played).sort((a,b)=>a.date-b.date);
+    if(!allUnplayed.length) break;
+    const myNext = allUnplayed.find(f=>f.homeId===G.playerTeam||f.awayId===G.playerTeam);
+    if(!myNext){ nav(G.currentPage); return; }
+    // If we're on or past the match date, show prematch
+    if(G.date >= myNext.date){ nav('prematch', myNext.id); return; }
+    // Otherwise sim all matches on next match day and advance
     const next = getNextMatchDay();
     if(!next) break;
-    const myMatch = G.fixtures.find(f=>!f.played&&f.date.toDateString()===next.toDateString()&&(f.homeId===G.playerTeam||f.awayId===G.playerTeam));
-    if(myMatch){ nav('prematch', myMatch.id); return; }
-    // No player match on this day   sim all and advance
-    const toSim = G.fixtures.filter(f=>!f.played && f.date.toDateString()===next.toDateString());
+    const dayStr = next.toDateString();
+    const toSim = G.fixtures.filter(f=>!f.played && f.date.toDateString()===dayStr);
     toSim.forEach(f=>{ const r=simMatch(f); if(r){G.results.push(r);f.played=true;} });
     G.date = new Date(next.getTime()+86400000);
     checkSeasonEnd(); updateTopbar();
@@ -2290,6 +2396,9 @@ function endSeason(lid){
   G.fixtures=G.fixtures.filter(f=>f.leagueId!==lid);
   genFixtures(lid);setupContinental();
   generateTransferRumors();
+  generateIncomingOffers();
+  generateScoutRecs();
+  generateYouthIntake();
   toast(`⚽ Season ${G.season} begins!`,'s');
 }
 
@@ -2340,23 +2449,235 @@ function runAI(){
   });
 }
 
-// -- TRANSFERS --------------------------------
+// -- REALISTIC TRANSFER SYSTEM ----------------
 function makeOffer(pid){
   const p=G.players.find(x=>x.id===pid);
-  const team=G.teams.find(t=>t.id===G.playerTeam);
-  if(!p||!team)return;
+  const myTeam=G.teams.find(t=>t.id===G.playerTeam);
+  if(!p||!myTeam)return;
   if(p.teamId===G.playerTeam){toast('Already in your squad','e');return;}
-  if(team.finances.transferBudget<p.value){toast(`Need ${money(p.value)}, only have ${money(team.finances.transferBudget)}`,'e');return;}
-  const chance=p.forSale?0.82:p.morale<50?0.7:0.55;
-  if(Math.random()<chance){
-    const ot=G.teams.find(t=>t.id===p.teamId);
-    if(ot)ot.squad=ot.squad.filter(id=>id!==p.id);
-    p.teamId=G.playerTeam;
-    team.squad.push(p.id);
-    team.finances.transferBudget-=p.value;
-    G.transfers.push({season:G.season,type:'buy',player:p.name,from:ot?.name||'Free',to:team.name,fee:p.value});
-    closeModal();toast(`✅ ${p.name} signed for ${money(p.value)}!`,'s');nav('squad');
-  } else {toast(`❌ ${p.name}'s club rejected the bid`,'e');}
+
+  const theirTeam=G.teams.find(t=>t.id===p.teamId);
+  const myTier=myTeam.tier||2;
+  const theirTier=theirTeam?.tier||2;
+  const tierDiff=theirTier - myTier; // negative = we're buying up, positive = buying down
+
+  // Budget check
+  if(myTeam.finances.transferBudget < p.value * 0.7){
+    toast(`Insufficient budget. Need at least ${money(Math.round(p.value*0.7))}. You have ${money(myTeam.finances.transferBudget)}`,'e');
+    return;
+  }
+
+  // Player willingness: realistically they don't step down
+  let playerWilling = 0.5;
+  if(tierDiff > 0) playerWilling = 0.08; // Huge downgrade — very unlikely
+  else if(tierDiff === 0) playerWilling = p.forSale ? 0.75 : (p.morale<50?0.65:0.48);
+  else if(tierDiff === -1) playerWilling = p.forSale ? 0.88 : 0.68; // stepping up slightly
+  else playerWilling = p.forSale ? 0.95 : 0.82; // big step up — player usually keen
+
+  // Wage demand: stepping up they want more
+  const wageMultiplier = tierDiff<=0 ? 1.3 : (tierDiff===1?1.1:1.0);
+  const agentFee = Math.round(p.value * 0.07); // 7% agent cut
+
+  // Club willingness to sell
+  let clubWilling = p.forSale ? 0.9 : 0.45;
+  if(tierDiff < -1) clubWilling = 0.25; // top club won't sell to much smaller club easily
+  if(p.teamId===null) clubWilling = 1.0; // free agent
+
+  // Create realistic outcome
+  const playerAgrees = Math.random() < playerWilling;
+  const clubAgrees = Math.random() < clubWilling;
+
+  if(!playerAgrees){
+    const msgs = tierDiff>0 ? [
+      `${p.name} has rejected the move — he doesn't want to drop down to a lower-tier club`,
+      `${p.name}'s agent: "He's not interested in taking a step down at this stage of his career"`,
+      `${p.name} rejected the transfer — prefers to stay at a higher level`,
+    ] : [
+      `${p.name} is happy at ${theirTeam?.name||'his current club'} and rejected the approach`,
+      `${p.name} wants more time to consider — bid rejected for now`,
+    ];
+    toast(pick(msgs),'e'); return;
+  }
+  if(!clubAgrees){
+    toast(`${theirTeam?.name||'The club'} rejected the bid for ${p.name}. Try a higher offer.`,'e'); return;
+  }
+
+  // Deal goes through
+  const finalFee = Math.round(p.value * rf(0.9, 1.15));
+  if(myTeam.finances.transferBudget < finalFee){
+    toast(`${p.name} available but final fee ${money(finalFee)} exceeds your budget`,'e'); return;
+  }
+  if(theirTeam)theirTeam.squad=theirTeam.squad.filter(id=>id!==p.id);
+  p.teamId=G.playerTeam;
+  myTeam.squad.push(p.id);
+  myTeam.finances.transferBudget -= finalFee + agentFee;
+  G.transfers.push({season:G.season,type:'buy',player:p.name,from:theirTeam?.name||'Free',to:myTeam.name,fee:finalFee});
+  G.startingXI=null; // reset XI
+  addSocialPost('rumor',null,`🔄 DONE DEAL: ${myTeam.name} complete signing of <strong>${p.name}</strong> from ${theirTeam?.name||'Free Transfer'} for ${money(finalFee)}. Club add quality to their squad.`,p.id);
+  closeModal();
+  toast(`✅ ${p.name} signed for ${money(finalFee)} (+${money(agentFee)} agent fees)!`,'s');
+  nav('squad');
+}
+
+// ── INCOMING OFFERS (AI clubs bidding for your players) ───────────
+function generateIncomingOffers(){
+  G.incomingOffers=G.incomingOffers.filter(o=>!o.responded);
+  if(G.incomingOffers.length>=3)return;
+  const myTeam=G.teams.find(t=>t.id===G.playerTeam);if(!myTeam)return;
+  const myPlayers=myTeam.squad.map(id=>G.players.find(p=>p.id===id)).filter(Boolean);
+  if(!myPlayers.length)return;
+
+  // Pick 0-2 new offers this window
+  const count=rand(0,2);
+  for(let i=0;i<count;i++){
+    const target=pick(myPlayers.filter(p=>p.overall>=65));
+    if(!target)continue;
+    // Bidding club is at same tier or higher
+    const bidders=G.teams.filter(t=>t.id!==G.playerTeam&&(t.tier||2)<=(myTeam.tier||2));
+    if(!bidders.length)continue;
+    const bidder=pick(bidders);
+    const bidAmount=Math.round(target.value * rf(0.85,1.35));
+    const isHighBid=bidAmount>=target.value;
+    G.incomingOffers.push({
+      id:uid(),
+      playerId:target.id,playerName:target.name,playerPos:target.pos,playerOvr:target.overall,
+      fromTeam:bidder.name,fromTeamId:bidder.id,fromTier:bidder.tier,
+      amount:bidAmount, valuePct:Math.round(bidAmount/target.value*100),
+      responded:false, accepted:false,
+      date:new Date(G.date), season:G.season,
+      message: isHighBid ? `${bidder.name} have submitted a significant bid for your player` : `${bidder.name} have made an enquiry about your player`,
+    });
+    addSocialPost('rumor',null,`📰 ${bidder.name} have made a ${money(bidAmount)} bid for <strong>${target.name}</strong> (${myTeam.name}) — will the club sell?`,target.id);
+  }
+}
+
+function acceptOffer(offerId){
+  const offer=G.incomingOffers.find(o=>o.id===offerId);if(!offer)return;
+  const myTeam=G.teams.find(t=>t.id===G.playerTeam);
+  const p=G.players.find(x=>x.id===offer.playerId);
+  if(!p||!myTeam)return;
+  offer.responded=true;offer.accepted=true;
+  myTeam.squad=myTeam.squad.filter(id=>id!==p.id);
+  myTeam.finances.transferBudget+=offer.amount;
+  const buyer=G.teams.find(t=>t.name===offer.fromTeam);
+  if(buyer)buyer.squad.push(p.id);
+  p.teamId=buyer?.id||null;
+  G.transfers.push({season:G.season,type:'sell',player:p.name,from:myTeam.name,to:offer.fromTeam,fee:offer.amount});
+  G.startingXI=null;
+  addSocialPost('rumor',null,`🔄 SOLD: <strong>${p.name}</strong> leaves ${myTeam.name} for ${offer.fromTeam} for ${money(offer.amount)}.`,p.id);
+  toast(`${p.name} sold to ${offer.fromTeam} for ${money(offer.amount)}`,'s');
+  nav('transfers');
+}
+
+function rejectOffer(offerId){
+  const offer=G.incomingOffers.find(o=>o.id===offerId);if(!offer)return;
+  offer.responded=true;
+  const p=G.players.find(x=>x.id===offer.playerId);
+  addSocialPost('info',null,`🚫 ${G.teams.find(t=>t.id===G.playerTeam)?.name} reject ${money(offer.amount)} bid from ${offer.fromTeam} for ${offer.playerName}. Not for sale.`,offer.playerId);
+  toast(`Bid from ${offer.fromTeam} rejected`,'i');
+  nav('transfers');
+}
+
+// ── PROACTIVE SCOUT RECOMMENDATIONS ──────────────
+function generateScoutRecs(){
+  G.scoutRecs=G.scoutRecs.filter(r=>!r.seen);
+  if(G.scoutRecs.length>=5)return;
+  const myTeam=G.teams.find(t=>t.id===G.playerTeam);if(!myTeam)return;
+  const myTier=myTeam.tier||2;
+
+  // Find weak positions
+  const posCounts={GK:0,CB:0,LB:0,RB:0,CM:0,CDM:0,CAM:0,LW:0,RW:0,ST:0};
+  myTeam.squad.map(id=>G.players.find(p=>p.id===id)).filter(Boolean).forEach(p=>{
+    const base=p.pos==='LWB'?'LB':p.pos==='RWB'?'RB':p.pos==='CF'?'ST':p.pos;
+    if(posCounts[base]!==undefined)posCounts[base]++;
+  });
+  const weakPos=Object.entries(posCounts).filter(([,c])=>c<2).map(([p])=>p);
+
+  // Recommend players from affordable clubs, same/higher tier
+  const affordable=G.players.filter(p=>{
+    if(p.teamId===G.playerTeam)return false;
+    const club=G.teams.find(t=>t.id===p.teamId);
+    if(!club)return false;
+    if((club.tier||4)<myTier-1)return false; // too far above
+    return p.value<=myTeam.finances.transferBudget*0.6;
+  });
+
+  const count=rand(1,3);
+  for(let i=0;i<count;i++){
+    const targetPos=weakPos.length?pick(weakPos):pick(Object.keys(posCounts));
+    const candidates=affordable.filter(p=>{
+      const base=p.pos==='LWB'?'LB':p.pos==='RWB'?'RB':p.pos==='CF'?'ST':p.pos;
+      return base===targetPos||p.pos===targetPos;
+    }).sort((a,b)=>b.potential-a.potential).slice(0,10);
+    if(!candidates.length)continue;
+    const target=pick(candidates);
+    const club=G.teams.find(t=>t.id===target.teamId);
+    G.scoutRecs.push({
+      id:uid(),pid:target.id,name:target.name,pos:target.pos,ovr:target.overall,pot:target.potential,
+      club:club?.name||'Free',tier:club?.tier||4,
+      value:target.value,age:target.age,
+      reason:weakPos.includes(targetPos)?`You're light on ${targetPos}s — this player could strengthen that area`:`Strong ${targetPos} option within your budget`,
+      seen:false,date:new Date(G.date),
+    });
+  }
+}
+
+// ── YOUTH ACADEMY ─────────────────────────────────
+function generateYouthIntake(){
+  const myTeam=G.teams.find(t=>t.id===G.playerTeam);if(!myTeam)return;
+  const tier=myTeam.tier||2;
+  const countryNat=myTeam.country?COUNTRY_NAT[myTeam.country]||pick(NATS):pick(NATS);
+
+  // Generate 3-6 youth prospects
+  const count=rand(3,6);
+  const newYouth=[];
+  for(let i=0;i<count;i++){
+    const pos=pick(['GK','CB','LB','RB','CM','CDM','LW','RW','ST']);
+    const age=rand(16,18);
+    const nat=Math.random()<0.7?countryNat:pick(NATS);
+    // Youth have low OVR but high potential
+    const pot=rand(TIER_POT[tier].high[0], TIER_POT[tier].high[1]);
+    const ovr=Math.max(40, pot - rand(15,28));
+    const p=mkPlayer({pos,age,teamId:G.playerTeam,tier,leagueRep:myTeam.rep,nationality:nat,youth:true,cat:'youth'});
+    p.potential=pot;
+    p.overall=ovr;
+    Object.keys(p.attrs).forEach(k=>{p.attrs[k]=Math.max(30,Math.round(p.attrs[k]*0.6+rand(0,15)));});
+    G.players.push(p);
+    myTeam.squad.push(p.id);
+    newYouth.push(p);
+    G.youthAcademy.push({id:p.id,name:p.name,pos:p.pos,age:p.age,pot:p.potential,added:G.season,teamId:G.playerTeam});
+  }
+
+  if(newYouth.length){
+    const names=newYouth.slice(0,3).map(p=>`${p.name} (${p.pos}, ${p.age})`).join(', ');
+    toast(`🌱 Youth intake: ${names}${newYouth.length>3?` +${newYouth.length-3} more`:''}`, 'i');
+    addSocialPost('info',null,`🌱 ${myTeam.name} announce their annual youth intake. ${newYouth.length} prospects promoted from the academy.`,null);
+  }
+  return newYouth;
+}
+
+function renderYouthAcademy(){
+  const myTeam=G.teams.find(t=>t.id===G.playerTeam);if(!myTeam)return '';
+  const youth=G.players.filter(p=>p.teamId===G.playerTeam&&p.age<=21&&p.potential>=(TIER_POT[myTeam.tier||2].mid[0])).sort((a,b)=>b.potential-a.potential);
+  return `
+<div class="card" style="margin-bottom:14px">
+  <div class="ch">
+    <span class="ct">Youth Academy</span>
+    <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="generateYouthIntake();nav('squad')">🌱 Trigger Intake</button>
+  </div>
+  <p style="font-size:11px;color:var(--text3);margin-bottom:12px">Your next generation of talent. Youth prospects (U21) with high potential.</p>
+  ${youth.length?`<table><thead><tr><th>Player</th><th>Nat</th><th>Pos</th><th>Age</th><th>OVR</th><th>POT</th><th>Gap</th></tr></thead><tbody>
+  ${youth.map(p=>`<tr onclick="nav('player',${p.id})" style="cursor:pointer">
+    <td><span class="tname">${p.name}</span></td>
+    <td>${NAT_FLAGS[p.nationality]||''}</td>
+    <td><span class="pbadge ${posCls(p.pos)}">${p.pos}</span></td>
+    <td class="tn">${p.age}</td>
+    <td><span class="ovr ${ovrCls(p.overall)}">${p.overall}</span></td>
+    <td class="tn" style="color:var(--accent)">${p.potential}</td>
+    <td class="tn" style="color:var(--green)">+${p.potential-p.overall}</td>
+  </tr>`).join('')}
+  </tbody></table>`:'<p style="color:var(--text3);font-size:12px">No youth prospects yet — trigger an intake!</p>'}
+</div>`;
 }
 function sellPlayer(pid){
   const p=G.players.find(x=>x.id===pid);
@@ -2475,7 +2796,7 @@ function nav(page, param){
     fixtures:renderFixtures,matches:renderMatches,table:renderTable,transfers:renderTransfers,
     players:renderPlayers,history:renderHistory,finances:renderFinances,continental:renderContinental,
     international:renderInternational,dbedit:renderDbEditor,mods:renderMods,scouting:renderScouting,
-    social:renderSocial};
+    social:renderSocial,youth:()=>renderYouthAcademy()};
   c.innerHTML=(pages[page]||renderDashboard)();
   updateTopbar();
   } catch(e) {
@@ -2500,6 +2821,10 @@ function updateTopbar(){
   document.getElementById('sb-meta').textContent=`${lg?.name||'?'} · ${team.country}`;
   const rep=document.getElementById('sb-rep');
   if(rep) rep.innerHTML=Array.from({length:5},(_,i)=>`<div class="rep-pip${i<Math.round(team.rep/20)?' on':''}"></div>`).join('');
+  // Show pending offer badge
+  const pendingCount=(G.incomingOffers||[]).filter(o=>!o.responded).length;
+  const badge=document.getElementById('sb-offer-badge');
+  if(badge){badge.style.display=pendingCount>0?'inline':'none';badge.textContent=pendingCount;}
 }
 
 // ======= RENDER: DASHBOARD ====================
@@ -2686,95 +3011,84 @@ function renderTactics(){
   const selSlot=G._tacticSlot;
 
   return `
-<div style="display:grid;grid-template-columns:1fr 320px;gap:14px">
-  <div>
-    <div class="card" style="margin-bottom:12px">
-      <div class="ch" style="margin-bottom:10px">
-        <span class="ct">Formation</span>
-        <div style="display:flex;gap:6px;align-items:center">
-          <select class="fselect" style="width:130px;padding:4px 8px" onchange="G.formation=this.value;G.startingXI=null;G._tacticSlot=undefined;nav('tactics')">
-            ${Object.keys(FORMATIONS).map(f=>`<option value="${f}"${f===G.formation?' selected':''}>${f}</option>`).join('')}
-          </select>
-          <button class="btn btn-secondary" style="font-size:10px;padding:3px 8px" onclick="G.startingXI=null;G._tacticSlot=undefined;nav('tactics')">Auto XI</button>
-        </div>
+<div style="display:grid;grid-template-columns:210px 1fr 240px;gap:10px">
+  <!-- Col 1: Small pitch + tactics -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="card" style="padding:10px">
+      <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px">
+        <select class="fselect" style="flex:1;padding:3px 6px;font-size:10px" onchange="G.formation=this.value;G.startingXI=null;G._tacticSlot=undefined;nav('tactics')">
+          ${Object.keys(FORMATIONS).map(f=>`<option value="${f}"${f===G.formation?' selected':''}>${f}</option>`).join('')}
+        </select>
+        <button class="btn btn-secondary" style="font-size:9px;padding:2px 5px" onclick="G.startingXI=null;G._tacticSlot=undefined;nav('tactics')">Auto</button>
       </div>
-      ${selSlot!==undefined?`<div style="font-size:11px;color:var(--gold);margin-bottom:8px;padding:5px 8px;background:rgba(245,200,66,.08);border-radius:4px">📌 Slot ${selSlot+1} selected (${positions[selSlot]}) — click a bench player below to fill it, or click slot again to deselect</div>`:'<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Click any player on the pitch to select their slot, then pick a replacement from the bench below</div>'}
-      <div class="pitch">
+      ${selSlot!==undefined?`<div style="font-size:9px;color:var(--gold);margin-bottom:5px">📌 ${positions[selSlot]} — pick bench player →</div>`:'<div style="font-size:9px;color:var(--text3);margin-bottom:5px">Tap pitch slot → pick from bench</div>'}
+      <div class="pitch" style="max-width:190px">
         <div class="pitch-inner">
           <svg class="pitch-svg" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
             <rect x="5" y="5" width="90" height="140" fill="none" stroke="#fff" stroke-width=".8"/>
             <line x1="5" y1="75" x2="95" y2="75" stroke="#fff" stroke-width=".5"/>
             <circle cx="50" cy="75" r="12" fill="none" stroke="#fff" stroke-width=".5"/>
-            <circle cx="50" cy="75" r=".8" fill="#fff"/>
             <rect x="25" y="5" width="50" height="18" fill="none" stroke="#fff" stroke-width=".5"/>
-            <rect x="35" y="5" width="30" height="9" fill="none" stroke="#fff" stroke-width=".5"/>
             <rect x="25" y="127" width="50" height="18" fill="none" stroke="#fff" stroke-width=".5"/>
-            <rect x="35" y="136" width="30" height="9" fill="none" stroke="#fff" stroke-width=".5"/>
           </svg>
           ${coords.map((c,i)=>{
-            const p=assigned[i];
-            const isSel=(selSlot===i);
-            const dotBorder=isSel?'3px solid var(--gold)':'2px solid rgba(0,212,255,.6)';
-            if(!p)return `<div class="pp" style="left:${c[0]}%;top:${c[1]}%" onclick="tacSelectSlot(${i})">
-              <div class="pp-dot" style="background:var(--bg4);color:var(--text3);border:${dotBorder};font-size:9px">${positions[i]}</div></div>`;
+            const p=assigned[i];const isSel=(selSlot===i);
+            const border=isSel?'2px solid var(--gold)':'1px solid rgba(0,212,255,.5)';
+            if(!p)return `<div class="pp" style="left:${c[0]}%;top:${c[1]}%" onclick="tacSelectSlot(${i})"><div style="width:20px;height:20px;border-radius:50%;background:var(--bg4);border:${border};display:flex;align-items:center;justify-content:center;font-size:6px;color:var(--text3)">${positions[i]}</div></div>`;
             return `<div class="pp" style="left:${c[0]}%;top:${c[1]}%" onclick="tacSelectSlot(${i})">
-              <div style="width:30px;height:30px;border-radius:50%;overflow:hidden;border:${dotBorder};cursor:pointer">${genFaceSvg(p.id,p.nationality)}</div>
-              <div class="pp-name" style="color:${isSel?'var(--gold)':'#aef'}">${p.name.split(' ').pop()}</div>
+              <div style="width:22px;height:22px;border-radius:50%;overflow:hidden;border:${border}">${genFaceSvg(p.id,p.nationality)}</div>
+              <div class="pp-name" style="font-size:7px;color:${isSel?'var(--gold)':'#cef'}">${p.name.split(' ').pop()}</div>
             </div>`;
           }).join('')}
         </div>
       </div>
     </div>
-
-    <div class="card">
-      <div class="ch" style="margin-bottom:8px"><span class="ct" style="font-size:16px">Bench & Squad</span></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px">
-        ${bench.map(p=>`<div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--bg3);border-radius:6px;cursor:pointer;border:1px solid ${selSlot!==undefined?'var(--bdr2)':'var(--border)'};transition:border-color .1s"
-            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='${selSlot!==undefined?'var(--bdr2)':'var(--border)'}'"
-            onclick="tacSubIn(${p.id})">
-          <div style="width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0">${genFaceSvg(p.id,p.nationality)}</div>
-          <div style="min-width:0">
-            <div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name.split(' ').pop()}</div>
-            <div style="display:flex;gap:3px"><span class="pbadge ${posCls(p.pos)}" style="font-size:8px">${p.pos}</span><span style="font-size:10px;color:var(--text3)">${p.overall}</span></div>
-          </div>
-        </div>`).join('')}
-        ${bench.length===0?'<p style="color:var(--text3);font-size:11px">All squad players are in the starting XI</p>':''}
+    <div class="card" style="padding:10px">
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px">Style</div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px">
+        ${['possession','counter','direct','balanced'].map(s=>`<button class="btn ${G.tactic.style===s?'btn-primary':'btn-secondary'}" style="font-size:9px;padding:2px 5px" onclick="G.tactic.style='${s}';nav('tactics')">${s}</button>`).join('')}
       </div>
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px">Def. Line</div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px">
+        ${[['low block','Low'],['balanced','Mid'],['high press','High']].map(([v,l])=>`<button class="btn ${G.tactic.dline===v?'btn-primary':'btn-secondary'}" style="font-size:9px;padding:2px 5px" onclick="G.tactic.dline='${v}';nav('tactics')">${l}</button>`).join('')}
+      </div>
+      ${['pressing','tempo','width'].map(k=>`<div style="margin-bottom:5px"><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text2)"><span>${k}</span><span style="color:var(--accent)" id="sl-${k}">${G.tactic[k]}</span></div><input type="range" min="1" max="10" value="${G.tactic[k]}" oninput="G.tactic.${k}=+this.value;document.getElementById('sl-${k}').textContent=this.value" style="width:100%"></div>`).join('')}
     </div>
   </div>
 
-  <div>
-    <div class="card" style="margin-bottom:12px">
-      <div class="ch" style="margin-bottom:12px"><span class="ct">Tactics</span></div>
-      <div style="margin-bottom:14px">
-        <div class="flabel" style="margin-bottom:6px">Playing Style</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap">
-          ${['possession','counter','direct','balanced'].map(s=>`<button class="btn ${G.tactic.style===s?'btn-primary':'btn-secondary'}" style="font-size:10px;padding:4px 8px" onclick="G.tactic.style='${s}';nav('tactics')">${s}</button>`).join('')}
+  <!-- Col 2: XI table -->
+  <div class="card" style="padding:10px;overflow-y:auto">
+    <div class="ct-sm" style="margin-bottom:8px">Starting XI — ${G.formation}</div>
+    <table style="font-size:11px"><thead><tr>
+      <th style="padding:3px 5px">#</th><th style="padding:3px 5px">Slot</th><th style="padding:3px 5px">Player</th><th style="padding:3px 5px">Pos</th><th style="padding:3px 5px">OVR</th>
+    </tr></thead><tbody>
+    ${assigned.map((p,i)=>`<tr style="cursor:pointer;${selSlot===i?'background:rgba(245,200,66,.07)':''}" onclick="tacSelectSlot(${i})">
+      <td style="padding:3px 5px;font-size:9px;color:var(--text3)">${i+1}</td>
+      <td style="padding:3px 5px"><span class="pbadge ${posCls(positions[i])}" style="background:var(--bg4);color:var(--text3)">${positions[i]}</span></td>
+      <td style="padding:3px 5px">${p?`<div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;border-radius:50%;overflow:hidden;flex-shrink:0">${genFaceSvg(p.id,p.nationality)}</div><span class="tname" style="font-size:11px">${p.name}</span></div>`:'<span style="color:var(--text3)">—</span>'}</td>
+      <td style="padding:3px 5px">${p?`<span class="pbadge ${posCls(p.pos)}">${p.pos}</span>`:''}</td>
+      <td style="padding:3px 5px">${p?`<span class="ovr ${ovrCls(p.overall)}" style="width:22px;height:22px;font-size:9px">${p.overall}</span>`:''}</td>
+    </tr>`).join('')}
+    </tbody></table>
+  </div>
+
+  <!-- Col 3: Bench -->
+  <div class="card" style="padding:10px;overflow-y:auto">
+    <div class="ct-sm" style="margin-bottom:8px">${selSlot!==undefined?`<span style="color:var(--gold)">Pick for ${positions[selSlot]}</span>`:'Bench'}</div>
+    <div style="display:flex;flex-direction:column;gap:3px">
+      ${bench.map(p=>`<div style="display:flex;align-items:center;gap:5px;padding:4px 6px;background:var(--bg3);border-radius:4px;cursor:pointer;border:1px solid ${selSlot!==undefined?'var(--bdr2)':'var(--border)'}"
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='${selSlot!==undefined?'var(--bdr2)':'var(--border)'}'"
+          onclick="tacSubIn(${p.id})">
+        <div style="width:22px;height:22px;border-radius:50%;overflow:hidden;flex-shrink:0">${genFaceSvg(p.id,p.nationality)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+          <div style="display:flex;gap:3px"><span class="pbadge ${posCls(p.pos)}" style="font-size:8px">${p.pos}</span><span style="font-size:10px;color:var(--text3)">${p.overall}</span></div>
         </div>
-      </div>
-      <div style="margin-bottom:14px">
-        <div class="flabel" style="margin-bottom:6px">Defensive Line</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap">
-          ${['low block','balanced','high press'].map(s=>`<button class="btn ${G.tactic.dline===s?'btn-primary':'btn-secondary'}" style="font-size:10px;padding:4px 8px" onclick="G.tactic.dline='${s}';nav('tactics')">${s}</button>`).join('')}
-        </div>
-      </div>
-      ${renderSlider('Pressing','pressing',G.tactic.pressing)}
-      ${renderSlider('Tempo','tempo',G.tactic.tempo)}
-      ${renderSlider('Width','width',G.tactic.width)}
-    </div>
-    <div class="card">
-      <div class="ct-sm" style="margin-bottom:8px">Starting XI — ${G.formation}</div>
-      <table style="font-size:11px"><thead><tr><th>#</th><th>Pos</th><th>Player</th><th>OVR</th></tr></thead><tbody>
-      ${assigned.map((p,i)=>`<tr style="cursor:pointer;${selSlot===i?'background:rgba(245,200,66,.07)':''}" onclick="tacSelectSlot(${i})">
-        <td class="tr" style="font-size:10px">${i+1}</td>
-        <td><span class="pbadge ${posCls(positions[i])}" style="background:var(--bg4);color:var(--text3)">${positions[i]}</span></td>
-        <td><span class="${p?'tname':'tsub'}" style="font-size:11px">${p?p.name.split(' ').pop():'—'}</span></td>
-        <td>${p?`<span class="ovr ${ovrCls(p.overall)}" style="width:24px;height:24px;font-size:10px">${p.overall}</span>`:''}</td>
-      </tr>`).join('')}
-      </tbody></table>
+      </div>`).join('')}
+      ${bench.length===0?'<p style="color:var(--text3);font-size:11px;text-align:center;padding:8px">Full squad in XI</p>':''}
     </div>
   </div>
-</div>`;
+</div>`
 }
 
 function tacSelectSlot(i){
@@ -3033,12 +3347,16 @@ function switchIntlTab(conf, el){
 
 // ======= RENDER: TRANSFERS ===================
 function renderTransfers(){
+  const pendingOffers=G.incomingOffers.filter(o=>!o.responded).length;
+  const newRecs=G.scoutRecs.filter(r=>!r.seen).length;
   return `
 <div class="tabs">
   <div class="tab active" id="tab-mkt" onclick="switchTTab('mkt')">Transfer Market</div>
-  <div class="tab" id="tab-lst" onclick="switchTTab('lst')">Listed Players</div>
+  <div class="tab" id="tab-lst" onclick="switchTTab('lst')">Listed</div>
+  <div class="tab" id="tab-incoming" onclick="switchTTab('incoming')">${pendingOffers?`<span style="color:var(--red)">Incoming Offers (${pendingOffers})</span>`:'Incoming Offers'}</div>
+  <div class="tab" id="tab-recs" onclick="switchTTab('recs')">${newRecs?`<span style="color:var(--green)">Scout Recs (${newRecs})</span>`:'Scout Recs'}</div>
   <div class="tab" id="tab-rumor" onclick="switchTTab('rumor')">Rumors</div>
-  <div class="tab" id="tab-log" onclick="switchTTab('log')">Transfer Log</div>
+  <div class="tab" id="tab-log" onclick="switchTTab('log')">Log</div>
 </div>
 <div id="t-content">${tMarket()}</div>`;
 }
@@ -3048,8 +3366,82 @@ function switchTTab(tab){
   const c=document.getElementById('t-content');
   if(tab==='mkt')c.innerHTML=tMarket();
   else if(tab==='lst')c.innerHTML=tListed();
+  else if(tab==='incoming')c.innerHTML=tIncomingOffers();
+  else if(tab==='recs')c.innerHTML=tScoutRecs();
   else if(tab==='rumor')c.innerHTML=tRumors();
   else c.innerHTML=tLog();
+}
+
+function tIncomingOffers(){
+  const pending=G.incomingOffers.filter(o=>!o.responded);
+  const past=G.incomingOffers.filter(o=>o.responded).slice(-10);
+  const myTeam=G.teams.find(t=>t.id===G.playerTeam);
+  return `
+<div class="card" style="margin-bottom:14px">
+  <div class="ch"><span class="ct">Incoming Bids</span><button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="generateIncomingOffers();nav('transfers')">🔄 Check</button></div>
+  ${pending.length?pending.map(o=>{
+    const p=G.players.find(x=>x.id===o.playerId);
+    const overpay=o.amount>=(p?.value||0)*1.1?'<span class="badge badge-g">Above Value</span>':o.amount<(p?.value||0)*0.85?'<span class="badge badge-r">Low Ball</span>':'<span class="badge badge-y">Fair</span>';
+    return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text)">${o.fromTeam} <span style="font-size:10px;color:var(--text3)">(Tier ${o.fromTier})</span></div>
+          <div style="font-size:12px;color:var(--text2);margin-top:3px">Want to sign <strong onclick="nav('player',${o.playerId})" style="cursor:pointer;color:var(--accent)">${o.playerName}</strong> (${o.playerPos} · ${o.playerOvr} OVR)</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${o.message}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--fm);font-size:22px;font-weight:700;color:var(--accent)">${money(o.amount)}</div>
+          <div style="font-size:10px;color:var(--text3)">${o.valuePct}% of value ${overpay}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-success" onclick="acceptOffer(${o.id})">✓ Accept ${money(o.amount)}</button>
+        <button class="btn btn-danger" onclick="rejectOffer(${o.id})">✗ Reject</button>
+        <button class="btn btn-secondary" onclick="nav('player',${o.playerId})">View Player</button>
+      </div>
+    </div>`;
+  }).join(''):'<p style="color:var(--text3);padding:20px;text-align:center">No pending bids for your players right now</p>'}
+</div>
+${past.length?`<div class="card"><div class="ch"><span class="ct">Recent Bids</span></div>
+<table><thead><tr><th>From</th><th>Player</th><th>Amount</th><th>Response</th></tr></thead><tbody>
+${past.map(o=>`<tr><td>${o.fromTeam}</td><td><span class="tname" style="cursor:pointer" onclick="nav('player',${o.playerId})">${o.playerName}</span></td>
+<td class="tn">${money(o.amount)}</td>
+<td><span class="badge badge-${o.accepted?'g':'r'}">${o.accepted?'ACCEPTED':'REJECTED'}</span></td></tr>`).join('')}
+</tbody></table></div>`:''}`;
+}
+
+function tScoutRecs(){
+  // Mark all as seen
+  G.scoutRecs.forEach(r=>r.seen=true);
+  return `
+<div class="card" style="margin-bottom:14px">
+  <div class="ch"><span class="ct">Scout Recommendations</span><button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="generateScoutRecs();nav('transfers')">🔄 New Targets</button></div>
+  <p style="font-size:11px;color:var(--text3);margin-bottom:12px">Your scouts have identified these players as good fits for your club.</p>
+  ${G.scoutRecs.length?G.scoutRecs.slice(0,15).map(r=>{
+    const p=G.players.find(x=>x.id===r.pid);
+    if(!p)return '';
+    const myTeam=G.teams.find(t=>t.id===G.playerTeam);
+    const canAfford=myTeam&&myTeam.finances.transferBudget>=r.value*0.7;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg3);border-radius:6px;margin-bottom:8px;border:1px solid var(--border)">
+      <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0">${genFaceSvg(p.id,p.nationality)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span class="tname" onclick="nav('player',${r.pid})" style="cursor:pointer">${r.name}</span>
+          <span class="pbadge ${posCls(r.pos)}">${r.pos}</span>
+          <span style="font-size:10px;color:var(--text3)">Age ${r.age}</span>
+          <span class="ovr ${ovrCls(r.ovr)}" style="width:26px;height:26px;font-size:10px">${r.ovr}</span>
+          <span style="font-size:10px;color:var(--accent)">POT ${r.pot}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3)">${r.reason}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${r.club} · ${money(r.value)}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn ${canAfford?'btn-success':'btn-secondary'}" style="padding:4px 10px;font-size:10px" onclick="makeOffer(${r.pid})">${canAfford?'Bid':'Bid'}</button>
+        <button class="btn btn-secondary" style="padding:4px 10px;font-size:10px" onclick="scoutPlayer(${r.pid});nav('transfers')">Scout</button>
+      </div>
+    </div>`;
+  }).join(''):`<p style="color:var(--text3);text-align:center;padding:20px">No recommendations yet — click "New Targets" or play through a season</p>`}
+</div>`;
 }
 function tMarket(){
   return `<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
