@@ -3031,17 +3031,17 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
       }
     }
     // Detect by league id
-    if (leagueId === 'cl') overlay2.classList.add('theme-ucl');
-    else if (leagueId === 'el') overlay2.classList.add('theme-uel');
-    else if (leagueId === 'ecl') overlay2.classList.add('theme-ecl');
-    else if (leagueId && leagueId.includes('cup')) overlay2.classList.add('theme-cup');
+    if (leagueId === 'cl') overlay.classList.add('theme-ucl');
+    else if (leagueId === 'el') overlay.classList.add('theme-uel');
+    else if (leagueId === 'ecl') overlay.classList.add('theme-ecl');
+    else if (leagueId && leagueId.includes('cup')) overlay.classList.add('theme-cup');
     // Also detect from competition name in badge
     const compBadgeName = G.ucCompetitions ? (() => {
       for (const [k,uc] of Object.entries(G.ucCompetitions)) {
         if (uc && uc.teams && (uc.teams.includes(homeId) || uc.teams.includes(awayId))) {
-          if (k==='cl') { overlay2.classList.add('theme-ucl'); return uc.name; }
-          if (k==='el') { overlay2.classList.add('theme-uel'); return uc.name; }
-          if (k==='ecl') { overlay2.classList.add('theme-ecl'); return uc.name; }
+          if (k==='cl') { overlay.classList.add('theme-ucl'); return uc.name; }
+          if (k==='el') { overlay.classList.add('theme-uel'); return uc.name; }
+          if (k==='ecl') { overlay.classList.add('theme-ecl'); return uc.name; }
         }
       }
       return null;
@@ -5696,7 +5696,7 @@ document.addEventListener('DOMContentLoaded', function boot() {
   </div>
 </div>
 
-<style>
+<script>
 
 // ═══════════════════════════════════════════════════════════════
 // PLAYER PAGE (full-screen panel, not modal)
@@ -6325,9 +6325,10 @@ renderDashboard = function() {
   }, 50);
 };
 
-console.log('EuroSim v8 enhancements loaded ✓');
+console.log('EuroSim v9 loaded ✓');
+</script>
 
-
+<style>
 /* ═══ STANDALONE HOME SCREEN ═══ */
 #home-screen-root {
   display: none; /* shown by JS on boot */
