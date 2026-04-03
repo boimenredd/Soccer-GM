@@ -5127,6 +5127,13 @@ function startGame() {
   addNews(`New manager appointed at ${G.clubs[clubId].name}`, 'Week 1 · Season 1', 'The new era begins.');
   // Hide home screen, reveal game
   document.body.classList.remove('on-home');
+  // Explicitly hide the home screen root and all its sub-pages so nothing bleeds through
+  const hsr = document.getElementById('home-screen-root');
+  if (hsr) hsr.style.display = 'none';
+  ['hs-landing','hs-new-league','hs-explorer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
   updateTopBar();
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-dashboard').classList.add('active');
@@ -6293,8 +6300,13 @@ console.log('EuroSim v8 enhancements loaded ✓');
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
+  /* Ensure it never stacks over the game UI */
+  position: relative;
+  z-index: 0;
 }
 body.on-home #home-screen-root { display: block; }
+/* When game is active, keep home screen fully gone */
+body:not(.on-home) #home-screen-root { display: none !important; }
 
 /* Landing topbar */
 #hs-topbar {
