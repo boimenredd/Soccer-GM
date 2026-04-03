@@ -1883,7 +1883,7 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
 <div id="var-overlay">
   <div id="var-box">
     <div id="var-screen">
-      <canvas id="var-canvas" style="width:100%;height:100%;"></canvas>
+      <canvas id="var-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
       <div id="var-overlay-text">VAR REVIEW</div>
       <div id="var-red-box" style="display:none;"></div>
     </div>
@@ -2679,7 +2679,9 @@ async function advanceWeek() {
     const isHome = myMatch.home === p.clubId;
     const opponent = isHome ? myMatch.away : myMatch.home;
     await showMatchSim(myMatch.home, myMatch.away, myClub.leagueId, true);
-    const result = simulateMatchFull(myMatch.home, myMatch.away, myClub.leagueId, true);
+    // Use the result from the visual sim (stored on overlay) to avoid score mismatch
+    const _simOverlay = document.getElementById('match-sim-overlay');
+    const result = (_simOverlay && _simOverlay._fullResult) ? _simOverlay._fullResult : simulateMatchFull(myMatch.home, myMatch.away, myClub.leagueId, true);
     myMatch.played = true;
     myMatch.result = { home: result.homeGoals, away: result.awayGoals };
     myMatch.events = result.events;
@@ -3199,7 +3201,7 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
       while (_simPaused && !_simSkipped) await sleep(80);
       if (_simSkipped) break;
 
-      const minute = tick * 5;
+      const minute = tick * 5 - rngInt(0, 3) + (tick === 18 ? 0 : rngInt(0, 2)); // random timing within each 5-min window
       document.getElementById('sim-minute').textContent = `${minute}'`;
       document.getElementById('sim-progress').style.width = `${(tick/18)*100}%`;
 
@@ -3457,7 +3459,9 @@ async function simOneDay() {
       });
 
       await showMatchSim(myMatch.home, myMatch.away, myClub.leagueId, true);
-      const result = simulateMatchFull(myMatch.home, myMatch.away, myClub.leagueId, true);
+      // Use the result from the visual sim to avoid score mismatch
+      const _simOvl = document.getElementById('match-sim-overlay');
+      const result = (_simOvl && _simOvl._fullResult) ? _simOvl._fullResult : simulateMatchFull(myMatch.home, myMatch.away, myClub.leagueId, true);
       myMatch.played = true; myMatch.result = { home: result.homeGoals, away: result.awayGoals }; myMatch.events = result.events; myMatch.stats = result.stats;
       updateLeagueTable(myClub.leagueId, myMatch.home, myMatch.away, result.homeGoals, result.awayGoals);
       addNews(`Result: ${G.clubs[myMatch.home].name} ${result.homeGoals}–${result.awayGoals} ${G.clubs[myMatch.away].name}`, `Week ${p.week}`, result.homeGoals>result.awayGoals?'Home win':result.awayGoals>result.homeGoals?'Away win':'Draw');
@@ -5880,14 +5884,17 @@ function showHeatmap(pid) {
   const overlay = document.getElementById('heatmap-overlay');
   overlay.classList.add('open');
 
-  // Draw heatmap on canvas after overlay is visible
-  requestAnimationFrame(() => {
+  // Draw heatmap on canvas after overlay is visible — defer to let layout flush
+  setTimeout(() => {
     const canvas = document.getElementById('heatmap-canvas');
     const pitch = document.getElementById('heatmap-pitch');
-    canvas.width = pitch.clientWidth * 2;
-    canvas.height = pitch.clientHeight * 2;
-    canvas.style.width = pitch.clientWidth + 'px';
-    canvas.style.height = pitch.clientHeight + 'px';
+    // Use measured size or sensible fallback if still 0
+    const pw = pitch.clientWidth > 10 ? pitch.clientWidth : 460;
+    const ph = pitch.clientHeight > 10 ? pitch.clientHeight : 690;
+    canvas.width = pw * 2;
+    canvas.height = ph * 2;
+    canvas.style.width = pw + 'px';
+    canvas.style.height = ph + 'px';
 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -5910,7 +5917,7 @@ function showHeatmap(pid) {
       ctx.fillStyle = grad;
       ctx.fill();
     });
-  });
+  }, 60); // 60ms delay lets the overlay render before we measure
 }
 
 function getHeatmapZones(pos, apps) {
@@ -5998,9 +6005,10 @@ function tpopNegotiate() {
 }
 
 // Override processIncomingOffers to show popup for new offers
-const _origProcessIncomingOffers = processIncomingOffers;
-function processIncomingOffers() {
-  if (typeof _origProcessIncomingOffers === 'function') _origProcessIncomingOffers();
+// NOTE: capture the original BEFORE redeclaring, using a temp reference
+const _origProcessIncomingOffers = (function(orig) { return orig; })(processIncomingOffers);
+processIncomingOffers = function() {
+  _origProcessIncomingOffers();
   // Check for newly created pending offers and show popup
   const pending = G.player?.incomingOffers?.filter(o=>o.status==='pending'&&!o._popupShown) || [];
   if (pending.length > 0) {
@@ -6039,11 +6047,18 @@ function showVARReview(incident, onDecision) {
   // Draw VAR pitch view on canvas
   const canvas = document.getElementById('var-canvas');
   const screen = document.getElementById('var-screen');
-  canvas.width = screen.clientWidth * 2 || 640;
-  canvas.height = screen.clientHeight * 2 || 360;
-  canvas.style.width = (screen.clientWidth || 320) + 'px';
-  canvas.style.height = (screen.clientHeight || 180) + 'px';
-  drawVARScene(canvas, incident);
+  // Defer canvas draw so overlay layout is flushed first
+  requestAnimationFrame(() => {
+    const vW2 = screen.clientWidth > 10 ? screen.clientWidth : 580;
+    const vH2 = screen.clientHeight > 10 ? screen.clientHeight : 326;
+    canvas.width = vW2 * 2;
+    canvas.height = vH2 * 2;
+    canvas.style.width = vW2 + 'px';
+    canvas.style.height = vH2 + 'px';
+    drawVARScene(canvas, incident);
+    // Show pulsing red box immediately during review
+    document.getElementById('var-red-box').style.display = 'block';
+  });
 
   const scanTexts = [
     'Checking incident...', 'Reviewing angle 1...', 'Reviewing angle 2...',
@@ -6157,7 +6172,7 @@ function drawVARScene(canvas, incident) {
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Highlight offside line
+  // Highlight offside line or penalty challenge
   if (incident.type === 'goal') {
     ctx.strokeStyle = '#ef4444';
     ctx.lineWidth = 2;
@@ -6171,6 +6186,25 @@ function drawVARScene(canvas, incident) {
     ctx.font = `bold ${W*0.025}px monospace`;
     ctx.fillStyle = '#ef4444';
     ctx.fillText('OFFSIDE LINE', W*0.47+4, H*0.35);
+  } else if (incident.type === 'penalty') {
+    // Highlight contact zone — circle around tackle area
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([5,3]);
+    ctx.beginPath();
+    ctx.arc(W*0.52, H*0.56, W*0.07, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = `bold ${W*0.024}px monospace`;
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText('CONTACT ZONE', W*0.3, H*0.72);
+    // Arrow pointing to incident
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W*0.38, H*0.7);
+    ctx.lineTo(W*0.5, H*0.58);
+    ctx.stroke();
   }
 
   // TV overlay — timestamp / camera label
@@ -6178,7 +6212,8 @@ function drawVARScene(canvas, incident) {
   ctx.fillRect(0, 0, W, H*0.06);
   ctx.fillStyle = '#fff';
   ctx.font = `${W*0.022}px monospace`;
-  ctx.fillText('CAM 2 — PENALTY AREA', W*0.02, H*0.04);
+  const camLabel = incident.type === 'penalty' ? 'CAM 4 — PENALTY SPOT' : 'CAM 2 — PENALTY AREA';
+  ctx.fillText(camLabel, W*0.02, H*0.04);
   ctx.fillStyle = '#ef4444';
   ctx.fillRect(W*0.88, H*0.01, W*0.1, H*0.04);
   ctx.fillStyle = '#fff';
