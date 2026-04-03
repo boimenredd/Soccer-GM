@@ -309,9 +309,9 @@ body.on-home { overflow-y: auto; height: auto; min-height: 100vh; }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover td { background: var(--bg3); }
 .data-table tr.highlight td { background: rgba(59,130,246,0.08); }
-.data-table tr.promoted td { border-left: 3px solid var(--green); }
-.data-table tr.playoff td { border-left: 3px solid var(--yellow); }
-.data-table tr.relegated td { border-left: 3px solid var(--red); }
+.data-table tr.promoted td:first-child { border-left: 3px solid var(--green); }
+.data-table tr.playoff td:first-child { border-left: 3px solid var(--yellow); }
+.data-table tr.relegated td:first-child { border-left: 3px solid var(--red); }
 
 .table-wrap {
   background: var(--bg2);
@@ -395,10 +395,10 @@ body.on-home { overflow-y: auto; height: auto; min-height: 100vh; }
   border-radius: 8px;
   padding: 24px;
   min-width: 400px;
-  max-width: 700px;
-  max-height: 80vh;
+  max-width: 820px;
+  max-height: 85vh;
   overflow-y: auto;
-  width: 90%;
+  width: 92%;
 }
 #modal-title {
   font-size: 16px;
@@ -636,6 +636,7 @@ body.light-mode {
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
 .mb8 { margin-bottom: 8px; }
 .mb12 { margin-bottom: 12px; }
+.mb14 { margin-bottom: 14px; }
 .mb16 { margin-bottom: 16px; }
 .mt8 { margin-top: 8px; }
 .mt12 { margin-top: 12px; }
@@ -665,6 +666,52 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
 .news-item:last-child { border-bottom: none; }
 .news-headline { font-weight: 500; margin-bottom: 3px; }
 .news-meta { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+/* ── SOCIAL / TWEET CARDS ── */
+.tweet-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: border-color 0.15s;
+}
+.tweet-card:hover { border-color: var(--border2); }
+.tweet-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.tweet-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--bg4);
+  border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.tweet-name { font-weight: 600; font-size: 13px; }
+.tweet-handle { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.tweet-body { font-size: 13px; line-height: 1.55; color: var(--text); margin-bottom: 10px; }
+.tweet-body .mention { color: var(--accent); }
+.tweet-body .hashtag { color: var(--purple); }
+.tweet-footer { display: flex; align-items: center; gap: 16px; font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.tweet-tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-family: var(--mono); margin-bottom: 6px; }
+.tweet-tag.transfer { background: rgba(234,179,8,0.15); color: var(--yellow); }
+.tweet-tag.scout { background: rgba(34,197,94,0.15); color: var(--green); }
+.tweet-tag.pundit { background: rgba(59,130,246,0.15); color: var(--accent); }
+.tweet-tag.breaking { background: rgba(239,68,68,0.15); color: var(--red); }
+.scout-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.scout-title { font-size: 11px; font-family: var(--mono); color: var(--green); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.scout-player { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.scout-meta { font-size: 11px; color: var(--text2); margin-bottom: 8px; font-family: var(--mono); }
+.scout-attrs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.scout-attr { background: var(--bg3); border-radius: 4px; padding: 4px 8px; font-size: 11px; font-family: var(--mono); }
+.scout-verdict { font-size: 12px; color: var(--text2); border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
 
 .formation-grid {
   background: var(--bg3);
@@ -1017,6 +1064,7 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
   <div id="season-info">
     <span><b id="tb-season">1</b>Season</span>
     <span><b id="tb-week">1</b>Week</span>
+    <span><b id="tb-day">Mon</b>Day</span>
     <span><b id="tb-position">—</b>Position</span>
     <span><b id="tb-record">0W 0D 0L</b>Record</span>
   </div>
@@ -1028,7 +1076,7 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
   <div id="topbar-actions">
     <button class="tb-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle light/dark mode">🌙</button>
     <button class="tb-btn" onclick="showPanel('news')">Inbox <span id="inbox-count" style="color:var(--yellow)"></span></button>
-    <button class="tb-btn" onclick="simOneDay()" title="Simulate current week's matches without advancing">Sim Day ⊕</button>
+    <button class="tb-btn" onclick="simOneDay()" title="Advance one day — may trigger events">Sim Day ⊕</button>
     <button class="tb-btn primary" onclick="advanceWeek()">Advance Week ▶</button>
   </div>
 </div>
@@ -1062,6 +1110,7 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">World</div>
+      <div class="sidebar-item" onclick="showPanel('social')">Social Media 𝕏</div>
       <div class="sidebar-item" onclick="showPanel('leagues')">All Leagues</div>
       <div class="sidebar-item" onclick="showPanel('news')">News & Events</div>
     </div>
@@ -1418,6 +1467,24 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
         <div class="screen-title">All Leagues</div>
       </div>
       <div id="all-leagues-content"></div>
+    </div>
+
+    <!-- SOCIAL MEDIA / X PANEL -->
+    <div id="panel-social" class="panel">
+      <div class="screen-header flex-between">
+        <div>
+          <div class="screen-title">𝕏 Football Twitter</div>
+          <div class="screen-sub">Pundits · Transfers · Scouts · Opinions</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm active" onclick="setSocialTab('all',this)">All</button>
+          <button class="btn btn-sm" onclick="setSocialTab('transfers',this)">Transfers</button>
+          <button class="btn btn-sm" onclick="setSocialTab('scouting',this)">Scouting</button>
+          <button class="btn btn-sm" onclick="setSocialTab('pundits',this)">Pundits</button>
+          <button class="btn btn-sm btn-primary" onclick="renderSocialFeed()">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="social-feed" style="max-width:680px;"></div>
     </div>
 
   </div><!-- /content -->
@@ -1982,32 +2049,84 @@ function generateFixtures(leagueId) {
 }
 
 function generateUEFACompetitions() {
-  // Build participant lists from top leagues
+  // ── 2026 REAL UEFA FORMAT ──
+  // UCL: 36-team league phase. Direct entry for top clubs from top leagues.
+  // UEL: 36-team league phase. Mid-tier clubs + UCL qualifying dropouts.
+  // UECL: 36-team league phase. Lower-ranked clubs + UEL qualifying dropouts.
+
   const clTeams = [], elTeams = [], eclTeams = [];
-  LEAGUES_DATA.forEach(ld => {
-    if (ld.tier !== 1) return;
+
+  // Sort leagues by leagueRating (country coefficient proxy)
+  const tier1Leagues = LEAGUES_DATA.filter(ld=>ld.tier===1).sort((a,b)=>b.leagueRating-a.leagueRating);
+
+  tier1Leagues.forEach((ld, leagueRank) => {
     const lg = G.leagues[ld.id];
+    if (!lg) return;
+    // Sort clubs by current table position (best first) — at season start, use random order
     const sorted = [...lg.clubs];
-    for (let i = 0; i < ld.ucSpots.cl && i < sorted.length; i++) clTeams.push(sorted[i]);
-    for (let i = ld.ucSpots.cl; i < ld.ucSpots.cl + ld.ucSpots.el && i < sorted.length; i++) elTeams.push(sorted[i]);
-    for (let i = ld.ucSpots.cl + ld.ucSpots.el; i < ld.ucSpots.cl + ld.ucSpots.el + ld.ucSpots.ecl && i < sorted.length; i++) eclTeams.push(sorted[i]);
+
+    const ucSpots = ld.ucSpots || { cl:0, el:0, ecl:0 };
+    const clSpots = ucSpots.cl || 0;
+    const elSpots = ucSpots.el || 0;
+    const eclSpots = ucSpots.ecl || 0;
+
+    // Top-4 leagues (by coefficient) get direct UCL entry for champion + runner-up
+    // Lower leagues: only champion qualifies directly, rest go through qualifying
+    const directCL = leagueRank < 4 ? Math.min(clSpots, 4) : Math.min(clSpots, 1);
+    const qualifyingCL = Math.max(0, clSpots - directCL);
+
+    for (let i = 0; i < directCL && i < sorted.length; i++) clTeams.push(sorted[i]);
+    // Qualifying clubs: some drop to EL qualifying (not simulated in full, just add to EL pool)
+    for (let i = directCL; i < directCL + qualifyingCL && i < sorted.length; i++) {
+      rngBool(0.6) ? clTeams.push(sorted[i]) : elTeams.push(sorted[i]); // ~60% make it through
+    }
+    for (let i = clSpots; i < clSpots + elSpots && i < sorted.length; i++) elTeams.push(sorted[i]);
+    for (let i = clSpots + elSpots; i < clSpots + elSpots + eclSpots && i < sorted.length; i++) eclTeams.push(sorted[i]);
   });
+
+  // UCL defending champion gets automatic group stage entry (deduplicate)
+  // Pad to 36 teams each
+  const padTeams = (teams, target) => {
+    const unique = [...new Set(teams)];
+    while (unique.length < target) {
+      const allClubs = Object.keys(G.clubs);
+      const extra = rngFrom(allClubs.filter(c=>!unique.includes(c)));
+      if (extra) unique.push(extra); else break;
+    }
+    return unique.slice(0, target);
+  };
+
+  const clFinal = padTeams(clTeams, 36);
+  const elFinal = padTeams(elTeams.filter(t=>!clFinal.includes(t)), 36);
+  const eclFinal = padTeams(eclTeams.filter(t=>!clFinal.includes(t)&&!elFinal.includes(t)), 36);
+
   G.ucCompetitions = {
-    cl: generateUCBracket('Champions League', clTeams.slice(0,32)),
-    el: generateUCBracket('Europa League', elTeams.slice(0,32)),
-    ecl: generateUCBracket('Conference League', eclTeams.slice(0,32)),
+    cl:  generateLeaguePhase('Champions League', clFinal, 36),
+    el:  generateLeaguePhase('Europa League', elFinal, 36),
+    ecl: generateLeaguePhase('Conference League', eclFinal, 36),
   };
 }
 
-function generateUCBracket(name, teams) {
-  // Fill to min 8
-  while (teams.length < 8) teams.push(teams[rngInt(0, teams.length-1)] || teams[0]);
+function generateLeaguePhase(name, teams, size) {
+  // 2026 format: league phase (no groups), 36 teams each play 8 matches
+  // Top 8 → R16 direct. 9–24 → knockout playoff for R16. 25–36 eliminated.
+  // For display we still show "groups" of 4 for readability (9 groups of 4)
+  const padded = [...teams];
+  while (padded.length < size) padded.push(padded[rngInt(0,padded.length-1)]||padded[0]);
+  const leagueTable = padded.slice(0,size).map(tid=>({
+    clubId: tid, played:0, won:0, drawn:0, lost:0, gf:0, ga:0, gd:0, points:0
+  }));
+  // Show 9 groups of 4 for UI display
   const groups = [];
-  const groupCount = Math.min(8, Math.floor(teams.length / 4));
-  for (let g = 0; g < groupCount; g++) {
-    groups.push({ teams: [teams[g*4],teams[g*4+1],teams[g*4+2],teams[g*4+3]].filter(Boolean), table: [] });
+  for (let g = 0; g < 9; g++) {
+    groups.push({ teams: padded.slice(g*4, g*4+4).filter(Boolean), table: [] });
   }
-  return { name, groups, knockouts: [], currentStage: 'groups', winner: null };
+  return {
+    name, teams: padded, leagueTable, groups,
+    knockouts: [], currentStage: 'league_phase',
+    knockoutPlayoff: [], r16: [], qf: [], sf: [], final: null, winner: null,
+    format: '36-team league phase · Top 8 → R16 · 9–24 → Playoff · 25–36 eliminated'
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2682,46 +2801,132 @@ function closePostMatch() {
 }
 
 // SIM ONE DAY — simulates matches for current week without auto-advancing
-async function simOneDay() {
+// ── DAILY SIM — just advances time by 1 day, fires events every 2 days ──
+function simOneDay() {
   if (!G.player) return;
   const p = G.player;
-  const myClub = G.clubs[p.clubId];
-  const myLeague = G.leagues[myClub.leagueId];
-  const thisRound = p.week;
-  const myFixtures = myLeague.fixtures.filter(f=>f.round===thisRound&&!f.played);
-  const myMatch = myFixtures.find(f=>f.home===p.clubId||f.away===p.clubId);
+  if (!p.dayOfWeek) p.dayOfWeek = 1; // 1–7
 
-  if (!myMatch) { notify('No match scheduled this week', 'warn'); return; }
+  p.dayOfWeek++;
+  if (p.dayOfWeek > 7) {
+    p.dayOfWeek = 1;
+    // Reached end of week — don't auto-advance, just notify
+    notify('End of week — press Advance Week to play your match.', 'warn');
+    updateTopBar(); renderCurrentPanel(); return;
+  }
 
-  processRandomEvents();
+  const dayNames = ['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  notify(`${dayNames[p.dayOfWeek]} · Week ${p.week}`, '');
 
-  // Show match sim
-  await showMatchSim(myMatch.home, myMatch.away, myClub.leagueId, true);
-  const result = simulateMatchFull(myMatch.home, myMatch.away, myClub.leagueId, true);
-  myMatch.played = true;
-  myMatch.result = { home: result.homeGoals, away: result.awayGoals };
-  myMatch.events = result.events;
-  updateLeagueTable(myClub.leagueId, myMatch.home, myMatch.away, result.homeGoals, result.awayGoals);
+  // Every 2 days fire a random event/inbox item
+  if (p.dayOfWeek % 2 === 0) {
+    fireDailyEvent();
+  }
 
-  const isHome = myMatch.home === p.clubId;
-  const oppId = isHome ? myMatch.away : myMatch.home;
-  const opp = G.clubs[oppId];
-  const myG = isHome ? result.homeGoals : result.awayGoals;
-  const theirG = isHome ? result.awayGoals : result.homeGoals;
-  addNews(`Match: ${myClub.name} ${myG}–${theirG} ${opp.name}`, `Week ${p.week}`, myG>theirG?'Victory!':myG<theirG?'Defeat':' Draw');
-  notify(`FT: ${myClub.name} ${myG} – ${theirG} ${opp.name}`, myG>theirG?'success':myG<theirG?'error':'warn');
-
-  // Sim other matches silently
-  myFixtures.filter(f=>f!==myMatch&&!f.played).forEach(f=>{
-    const r=simulateMatchFull(f.home,f.away,myClub.leagueId,false);
-    f.played=true; f.result={home:r.homeGoals,away:r.awayGoals}; f.events=r.events;
-    updateLeagueTable(myClub.leagueId,f.home,f.away,r.homeGoals,r.awayGoals);
-  });
-
-  // NOTE: We do NOT auto-advance week. Player stays on same screen.
   updateTopBar();
   renderCurrentPanel();
-  notify('Day simulated. Advance week when ready.', 'success');
+}
+
+const DAILY_EVENTS = [
+  // Transfer bid for your player
+  () => {
+    const myClub = G.clubs[G.player.clubId];
+    if (!myClub.players.length) return;
+    const pid = rngFrom(myClub.players);
+    const p = G.players[pid];
+    if (!p || G.player.incomingOffers.find(o=>o.playerId===pid&&o.status==='pending')) return;
+    const clubs = Object.keys(G.clubs).filter(c=>c!==G.player.clubId);
+    const buyerId = rngFrom(clubs);
+    const fee = Math.floor(p.transferValue * (0.85 + rng()*0.6));
+    G.player.incomingOffers.push({ id:'io_'+Date.now(), playerId:pid, fromClub:buyerId, fee, week:G.player.week, status:'pending' });
+    notify(`📨 ${G.clubs[buyerId].name} bid £${fmt(fee)} for ${p.name}!`, 'warn');
+    addNews(`Transfer offer for ${p.name}`, `Week ${G.player.week}`, `${G.clubs[buyerId].name} submit £${fmt(fee)} — check Transfers > Incoming`);
+  },
+  // Player requests more playing time
+  () => {
+    const myClub = G.clubs[G.player.clubId];
+    const pid = rngFrom(myClub.players);
+    const p = G.players[pid];
+    if (!p) return;
+    const xi = G.player.startingXI || [];
+    const isInXI = xi.find(a=>a.playerId===pid);
+    if (isInXI) return; // Only bench players complain
+    notify(`😤 ${p.name} wants more first-team football!`, 'warn');
+    addNews(`${p.name} requests more PT`, `Week ${G.player.week}`, 'Player unhappy with bench role. Consider starting or selling.');
+    p.morale = Math.max(10, p.morale - rngInt(5,15));
+  },
+  // Scout report on promising U21
+  () => {
+    const youngsters = Object.values(G.players).filter(pl=>pl.age<=21&&pl.contract.clubId!==G.player.clubId&&pl.potential>=75).sort(()=>rng()-0.5).slice(0,1);
+    if (!youngsters.length) return;
+    const scout = youngsters[0];
+    const club = G.clubs[scout.contract.clubId];
+    notify(`🔭 Scout report: ${scout.name} (${scout.age}) at ${club?.name} — high potential!`, '');
+    addNews(`Scout report: ${scout.name}`, `Week ${G.player.week}`, `${scout.position} · Age ${scout.age} · Pot ${scout.potential} — worth watching`);
+  },
+  // Injury update
+  () => {
+    const myClub = G.clubs[G.player.clubId];
+    const pid = rngFrom(myClub.players);
+    const p = G.players[pid];
+    if (!p || p.currentInjury) return;
+    if (rngBool(0.4)) {
+      const weeks = rngInt(1,4);
+      p.currentInjury = { type: rngFrom(['knock','muscle tightness','fatigue']), weeks };
+      notify(`🏥 ${p.name} picked up a knock — ${weeks}w out`, 'error');
+      addNews(`${p.name} fitness concern`, `Week ${G.player.week}`, `Minor issue, expected back in ${weeks} week(s)`);
+    }
+  },
+  // Player form boost
+  () => {
+    const myClub = G.clubs[G.player.clubId];
+    const pid = rngFrom(myClub.players);
+    const p = G.players[pid];
+    if (!p) return;
+    p.form = Math.min(99, p.form + rngInt(8,20));
+    notify(`⚡ ${p.name} is in red-hot form in training!`, 'success');
+    addNews(`${p.name} on fire in training`, `Week ${G.player.week}`, 'Player looking sharp — morale through the roof');
+  },
+  // Contract extension request
+  () => {
+    const myClub = G.clubs[G.player.clubId];
+    const pid = myClub.players.find(pid=>{ const p=G.players[pid]; return p&&p.contract.expiresSeasons<=1&&p.rating>=70; });
+    if (!pid) return;
+    const p = G.players[pid];
+    const newWage = Math.floor(p.contract.wage * 1.15);
+    notify(`📋 ${p.name} wants a contract extension (£${fmt(newWage)}/wk)`, 'warn');
+    addNews(`${p.name} seeks new deal`, `Week ${G.player.week}`, `Agent wants £${fmt(newWage)}/wk — contract expires soon`);
+  },
+  // Rival club gossip / rumor
+  () => {
+    const clubs = Object.values(G.clubs).filter(c=>c.id!==G.player.clubId);
+    const c1 = rngFrom(clubs); const c2 = rngFrom(clubs.filter(c=>c.id!==c1?.id));
+    if (!c1||!c2) return;
+    const pid = rngFrom(c1.players);
+    const p = G.players[pid];
+    if (!p) return;
+    addNews(`Rumour: ${p.name} to ${c2.name}?`, `Week ${G.player.week}`, `Sources claim talks are underway — fee could exceed £${fmt(p.transferValue)}`);
+  },
+  // Board message
+  () => {
+    const myClub = G.clubs[G.player.clubId];
+    const myLeague = G.leagues[myClub.leagueId];
+    const pos = myLeague.table.findIndex(r=>r.clubId===G.player.clubId)+1;
+    const msgs = [
+      `Board confident in direction of the club`,
+      `Chairman pleased with recent performances`,
+      `Board expects top-half finish this season`,
+      `Pressure growing — board expects improvement`,
+    ];
+    const msg = pos <= 3 ? msgs[1] : pos >= myLeague.table.length-3 ? msgs[3] : rngFrom(msgs);
+    addNews(`Board statement`, `Week ${G.player.week}`, msg);
+    notify(`📰 Board: "${msg}"`, '');
+  },
+];
+
+function fireDailyEvent() {
+  const fn = rngFrom(DAILY_EVENTS);
+  try { fn(); } catch(e) {}
 }
 
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
@@ -2751,30 +2956,84 @@ function makeTransferOffer(playerId) {
     const fee = parseInt(document.getElementById('offer-fee').value)||0;
     const wage = parseInt(document.getElementById('offer-wage').value)||0;
     const years = parseInt(document.getElementById('offer-years').value)||2;
-    if (fee > myClub.finances.balance) { notify('Insufficient funds!','error'); return; }
-    // Add agent fee
+    if (fee > myClub.finances.balance + myClub.finances.transferBudget) { notify('Insufficient funds!','error'); return; }
     const agentFee = Math.floor(fee * 0.05);
     G.player.offers.push({ id:'o_'+Date.now(), playerId, toClub:G.player.clubId, fee, wage, years, agentFee, week:G.player.week, status:'pending' });
-    // Decide outcome based on club's need and player personality
+
     const sellerClub = G.clubs[p.contract.clubId];
-    const accept = fee >= p.transferValue * 0.85 && wage >= p.contract.wage * 0.9;
-    const counterOffer = !accept && fee >= p.transferValue * 0.6;
+    const myClubRep = myClub.reputation;
+    const sellerRep = sellerClub?.reputation || 50;
+
+    // ── REALISTIC TRANSFER LOGIC ──
+    // 1. Player won't move to a significantly weaker club (rep check)
+    const repDrop = sellerRep - myClubRep;
+    if (repDrop > 25) {
+      setTimeout(()=>{
+        const offer = G.player.offers.find(o=>o.playerId===playerId&&o.status==='pending');
+        if (offer) { offer.status = 'rejected'; offer.rejectReason = 'player'; }
+        notify(`❌ ${p.name} won't drop to a lower level club`, 'error');
+        addNews(`${p.name} rejects move`, `Week ${G.player.week}`, `Player feels the step down is too great`);
+      }, rngInt(2000, 5000));
+      closeModal(); notify(`Offer submitted for ${p.name}`, 'success'); return;
+    }
+
+    // 2. Player won't accept a wage cut > 10%
+    if (wage < p.contract.wage * 0.90) {
+      setTimeout(()=>{
+        const offer = G.player.offers.find(o=>o.playerId===playerId&&o.status==='pending');
+        if (offer) { offer.status = 'rejected'; offer.rejectReason = 'wage'; }
+        notify(`❌ ${p.name} won't accept a wage cut`, 'error');
+      }, rngInt(1500, 3500));
+      closeModal(); notify(`Offer submitted for ${p.name}`, 'success'); return;
+    }
+
+    // 3. High-ambition players prefer bigger clubs — may reject even at good fee
+    if (p.personality.ambition >= 8 && myClubRep < sellerRep - 10 && rngBool(0.6)) {
+      setTimeout(()=>{
+        const offer = G.player.offers.find(o=>o.playerId===playerId&&o.status==='pending');
+        if (offer) { offer.status = 'rejected'; offer.rejectReason = 'ambition'; }
+        notify(`❌ ${p.name} has bigger ambitions`, 'error');
+        addNews(`${p.name} turns down move`, `Week ${G.player.week}`, `Ambitious player wants Champions League football`);
+      }, rngInt(2000, 5000));
+      closeModal(); notify(`Offer submitted for ${p.name}`, 'success'); return;
+    }
+
+    // 4. Loyal players reluctant to leave — may take longer or counter
+    if (p.personality.loyalty >= 8 && p.contract.expiresSeasons >= 2 && rngBool(0.55)) {
+      setTimeout(()=>{
+        const offer = G.player.offers.find(o=>o.playerId===playerId&&o.status==='pending');
+        if (offer) { offer.status = 'rejected'; offer.rejectReason = 'loyalty'; }
+        notify(`❌ ${p.name} is loyal to his current club`, 'error');
+      }, rngInt(3000, 6000));
+      closeModal(); notify(`Offer submitted for ${p.name}`, 'success'); return;
+    }
+
+    // 5. Club valuation check — counter if underbid
+    const acceptFee = fee >= p.transferValue * 0.88;
+    const counterFee = !acceptFee && fee >= p.transferValue * 0.55;
+    const playerWantsMove = p.morale < 60 || p._listedForTransfer || rngBool(0.4);
+
     setTimeout(()=>{
       const offer = G.player.offers.find(o=>o.playerId===playerId&&o.status==='pending');
       if (!offer) return;
-      if (accept || rngBool(0.3)) {
+      if (acceptFee && playerWantsMove) {
         executeTransfer(offer, playerId);
         offer.status = 'accepted';
-        notify(`${p.name} signed!`, 'success');
-      } else if (counterOffer) {
+        notify(`✅ ${p.name} signed! Welcome to the club.`, 'success');
+        addNews(`${p.name} joins ${myClub.name}`, `Week ${G.player.week}`, `Fee: £${fmt(fee)} · ${years} year deal`);
+      } else if (counterFee) {
         offer.status = 'countered';
-        offer.counterFee = Math.floor(p.transferValue * (0.95 + rng()*0.1));
-        notify(`${p.name}: counter-offer received`, 'warn');
+        offer.counterFee = Math.floor(p.transferValue * (0.92 + rng()*0.12));
+        notify(`💬 ${G.clubs[p.contract.clubId]?.name} counter: £${fmt(offer.counterFee)} for ${p.name}`, 'warn');
+      } else if (!playerWantsMove) {
+        offer.status = 'rejected';
+        offer.rejectReason = 'happy';
+        notify(`❌ ${p.name} is happy at his current club`, 'error');
       } else {
         offer.status = 'rejected';
-        notify(`Offer for ${p.name} rejected`, 'error');
+        notify(`❌ Offer for ${p.name} rejected — fee too low`, 'error');
       }
-    }, 3000);
+    }, rngInt(2500, 7000));
     closeModal();
     notify(`Offer submitted for ${p.name}`, 'success');
   }}]
@@ -2878,6 +3137,9 @@ function updateTopBar() {
   document.getElementById('club-league').textContent = myLeague.name;
   document.getElementById('tb-season').textContent = G.player.season;
   document.getElementById('tb-week').textContent = G.player.week;
+  const dayNames = ['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayEl = document.getElementById('tb-day');
+  if (dayEl) dayEl.textContent = dayNames[G.player.dayOfWeek||1]||'Mon';
   const pos = myLeague.table.findIndex(r=>r.clubId===G.player.clubId)+1;
   document.getElementById('tb-position').textContent = pos ? `${pos}${ord(pos)}` : '—';
   const row = myLeague.table.find(r=>r.clubId===G.player.clubId);
@@ -2920,6 +3182,7 @@ function renderCurrentPanel() {
     case 'staff': renderStaff(); break;
     case 'youth': renderYouth(); break;
     case 'leagues': renderAllLeagues(); break;
+    case 'social': renderSocialFeed(); break;
   }
 }
 
@@ -3078,6 +3341,11 @@ function switchTab(group, name) {
 // ═══════════════════════════════════════════════════════════════
 function renderDashboard_OLD_REPLACED() {}
 
+function setSortSquad(col) {
+  const el = document.getElementById('squad-sort');
+  if (el) { el.value = col; renderSquad(); }
+}
+
 function renderSquad() {
   if (!G.player) return;
   const myClub = G.clubs[G.player.clubId];
@@ -3092,8 +3360,21 @@ function renderSquad() {
     return 0;
   });
   document.getElementById('squad-count-sub').textContent = `${players.length} players`;
+  const sortVal = document.getElementById('squad-sort')?.value || 'rating';
+  const sortArrow = col => col === sortVal ? ' ▼' : '';
   document.getElementById('squad-table').innerHTML = `<table class="data-table"><thead><tr>
-    <th>Name</th><th>Pos</th><th>Nat</th><th>Age</th><th class="c">Rat</th><th class="c">Pot</th><th class="c">Fit</th><th class="c">Mor</th><th>Contract</th><th class="r">Value</th><th class="r">Wage</th><th>Status</th><th>Actions</th>
+    <th onclick="setSortSquad('rating')" style="cursor:pointer">Name</th>
+    <th onclick="setSortSquad('position')" style="cursor:pointer">Pos${sortArrow('position')}</th>
+    <th>Nat</th>
+    <th onclick="setSortSquad('age')" style="cursor:pointer">Age${sortArrow('age')}</th>
+    <th class="c" onclick="setSortSquad('rating')" style="cursor:pointer">Rat${sortArrow('rating')}</th>
+    <th class="c">Pot</th>
+    <th class="c">Fit</th>
+    <th class="c">Mor</th>
+    <th>Contract</th>
+    <th class="r" onclick="setSortSquad('value')" style="cursor:pointer">Value${sortArrow('value')}</th>
+    <th class="r" onclick="setSortSquad('wage')" style="cursor:pointer">Wage${sortArrow('wage')}</th>
+    <th>Status</th><th>Actions</th>
   </tr></thead><tbody>${players.map(p=>{
     const status = p.currentInjury ? `<span class="pill pill-red">${p.currentInjury.type.slice(0,8)} ${p.currentInjury.weeks}w</span>` :
       p.suspended > 0 ? `<span class="pill pill-yellow">Susp ${p.suspended}m</span>` :
@@ -3117,38 +3398,166 @@ function openPlayerDetail(pid) {
   const p = G.players[pid];
   if (!p) return;
   const attrs = p.attributes;
-  const attrHtml = Object.entries(attrs).map(([k,v])=>`
-    <div class="stat-row">
-      <div class="stat-label">${k.replace(/([A-Z])/g,' $1')}</div>
-      <div class="stat-bar"><div class="stat-fill" style="width:${v}%;background:${barColor(v)}"></div></div>
-      <div class="stat-val ${ratColor(v)}">${v}</div>
-    </div>`).join('');
+  const club = G.clubs[p.contract.clubId];
+  const isMyPlayer = club?.id === G.player.clubId;
+
+  // Generate per-match ratings history for this season
+  const matchRatings = [];
+  for (let i = 0; i < p.stats.apps; i++) {
+    const r = (4.5 + rng()*5.5).toFixed(1);
+    matchRatings.push(parseFloat(r));
+  }
+  const avgRating = matchRatings.length ? (matchRatings.reduce((s,r)=>s+r,0)/matchRatings.length).toFixed(2) : '—';
+
+  const ratingColor = r => {
+    if (r>=9) return '#22c55e';
+    if (r>=7.5) return '#86efac';
+    if (r>=6.5) return '#3b82f6';
+    if (r>=5.5) return '#eab308';
+    return '#ef4444';
+  };
+
+  const attrSections = {
+    'Technical': ['passing','shooting','dribbling','crossing','firstTouch'],
+    'Physical': ['pace','strength','stamina','jumping','heading'],
+    'Mental': ['vision','tackling','positioning','leadership','creativity'],
+  };
+
+  const attrSectionHtml = Object.entries(attrSections).map(([section, keys])=>{
+    const validKeys = keys.filter(k=>attrs[k]!==undefined);
+    if (!validKeys.length) return '';
+    return `<div class="mb12">
+      <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">${section}</div>
+      ${validKeys.map(k=>`<div class="stat-row">
+        <div class="stat-label" style="width:130px;">${k.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase())}</div>
+        <div class="stat-bar"><div class="stat-fill" style="width:${attrs[k]}%;background:${barColor(attrs[k])}"></div></div>
+        <div class="stat-val ${ratColor(attrs[k])}">${attrs[k]}</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+
+  // Mini ratings grid — FotMob style
+  const ratingsHtml = matchRatings.length ? `
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">
+      ${matchRatings.map((r,i)=>`<div title="Match ${i+1}" style="width:34px;height:34px;border-radius:6px;background:${ratingColor(r)};display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;">${r}</div>`).join('')}
+    </div>` : '<div class="muted" style="margin-bottom:12px;">No matches played yet</div>';
+
+  // Heatmap-style position overview (simple emoji grid)
+  const posEmoji = {'GK':'🧤','CB':'🛡️','LB':'⬅️','RB':'➡️','CDM':'🔒','CM':'⚙️','CAM':'🎯','LW':'⚡','RW':'⚡','ST':'🎯','CF':'🔥','SS':'✨','LM':'◀️','RM':'▶️','LWB':'⬅️','RWB':'➡️','CDM':'🔒'};
+  const posIcon = posEmoji[p.position]||'⚽';
+
+  const statBarHtml = (label, val, max, color='var(--accent)') =>
+    `<div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--text2)">${label}</span><span style="font-family:var(--mono);font-weight:600">${val}</span></div>
+      <div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;"><div style="width:${Math.min(100,(val/max)*100)}%;height:100%;background:${color};border-radius:2px;"></div></div>
+    </div>`;
+
   openModal(p.name, `
-    <div class="grid-2 mb12">
-      <div><div class="muted" style="font-size:11px">Position</div><b>${p.position}</b></div>
-      <div><div class="muted" style="font-size:11px">Nationality</div><b>${p.nationality}</b></div>
-      <div><div class="muted" style="font-size:11px">Age</div><b>${p.age}</b></div>
-      <div><div class="muted" style="font-size:11px">Rating / Potential</div><b class="${ratColor(p.rating)}">${p.rating}</b> / <b class="muted">${p.potential}</b></div>
-      <div><div class="muted" style="font-size:11px">Fitness / Morale</div><b>${p.fitness}% / ${p.morale}</b></div>
-      <div><div class="muted" style="font-size:11px">Form</div><b>${p.form}</b></div>
-    </div>
-    <div class="mb12"><div class="card-title">Personality</div>
-      <div class="flex"><span class="muted">Ambition:</span> <b>${p.personality.ambition}/10</b> &nbsp; <span class="muted">Loyalty:</span> <b>${p.personality.loyalty}/10</b> &nbsp; <span class="muted">Prof.:</span> <b>${p.personality.professionalism}/10</b></div>
-    </div>
-    <div class="mb12"><div class="card-title">This Season</div>
-      <div class="flex" style="gap:20px">
-        <span>Apps: <b>${p.stats.apps}</b></span><span>Goals: <b>${p.stats.goals}</b></span><span>Assists: <b>${p.stats.assists}</b></span><span>Yellows: <b>${p.stats.yellows}</b></span>
+    <!-- PLAYER HEADER -->
+    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--bg4);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">${posIcon}</div>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+          <span style="font-size:18px;font-weight:700;">${p.name}</span>
+          <span class="pill pill-blue">${p.position}</span>
+          ${p.currentInjury?`<span class="pill pill-red">Injured</span>`:''}
+          ${p.suspended>0?`<span class="pill pill-yellow">Suspended</span>`:''}
+        </div>
+        <div style="font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:8px;">${p.nationality} · ${p.age}y · ${club?.name||'Free Agent'}</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:${ratingColor(parseFloat(avgRating)||0)}">${avgRating}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Season Avg</div></div>
+          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--green)">${p.stats.goals}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Goals</div></div>
+          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--accent)">${p.stats.assists}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Assists</div></div>
+          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono)">${p.stats.apps}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Apps</div></div>
+          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:${p.rating>=75?'var(--green)':p.rating>=60?'var(--accent)':'var(--yellow)'}">${p.rating}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Rating</div></div>
+          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--purple)">${p.potential}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Potential</div></div>
+        </div>
       </div>
     </div>
-    <div class="mb8"><div class="card-title">Attributes</div>${attrHtml}</div>
-    <div><div class="card-title">Contract</div>
-      <div class="flex" style="gap:20px">
-        <span>Wage: <b>£${fmt(p.contract.wage)}/wk</b></span>
-        <span>Expires: <b>${p.contract.expiresSeasons} season(s)</b></span>
-        ${p.contract.buyoutClause?`<span>Buyout: <b>£${fmt(p.contract.buyoutClause)}</b></span>`:''}
+
+    <!-- TABS ROW -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px;">
+      <button class="msim-tab active" onclick="switchPlayerDetailTab(event,'pd-match-ratings')">Match Ratings</button>
+      <button class="msim-tab" onclick="switchPlayerDetailTab(event,'pd-attributes')">Attributes</button>
+      <button class="msim-tab" onclick="switchPlayerDetailTab(event,'pd-stats')">Season Stats</button>
+      <button class="msim-tab" onclick="switchPlayerDetailTab(event,'pd-contract')">Contract</button>
+    </div>
+
+    <!-- MATCH RATINGS TAB -->
+    <div id="pd-match-ratings" class="msim-tab-content active">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <div style="background:${ratingColor(parseFloat(avgRating)||0)};padding:8px 16px;border-radius:8px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;font-family:var(--mono);color:#fff">${avgRating}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:.08em">Avg Rating</div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);">
+          ${matchRatings.filter(r=>r>=7).length} good games (7.0+)<br>
+          ${matchRatings.filter(r=>r>=8).length} great games (8.0+)<br>
+          ${matchRatings.filter(r=>r<5.5).length} poor games (&lt;5.5)
+        </div>
+      </div>
+      <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Match by match — Season</div>
+      ${ratingsHtml}
+    </div>
+
+    <!-- ATTRIBUTES TAB -->
+    <div id="pd-attributes" class="msim-tab-content">
+      ${attrSectionHtml}
+    </div>
+
+    <!-- SEASON STATS TAB -->
+    <div id="pd-stats" class="msim-tab-content">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div class="card">
+          <div class="card-title">Attacking</div>
+          ${statBarHtml('Goals', p.stats.goals, Math.max(20, p.stats.goals+5), 'var(--green)')}
+          ${statBarHtml('Assists', p.stats.assists, Math.max(15, p.stats.assists+5), 'var(--accent)')}
+        </div>
+        <div class="card">
+          <div class="card-title">Discipline</div>
+          ${statBarHtml('Yellow Cards', p.stats.yellows, 10, 'var(--yellow)')}
+          ${statBarHtml('Red Cards', p.stats.reds||0, 3, 'var(--red)')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Appearance & Fitness</div>
+        ${statBarHtml('Appearances', p.stats.apps, 38, 'var(--accent)')}
+        ${statBarHtml('Minutes Played', p.stats.minutesPlayed||p.stats.apps*90, 3420, 'var(--teal)')}
+        ${statBarHtml('Current Fitness', p.fitness, 100, p.fitness<60?'var(--red)':'var(--green)')}
+        ${statBarHtml('Morale', p.morale, 100, p.morale<40?'var(--red)':p.morale>70?'var(--green)':'var(--yellow)')}
+        ${statBarHtml('Form', p.form, 100, 'var(--purple)')}
       </div>
     </div>
-  `, []);
+
+    <!-- CONTRACT TAB -->
+    <div id="pd-contract" class="msim-tab-content">
+      <div class="grid-2" style="margin-bottom:14px;">
+        <div class="card"><div class="card-title">Weekly Wage</div><div class="card-value" style="font-size:18px;color:var(--yellow)">£${fmt(p.contract.wage)}</div></div>
+        <div class="card"><div class="card-title">Contract Length</div><div class="card-value" style="font-size:18px;">${p.contract.expiresSeasons} season(s)</div></div>
+        ${p.contract.buyoutClause?`<div class="card"><div class="card-title">Buyout Clause</div><div class="card-value" style="font-size:18px;color:var(--red)">£${fmt(p.contract.buyoutClause)}</div></div>`:''}
+        <div class="card"><div class="card-title">Transfer Value</div><div class="card-value" style="font-size:18px;color:var(--green)">£${fmt(p.transferValue)}</div></div>
+      </div>
+      <div class="card mb12">
+        <div class="card-title">Personality</div>
+        <div class="stat-row"><div class="stat-label">Ambition</div><div class="stat-bar"><div class="stat-fill" style="width:${p.personality.ambition*10}%;background:${barColor(p.personality.ambition*10)}"></div></div><div class="stat-val">${p.personality.ambition}/10</div></div>
+        <div class="stat-row"><div class="stat-label">Loyalty</div><div class="stat-bar"><div class="stat-fill" style="width:${p.personality.loyalty*10}%;background:${barColor(p.personality.loyalty*10)}"></div></div><div class="stat-val">${p.personality.loyalty}/10</div></div>
+        <div class="stat-row"><div class="stat-label">Professionalism</div><div class="stat-bar"><div class="stat-fill" style="width:${p.personality.professionalism*10}%;background:${barColor(p.personality.professionalism*10)}"></div></div><div class="stat-val">${p.personality.professionalism}/10</div></div>
+      </div>
+    </div>
+  `, isMyPlayer ? [
+    {label:'List for Transfer', cls: p._listedForTransfer?'btn-danger':'btn', fn:()=>{ listPlayerForTransfer(pid); closeModal(); renderSquad(); }},
+  ] : [
+    {label:'Make Offer', cls:'btn-primary', fn:()=>{ closeModal(); makeTransferOffer(pid); }},
+  ]);
+}
+
+function switchPlayerDetailTab(e, tabId) {
+  const modal = document.getElementById('modal-box');
+  modal.querySelectorAll('.msim-tab-content').forEach(el=>el.classList.remove('active'));
+  modal.querySelectorAll('.msim-tab').forEach(el=>el.classList.remove('active'));
+  const tab = document.getElementById(tabId);
+  if (tab) tab.classList.add('active');
+  if (e && e.target) e.target.classList.add('active');
 }
 
 function renderTactics() {
@@ -3169,11 +3578,11 @@ function renderTactics() {
     byRow[slot.row].push({ ...slot, idx: i });
   });
 
-  const rows = Object.keys(byRow).map(Number).sort((a,b) => a - b); // ascending = GK at bottom
+  const rows = Object.keys(byRow).map(Number).sort((a,b) => a - b); // ascending: 1=attack, 6=GK
   let html = `<div class="pitch-line-mid"></div><div class="pitch-circle"></div><div class="pitch-box-top"></div><div class="pitch-box-bottom"></div>`;
 
-  // Render top (attack) to bottom (GK)
-  [...rows].reverse().forEach(rowNum => {
+  // rows sorted ascending: 1=striker at top, 6=GK at bottom — render in order (no reverse)
+  rows.forEach(rowNum => {
     const rowSlots = byRow[rowNum];
     html += `<div class="formation-row">`;
     rowSlots.forEach(slot => {
@@ -3231,6 +3640,9 @@ function saveTactics() {
   notify('Tactics saved!', 'success');
 }
 
+let _transferSort = 'rating';
+function setTransferSort(col) { _transferSort = col; renderTransferMarket(); }
+
 function renderTransferMarket() {
   if (!G.player) return;
   const search = document.getElementById('transfer-search')?.value?.toLowerCase()||'';
@@ -3245,20 +3657,52 @@ function renderTransferMarket() {
     if (p.transferValue > maxVal) return false;
     if (p.onLoan) return false;
     return true;
-  }).sort((a,b)=>b.rating-a.rating).slice(0,80);
+  });
+
+  players.sort((a,b)=>{
+    if (_transferSort==='rating') return b.rating-a.rating;
+    if (_transferSort==='age') return a.age-b.age;
+    if (_transferSort==='value') return b.transferValue-a.transferValue;
+    if (_transferSort==='wage') return b.contract.wage-a.contract.wage;
+    if (_transferSort==='pot') return b.potential-a.potential;
+    if (_transferSort==='form') return b.form-a.form;
+    return b.rating-a.rating;
+  });
+  players = players.slice(0,80);
+
+  const arrow = col => _transferSort===col ? ' ▼':'';
+  const thStyle = 'cursor:pointer;user-select:none;';
 
   document.getElementById('transfer-market-table').innerHTML = `<table class="data-table"><thead><tr>
-    <th>Name</th><th>Pos</th><th>Nat</th><th>Age</th><th class="c">Rat</th><th class="c">Pot</th><th>Club</th><th class="r">Value</th><th class="r">Wage</th><th class="c">Form</th><th></th>
+    <th>Name</th>
+    <th>Pos</th>
+    <th>Nat</th>
+    <th style="${thStyle}" onclick="setTransferSort('age')">Age${arrow('age')}</th>
+    <th class="c" style="${thStyle}" onclick="setTransferSort('rating')">Rat${arrow('rating')}</th>
+    <th class="c" style="${thStyle}" onclick="setTransferSort('pot')">Pot${arrow('pot')}</th>
+    <th>Club</th>
+    <th class="r" style="${thStyle}" onclick="setTransferSort('value')">Value${arrow('value')}</th>
+    <th class="r" style="${thStyle}" onclick="setTransferSort('wage')">Wage${arrow('wage')}</th>
+    <th class="c" style="${thStyle}" onclick="setTransferSort('form')">Form${arrow('form')}</th>
+    <th></th>
   </tr></thead><tbody>${players.map(p=>{
     const club = G.clubs[p.contract.clubId];
-    return `<tr><td><b>${p.name}</b></td><td><span class="pill pill-blue">${p.position}</span></td><td class="mono muted">${p.nationality}</td><td class="mono">${p.age}</td>
+    const myRep = myClub.reputation;
+    const theirRep = club?.reputation||50;
+    const willConsider = (theirRep - myRep) <= 25 && p.personality.ambition < 9;
+    const interestPill = willConsider ? '' : `<span class="pill pill-red" style="font-size:9px;margin-left:4px" title="Unlikely to join">↓</span>`;
+    return `<tr onclick="openPlayerDetail('${p.id}')" style="cursor:pointer;">
+      <td><b>${p.name}</b>${interestPill}</td>
+      <td><span class="pill pill-blue">${p.position}</span></td>
+      <td class="mono muted">${p.nationality}</td>
+      <td class="mono">${p.age}</td>
       <td class="c mono ${ratColor(p.rating)}">${p.rating}</td>
       <td class="c mono muted">${p.potential}</td>
-      <td>${club?.name||'Free'}</td>
+      <td>${club?.name||'<span class="pill pill-green">Free</span>'}</td>
       <td class="r mono">£${fmt(p.transferValue)}</td>
       <td class="r mono">£${fmt(p.contract.wage)}/wk</td>
       <td class="c"><span class="mono ${p.form>=70?'green':p.form>=50?'':'red'}">${p.form}</span></td>
-      <td><button class="btn btn-sm btn-primary" onclick="makeTransferOffer('${p.id}')">Bid</button></td>
+      <td><button class="btn btn-sm btn-primary" onclick="event.stopPropagation();makeTransferOffer('${p.id}')">Bid</button></td>
     </tr>`;
   }).join('')}</tbody></table>`;
 }
@@ -3361,28 +3805,60 @@ function renderFixtures() {
   document.getElementById('fixtures-results-list').innerHTML = allHtml(myFixtures.filter(f=>f.played));
 }
 
+let _tableSort = 'points';
+function setTableSort(col) {
+  _tableSort = col;
+  renderLeagueTable();
+}
+
 function renderLeagueTable() {
   if (!G.player) return;
   const myClub = G.clubs[G.player.clubId];
   const myLeague = G.leagues[myClub.leagueId];
   const ld = LEAGUES_DATA.find(l=>l.id===myClub.leagueId)||{};
   document.getElementById('table-season-sub').textContent = `${myLeague.name} · Season ${G.player.season} · Week ${G.player.week}`;
-  const table = myLeague.table;
   const clEnd = ld.ucSpots?.cl||0;
   const elEnd = clEnd + (ld.ucSpots?.el||0);
   const eclEnd = elEnd + (ld.ucSpots?.ecl||0);
   const relStart = (ld.clubs||20) - (ld.relegation||3) + 1;
 
+  // Sort table by selected column
+  let table = [...myLeague.table];
+  if (_tableSort === 'points') table.sort((a,b)=>b.points-a.points||b.gd-a.gd||b.gf-a.gf);
+  else if (_tableSort === 'gf') table.sort((a,b)=>b.gf-a.gf);
+  else if (_tableSort === 'ga') table.sort((a,b)=>a.ga-b.ga);
+  else if (_tableSort === 'gd') table.sort((a,b)=>b.gd-a.gd);
+  else if (_tableSort === 'won') table.sort((a,b)=>b.won-a.won);
+  else if (_tableSort === 'played') table.sort((a,b)=>b.played-a.played);
+
+  const arrow = col => _tableSort===col?' ▼':'';
+  const ths = 'style="cursor:pointer;user-select:none;"';
+
   document.getElementById('league-table').innerHTML = `<table class="data-table"><thead><tr>
-    <th>Pos</th><th>Club</th><th class="c">P</th><th class="c">W</th><th class="c">D</th><th class="c">L</th><th class="c">GF</th><th class="c">GA</th><th class="c">GD</th><th class="c">Pts</th><th>Form</th>
+    <th>Pos</th><th>Club</th>
+    <th class="c" ${ths} onclick="setTableSort('played')">P${arrow('played')}</th>
+    <th class="c" ${ths} onclick="setTableSort('won')">W${arrow('won')}</th>
+    <th class="c">D</th><th class="c">L</th>
+    <th class="c" ${ths} onclick="setTableSort('gf')">GF${arrow('gf')}</th>
+    <th class="c" ${ths} onclick="setTableSort('ga')">GA${arrow('ga')}</th>
+    <th class="c" ${ths} onclick="setTableSort('gd')">GD${arrow('gd')}</th>
+    <th class="c" ${ths} onclick="setTableSort('points')">Pts${arrow('points')}</th>
+    <th>Form</th>
   </tr></thead><tbody>${table.map((r,i)=>{
     const pos = i+1;
     const rowClass = r.clubId===G.player.clubId?'highlight':pos<=clEnd?'promoted':pos>relStart-1?'relegated':pos<=elEnd?'playoff':pos<=eclEnd?'playoff':'';
     const spotEl = pos<=clEnd?`<span class="spot-indicator spot-cl"></span>`:pos<=elEnd?`<span class="spot-indicator spot-el"></span>`:pos<=eclEnd?`<span class="spot-indicator spot-ecl"></span>`:pos>relStart-1?`<span class="spot-indicator spot-rel"></span>`:'';
-    // Fake last 5 form
-    const formLetters = Array(5).fill(null).map(()=>rngFrom(['W','W','D','L','W']));
-    const formHtml = formLetters.map(l=>`<span class="pill ${l==='W'?'pill-green':l==='L'?'pill-red':'pill-gray'}" style="padding:1px 5px;font-size:9px">${l}</span>`).join('');
-    return `<tr class="${rowClass}"><td class="mono">${spotEl}${pos}</td><td>${G.clubs[r.clubId]?.name||'—'} ${r.clubId===G.player.clubId?'(You)':''}</td>
+    // Form from last 5 played fixtures
+    const myFixtures = myLeague.fixtures.filter(f=>f.played&&(f.home===r.clubId||f.away===r.clubId));
+    const last5 = myFixtures.slice(-5).map(f=>{
+      const isH = f.home===r.clubId;
+      const scored = isH?f.result.home:f.result.away;
+      const conceded = isH?f.result.away:f.result.home;
+      return scored>conceded?'W':scored<conceded?'L':'D';
+    });
+    while(last5.length<5) last5.unshift('');
+    const formHtml = last5.map(l=>l?`<span class="pill ${l==='W'?'pill-green':l==='L'?'pill-red':'pill-gray'}" style="padding:1px 5px;font-size:9px">${l}</span>`:`<span style="display:inline-block;width:18px;"></span>`).join('');
+    return `<tr class="${rowClass}"><td class="mono">${spotEl}${pos}</td><td>${G.clubs[r.clubId]?.name||'—'} ${r.clubId===G.player.clubId?'<span style="color:var(--accent);font-size:10px">(You)</span>':''}</td>
       <td class="c">${r.played}</td><td class="c">${r.won}</td><td class="c">${r.drawn}</td><td class="c">${r.lost}</td>
       <td class="c">${r.gf}</td><td class="c">${r.ga}</td>
       <td class="c ${r.gd>0?'green':r.gd<0?'red':''}">${r.gd>0?'+':''}${r.gd}</td>
@@ -3391,7 +3867,6 @@ function renderLeagueTable() {
 }
 
 function renderCompetitions() {
-  // Domestic Cup - simple bracket display
   const myClub = G.clubs[G.player.clubId];
   const domesticCupName = {
     epl:'FA Cup',championship:'FA Cup',laliga:'Copa del Rey',laliga2:'Copa del Rey',
@@ -3400,27 +3875,100 @@ function renderCompetitions() {
   }[myClub.leagueId] || 'Domestic Cup';
 
   document.getElementById('comps-domestic').innerHTML = `<div class="card"><div class="card-title">${domesticCupName}</div>
-    <div class="muted">Cup draw takes place at the start of each round. Random upsets possible.</div>
+    <div class="muted" style="font-size:12px;margin-bottom:12px;">Cup draw takes place at the start of each round. Random upsets possible.</div>
     <div class="mt12" id="cup-rounds"></div></div>`;
   renderCupRounds('cup-rounds', domesticCupName);
 
-  // UEFA competitions
+  // ── UEFA 2026 LEAGUE PHASE DISPLAY ──
   ['cl','el','ecl'].forEach(comp=>{
     const uc = G.ucCompetitions[comp];
     if (!uc) return;
-    let html = `<div class="card-title mb8">${uc.name} — Group Stage</div>`;
-    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">`;
-    uc.groups.forEach((g,gi)=>{
-      html += `<div class="card"><div class="card-title">Group ${String.fromCharCode(65+gi)}</div>`;
-      g.teams.forEach(tid=>{
-        const club = G.clubs[tid];
-        html += `<div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">
-          <span ${tid===G.player.clubId?'style="color:var(--accent);font-weight:500"':''}>${club?.name||'TBD'}</span>
-          <span class="mono muted">${club?.country||'—'}</span></div>`;
-      });
-      html += '</div>';
+
+    const myTeamInComp = uc.teams && uc.teams.includes(G.player.clubId);
+    const myPos = uc.leagueTable ? uc.leagueTable.findIndex(r=>r.clubId===G.player.clubId)+1 : 0;
+
+    let html = `
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:16px;font-weight:700;">${uc.name} <span style="font-size:11px;font-family:var(--mono);color:var(--text3);">2026</span></div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px;">${uc.format||'36-team league phase'}</div>
+          </div>
+          ${myTeamInComp ? `<span class="pill pill-green">✓ Your club qualified</span>` : `<span class="pill pill-gray">Not qualified</span>`}
+        </div>
+      </div>
+
+      <!-- Knockout path overview -->
+      <div class="card mb14">
+        <div class="card-title mb8">Knockout Path</div>
+        <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:4px;">
+          ${[
+            {label:'League Phase', sub:'36 teams · 8 matches each', color:'var(--accent)'},
+            {label:'Playoff', sub:'9th–24th · single leg', color:'var(--purple)'},
+            {label:'Round of 16', sub:'16 teams', color:'var(--teal)'},
+            {label:'QF', sub:'8 teams', color:'var(--orange)'},
+            {label:'SF', sub:'4 teams', color:'var(--yellow)'},
+            {label:'Final', sub:'Single leg · neutral', color:'var(--green)'},
+          ].map((s,i)=>`
+            <div style="display:flex;align-items:center;gap:0;">
+              ${i>0?`<div style="width:20px;height:2px;background:var(--border2);flex-shrink:0;"></div>`:''}
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;white-space:nowrap;min-width:100px;text-align:center;">
+                <div style="font-size:12px;font-weight:600;color:${s.color}">${s.label}</div>
+                <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:1px;">${s.sub}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- League phase table (top portion) -->
+      <div class="card mb14">
+        <div class="card-title mb8">League Phase Standings <span style="font-weight:400;color:var(--text3);">(Provisional)</span></div>
+        <div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px;font-family:var(--mono);">
+          <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block;"></span>Top 8 → R16 direct</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--yellow);display:inline-block;"></span>9–24 → Knockout playoff</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block;"></span>25–36 eliminated</span>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr>
+          <th style="width:32px;">#</th><th>Club</th><th>Country</th><th class="c">P</th><th class="c">W</th><th class="c">D</th><th class="c">L</th><th class="c">GD</th><th class="c">Pts</th><th>Status</th>
+        </tr></thead><tbody>`;
+
+    const table = uc.leagueTable || [];
+    // Generate provisional standings (randomized for pre-season)
+    const displayTable = table.length ? table : uc.teams.slice(0,36).map((tid,i)=>{
+      const p_=rngInt(0,8),w_=rngInt(0,p_),l_=rngInt(0,p_-w_),d_=p_-w_-l_;
+      const gf=rngInt(0,w_*3+1),ga=rngInt(0,l_*3+1);
+      return {clubId:tid,played:p_,won:w_,drawn:d_,lost:l_,gf,ga,gd:gf-ga,points:w_*3+d_};
+    }).sort((a,b)=>b.points-a.points||b.gd-a.gd);
+
+    displayTable.slice(0,36).forEach((r,i)=>{
+      const pos=i+1;
+      const club=G.clubs[r.clubId];
+      const isMe=r.clubId===G.player.clubId;
+      const zone=pos<=8?'var(--green)':pos<=24?'var(--yellow)':'var(--red)';
+      const zoneLabel=pos<=8?'→ R16 direct':pos<=24?'→ Playoff':'Eliminated';
+      html+=`<tr class="${isMe?'highlight':''}">
+        <td class="mono" style="border-left:3px solid ${zone};padding-left:8px;">${pos}</td>
+        <td style="font-weight:${isMe?'600':'400'}">${club?.name||'—'} ${isMe?'(You)':''}</td>
+        <td class="muted" style="font-size:11px">${club?.country||'—'}</td>
+        <td class="c">${r.played}</td><td class="c">${r.won}</td><td class="c">${r.drawn}</td><td class="c">${r.lost}</td>
+        <td class="c ${r.gd>0?'green':r.gd<0?'red':''}">${r.gd>0?'+':''}${r.gd}</td>
+        <td class="c"><b>${r.points}</b></td>
+        <td style="font-size:10px;color:${zone};font-family:var(--mono)">${zoneLabel}</td>
+      </tr>`;
     });
-    html += '</div>';
+
+    html += `</tbody></table></div></div>
+
+      <!-- Qualifying round summary -->
+      <div class="card">
+        <div class="card-title mb8">Qualifying Round Summary</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+          <b>Champions Path:</b> Champions from lower-ranked associations enter early qualifying rounds (Preliminary → Q1 → Q2 → Q3 → Playoff → League Phase).<br>
+          <b>League Path:</b> Non-champions from higher-ranked leagues enter later qualifying rounds (Q2/Q3 → Playoff → League Phase).<br>
+          <b>Elimination drops:</b> Teams eliminated from UCL qualifying drop to UEL qualifying. UEL eliminees drop to UECL qualifying.
+        </div>
+      </div>`;
+
     document.getElementById(`comps-${comp}`).innerHTML = html;
   });
 }
@@ -3960,7 +4508,200 @@ function renderDashboard() {
     '<div class="muted">No data</div>';
 }
 
-// ── BOOT ──
+// ═══════════════════════════════════════════════════════════════
+// SOCIAL MEDIA / X FEED
+// ═══════════════════════════════════════════════════════════════
+let _socialTab = 'all';
+
+const PUNDITS = [
+  { name:'Gary Neville', handle:'@GNeville2', avatar:'⚽', country:'England', style:'pundit' },
+  { name:'Roy Keane', handle:'@RoyKeaneFC', avatar:'🔥', country:'Ireland', style:'pundit' },
+  { name:'Guillem Balagué', handle:'@GuillemBalague', avatar:'📰', country:'Spain', style:'journalist' },
+  { name:'Fabrizio Romano', handle:'@FabrizioRomano', avatar:'🤝', country:'Italy', style:'transfer' },
+  { name:'Darren Bent', handle:'@DBent_Official', avatar:'🎙️', country:'England', style:'pundit' },
+  { name:'Jan Aage Fjortoft', handle:'@JanAageFjortoft', avatar:'🇳🇴', country:'Norway', style:'journalist' },
+  { name:'Nico Williams Scout', handle:'@EU_Scout', avatar:'🔭', country:'Europe', style:'scout' },
+  { name:'Transfer Window HQ', handle:'@TransferHQ', avatar:'💸', country:'Global', style:'transfer' },
+  { name:'Tactical Notes', handle:'@TacticalNotes', avatar:'📋', country:'Global', style:'pundit' },
+  { name:'BundesligaWatcher', handle:'@BundesWatch', avatar:'🦅', country:'Germany', style:'journalist' },
+  { name:'La Liga Insider', handle:'@LaLigaInside', avatar:'☀️', country:'Spain', style:'journalist' },
+  { name:'SerieA Expert', handle:'@SerieAExpert', avatar:'🍕', country:'Italy', style:'journalist' },
+];
+
+function setSocialTab(tab, btn) {
+  _socialTab = tab;
+  document.querySelectorAll('#panel-social .btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderSocialFeed();
+}
+
+function generateTweetText(type) {
+  if (!G.player) return '';
+  const myClub = G.clubs[G.player.clubId];
+  const myLeague = G.leagues[myClub.leagueId];
+  const pos = myLeague.table.findIndex(r=>r.clubId===G.player.clubId)+1;
+  const tableRow = myLeague.table.find(r=>r.clubId===G.player.clubId)||{};
+
+  // Get random league players for tweets
+  const lgPlayers = Object.values(G.players).filter(p=>{
+    const c=G.clubs[p.contract.clubId]; return c&&c.leagueId===myClub.leagueId;
+  });
+  const hotPlayer = lgPlayers.sort((a,b)=>b.stats.goals-a.stats.goals)[0];
+  const youngStar = Object.values(G.players).filter(p=>p.age<=21&&p.potential>=78).sort(()=>rng()-0.5)[0];
+  const randomClub = rngFrom(Object.values(G.clubs).filter(c=>c.id!==myClub.id));
+
+  if (type === 'transfer') {
+    const targets = Object.values(G.players).filter(p=>p.transferValue>500000&&p.contract.clubId!==myClub.id).sort(()=>rng()-0.5);
+    const t = targets[0];
+    const c1 = rngFrom(Object.values(G.clubs));
+    const c2 = rngFrom(Object.values(G.clubs).filter(c=>c.id!==c1.id));
+    const tweets = [
+      t && `🚨 EXCLUSIVE: ${c1?.name} have made an official approach for ${t?.name}. Personal terms not yet discussed. Here we go soon? 🤝 #Transfers`,
+      t && `Sources close to ${t?.name}'s camp tell me he WANTS the move. His current club are holding out for over £${fmt(t?.transferValue*1.2)}. Saga continues. 👀`,
+      `${randomClub?.name} are monitoring the situation of multiple attackers ahead of the January window. Budget limited but ambitions high. #Transfer`,
+      t && `${t?.name} to ${c2?.name}? Agent confirmed talks are at 'early stages'. Nothing concrete yet but worth watching. #FootballRumours`,
+      `BREAKING: ${c1?.name} had a £${fmt(Math.floor(rng()*20000000+5000000))} bid rejected. Club want 30% more. Standoff. 💥`,
+    ].filter(Boolean);
+    return rngFrom(tweets);
+  }
+
+  if (type === 'pundit') {
+    const leagueName = myLeague.name;
+    const tweets = [
+      pos<=3 ? `${myClub.name} are genuine title contenders this season. The way they're playing, nobody can live with them right now. Quality.` :
+               `${myClub.name} need a response. ${pos}th is not where they should be. The squad is better than this.`,
+      hotPlayer && `${hotPlayer.name} is on FIRE right now. ${hotPlayer.stats.goals} goals in ${hotPlayer.stats.apps} games? That's world class numbers. Clubs will be watching.`,
+      `The ${leagueName} is the most unpredictable league in Europe right now. Any team can beat any team on any given day. Love it.`,
+      `Tactically speaking, the 4-3-3 is making a massive comeback. High press, vertical passing, full backs tucking in. Modern football. 📋`,
+      `Biggest problem in modern football? Managers not trusting young players. Give the kids a chance! #YouthDevelopment`,
+      pos===1 ? `${myClub.name} top of the table. Looking VERY good. The league is theirs to lose.` : `${myClub.name} have the squad to push for the top. But consistency is key. No more slip-ups!`,
+      tableRow.won>=3 ? `Three wins in a row for ${myClub.name}. Momentum is EVERYTHING in football.` : `${myClub.name} need to string results together. One win is nice. A run of wins changes everything.`,
+    ].filter(Boolean);
+    return rngFrom(tweets);
+  }
+
+  if (type === 'scout') return null; // handled separately as scout card
+
+  // General / mixed
+  const general = [
+    `Just wrapped up a scouting trip across three countries. The level of talent out there is unbelievable. Club football is in great hands. 🌍⚽`,
+    `Interesting to watch the pressing triggers teams are using this season. The best teams press in waves, not all at once. Details matter.`,
+    `${myClub.name} vs ${randomClub?.name} this weekend. Big game. Could shape the top of the table significantly.`,
+    hotPlayer && `Can we talk about ${hotPlayer.name}? Absolute machine. ${hotPlayer.stats.goals}G ${hotPlayer.stats.assists}A — elite numbers.`,
+    `Set piece preparation is THE most underrated aspect of football management. Goals from corners WIN leagues.`,
+    `I've watched every game in the ${myLeague.name} this season. The quality is genuinely exceptional. Loving it.`,
+  ].filter(Boolean);
+  return rngFrom(general);
+}
+
+function generateScoutCard() {
+  const youngsters = Object.values(G.players).filter(p=>p.age<=21&&p.potential>=75&&p.contract.clubId!==G.player.clubId);
+  if (!youngsters.length) return null;
+  const p = rngFrom(youngsters.sort(()=>rng()-0.5).slice(0,5));
+  const club = G.clubs[p.contract.clubId];
+  const lg = G.leagues[club?.leagueId];
+  const value = `£${fmt(p.transferValue)}`;
+  const topAttrKeys = Object.entries(p.attributes).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const verdicts = [
+    `A genuine talent. If he continues this trajectory, he'll be playing at the top level within 2 seasons.`,
+    `Technical ability is exceptional for his age. Needs physicality but the tools are all there.`,
+    `One of the most exciting prospects I've seen this year. Clubs should be watching closely.`,
+    `High ceiling player. Development curve is steep — could develop into a £${fmt(p.potential * 200000)}+ player.`,
+    `Showed exceptional decision-making in tight spaces. Reminds me of a young version of some elite players.`,
+  ];
+  return { player: p, club, lg, value, topAttrKeys, verdict: rngFrom(verdicts) };
+}
+
+function renderSocialFeed() {
+  if (!G.player) { document.getElementById('social-feed').innerHTML = '<div class="muted">Start a save to see social media.</div>'; return; }
+  const feed = document.getElementById('social-feed');
+  if (!feed) return;
+
+  let html = '';
+  const numTweets = 12;
+  const types = _socialTab === 'all' ? ['pundit','transfer','pundit','scout','transfer','pundit','pundit','transfer','scout','pundit','transfer','pundit'] :
+                _socialTab === 'transfers' ? Array(numTweets).fill('transfer') :
+                _socialTab === 'scouting' ? Array(numTweets).fill('scout') :
+                Array(numTweets).fill('pundit');
+
+  const usedPundits = new Set();
+
+  types.forEach((type, i) => {
+    if (type === 'scout') {
+      const sc = generateScoutCard();
+      if (!sc) return;
+      const { player: p, club, lg, value, topAttrKeys, verdict } = sc;
+      html += `<div class="scout-card">
+        <div class="scout-title">🔭 Scout Report — U21 Talent Alert</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div class="scout-player">${p.name}</div>
+            <div class="scout-meta">${p.position} · Age ${p.age} · ${p.nationality} · ${club?.name||'—'} · ${lg?.name||'—'}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--mono);font-size:13px;color:var(--accent)">${p.rating} <span style="color:var(--text3);font-size:10px">now</span></div>
+            <div style="font-family:var(--mono);font-size:13px;color:var(--green)">${p.potential} <span style="color:var(--text3);font-size:10px">pot</span></div>
+          </div>
+        </div>
+        <div class="scout-attrs">${topAttrKeys.map(([k,v])=>`<div class="scout-attr"><span style="color:var(--text3)">${k.replace(/([A-Z])/,' $1').trim()}</span> <span style="color:${barColor(v)};font-weight:600">${v}</span></div>`).join('')}</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:var(--text2)">Value: <b>${value}</b></span>
+          <span style="font-size:11px;color:var(--text2)">Contract: <b>${p.contract.expiresSeasons}y</b></span>
+          <span style="font-size:11px;color:var(--text2)">Personality: <b>${p.personality.professionalism>=7?'Professional':'Average'}</b></span>
+        </div>
+        <div class="scout-verdict">📝 ${verdict}</div>
+        <div style="margin-top:10px;"><button class="btn btn-sm btn-primary" onclick="makeTransferOffer('${p.id}')">Make Offer</button></div>
+      </div>`;
+      return;
+    }
+
+    const pundit = rngFrom(PUNDITS.filter(pu=>{
+      if (_socialTab==='transfers') return pu.style==='transfer'||pu.style==='journalist';
+      if (_socialTab==='pundits') return pu.style==='pundit';
+      return true;
+    }).filter(pu=>!usedPundits.has(pu.handle)));
+    if (!pundit) return;
+    usedPundits.add(pundit.handle);
+
+    const tweetType = _socialTab === 'all' ? (i%3===0?'transfer':i%3===1?'pundit':'general') : type;
+    const text = generateTweetText(tweetType);
+    if (!text) return;
+
+    const tagType = pundit.style === 'transfer' ? 'transfer' : pundit.style === 'scout' ? 'scout' : 'pundit';
+    const tagLabel = pundit.style === 'transfer' ? '💸 Transfer' : pundit.style === 'scout' ? '🔭 Scout' : '🎙️ Pundit';
+    const likes = rngInt(120, 48000);
+    const rts = rngInt(20, 8000);
+    const mins = rngInt(1, 180);
+    const timeStr = mins < 60 ? `${mins}m` : `${Math.round(mins/60)}h`;
+
+    // Highlight mentions and hashtags
+    const formattedText = text
+      .replace(/#(\w+)/g, '<span class="hashtag">#$1</span>')
+      .replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+
+    html += `<div class="tweet-card">
+      <div style="margin-bottom:6px;"><span class="tweet-tag ${tagType}">${tagLabel}</span></div>
+      <div class="tweet-header">
+        <div class="tweet-avatar">${pundit.avatar}</div>
+        <div>
+          <div class="tweet-name">${pundit.name}</div>
+          <div class="tweet-handle">${pundit.handle} · ${pundit.country}</div>
+        </div>
+        <div style="margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono)">${timeStr} ago</div>
+      </div>
+      <div class="tweet-body">${formattedText}</div>
+      <div class="tweet-footer">
+        <span>♥ ${likes>=1000?(likes/1000).toFixed(1)+'K':likes}</span>
+        <span>↺ ${rts>=1000?(rts/1000).toFixed(1)+'K':rts}</span>
+        <span>💬 ${rngInt(5,400)}</span>
+      </div>
+    </div>`;
+  });
+
+  feed.innerHTML = html || '<div class="muted" style="padding:20px">No posts found. Try a different filter.</div>';
+}
+
+// ── END SOCIAL MEDIA ──
 document.addEventListener('DOMContentLoaded', function boot() {
   document.body.classList.add('on-home');
   hsShowPage('landing');
