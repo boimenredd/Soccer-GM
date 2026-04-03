@@ -5196,9 +5196,9 @@ function renderDashboard() {
   const topAssist = [...players].sort((a,b)=>b.stats.assists-a.stats.assists)[0];
   const topRated = [...players].sort((a,b)=>b.rating-a.rating)[0];
   document.getElementById('dash-team-leaders').innerHTML = [
-    topScorer && `<div class="dash-leader-row"><span>${topScorer.name}</span><span class="mono green">${topScorer.stats.goals} G</span></div>`,
-    topAssist && `<div class="dash-leader-row"><span>${topAssist.name}</span><span class="mono accent">${topAssist.stats.assists} A</span></div>`,
-    topRated && `<div class="dash-leader-row"><span>${topRated.name}</span><span class="mono">${topRated.rating} RAT</span></div>`,
+    topScorer && `<div class="dash-leader-row" onclick="openPlayerDetail('${topScorer.id}')" style="cursor:pointer;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><span>⚽ <b>${topScorer.name}</b></span><span class="mono green">${topScorer.stats.goals} G</span></div>`,
+    topAssist && `<div class="dash-leader-row" onclick="openPlayerDetail('${topAssist.id}')" style="cursor:pointer;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><span>🎯 <b>${topAssist.name}</b></span><span class="mono accent">${topAssist.stats.assists} A</span></div>`,
+    topRated && `<div class="dash-leader-row" onclick="openPlayerDetail('${topRated.id}')" style="cursor:pointer;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><span>⭐ <b>${topRated.name}</b></span><span class="mono">${topRated.rating} RAT</span></div>`,
   ].filter(Boolean).join('') || '<div class="muted">No data yet</div>';
   if (topScorer) document.getElementById('dash-team-leaders').innerHTML += `<div style="margin-top:6px;"><span class="dash-link" onclick="showPanel('squad')">» Full Roster</span></div>`;
 
@@ -5251,7 +5251,7 @@ function renderDashboard() {
   // League headlines / news
   const newsItems = G.player.news.slice(0,6);
   document.getElementById('dash-headlines').innerHTML = newsItems.length ?
-    newsItems.map((n,i)=>`<div class="headline-item"><span class="headline-tag ${i===0?'new':''}">${i===0?'NEW':'NEWS'}</span>${n.headline}${n.detail?`<div style="font-size:10px;color:var(--text3);margin-top:2px;">${n.detail}</div>`:''}</div>`).join('') +
+    newsItems.map((n,i)=>`<div class="headline-item" style="cursor:${n.clubId?'pointer':'default'}" onclick="${n.clubId?'openTeamPage(''+n.clubId+'')':''}" onmouseover="${n.clubId?'this.style.background='var(--bg3)'':''}" onmouseout="this.style.background=''"><span class="headline-tag ${i===0?'new':''}">${i===0?'NEW':'NEWS'}</span>${n.headline}${n.detail?`<div style="font-size:10px;color:var(--text3);margin-top:2px;">${n.detail}</div>`:''}</div>`).join('') +
     `<div style="margin-top:6px;"><span class="dash-link" onclick="showPanel('news')">» News Feed</span></div>` :
     '<div class="muted">No news yet</div>';
 
@@ -5268,7 +5268,7 @@ function renderDashboard() {
     const c=G.clubs[p.contract.clubId]; return c&&c.leagueId===myClub.leagueId;
   }).sort((a,b)=>b.rating-a.rating).slice(0,5);
   document.getElementById('dash-top-players').innerHTML = lgPlayers.length ?
-    lgPlayers.map((p,i)=>`<div class="dash-leader-row"><span>${i+1}. <b>${p.name}</b> <span class="muted">${G.clubs[p.contract.clubId]?.name||''}</span></span><span class="mono ${ratColor(p.rating)}">${p.rating}</span></div>`).join('') +
+    lgPlayers.map((p,i)=>`<div class="dash-leader-row" onclick="openPlayerDetail('${p.id}')" style="cursor:pointer;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><span>${i+1}. <b>${p.name}</b> <span class="muted" onclick="event.stopPropagation();openTeamPage('${G.clubs[p.contract.clubId]?.id||''}')" style="cursor:pointer;color:var(--text2);" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">${G.clubs[p.contract.clubId]?.name||''}</span></span><span class="mono ${ratColor(p.rating)}">${p.rating}</span></div>`).join('') +
     `<div style="margin-top:6px;"><span class="dash-link" onclick="showPanel('analytics')">» Player Stats</span></div>` :
     '<div class="muted">No data</div>';
 }
@@ -5698,6 +5698,21 @@ document.addEventListener('DOMContentLoaded', function boot() {
 
 <script>
 
+// roundRect polyfill for browsers that don't support it natively
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (w < 2*r) r = w/2; if (h < 2*r) r = h/2;
+    this.beginPath();
+    this.moveTo(x+r, y);
+    this.arcTo(x+w, y, x+w, y+h, r);
+    this.arcTo(x+w, y+h, x, y+h, r);
+    this.arcTo(x, y+h, x, y, r);
+    this.arcTo(x, y, x+w, y, r);
+    this.closePath();
+    return this;
+  };
+}
+
 // ═══════════════════════════════════════════════════════════════
 // PLAYER PAGE (full-screen panel, not modal)
 // ═══════════════════════════════════════════════════════════════
@@ -5708,6 +5723,98 @@ function openPlayerDetail(pid) {
   renderPlayerPage(pid);
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// PLAYER FACE GENERATOR — deterministic from player id seed
+// ═══════════════════════════════════════════════════════════════
+function generatePlayerFaceSVG(pid, size=80) {
+  // Deterministic hash from pid
+  let h = 0;
+  for (let i = 0; i < pid.length; i++) { h = ((h << 5) - h) + pid.charCodeAt(i); h |= 0; }
+  const rh = (n, min, max) => { h = ((h * 1664525 + 1013904223) | 0); return min + Math.abs(h % (max - min + 1)); };
+
+  // Skin tones
+  const skins = ['#FDDBB4','#F5C28A','#E8A96A','#C68642','#8D5524','#4A2C17'];
+  const hairCols = ['#1a1a1a','#3d2b1f','#6b3a2a','#8B4513','#D4A017','#C0C0C0','#f5e6c8','#ff6b35'];
+  const eyeCols = ['#3d2b1f','#1a3a5c','#2d5a27','#8B6914','#1a1a1a'];
+
+  const skin = skins[rh(0, 0, skins.length-1)];
+  const hair = hairCols[rh(1, 0, hairCols.length-1)];
+  const eye = eyeCols[rh(2, 0, eyeCols.length-1)];
+  const faceW = rh(3, 44, 54);
+  const faceH = rh(4, 52, 64);
+  const hairStyle = rh(5, 0, 4); // 0=short, 1=medium, 2=buzz, 3=curly, 4=bald
+  const hasBeard = rh(6, 0, 3) === 0;
+  const noseW = rh(7, 6, 10);
+  const earSize = rh(8, 7, 10);
+  const eyeSpacing = rh(9, 13, 18);
+  const browThick = rh(10, 2, 4);
+  const mouthW = rh(11, 12, 18);
+  const cx = size/2, cy = size/2 + 4;
+
+  let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${size/2-1}" fill="#1a2030"/>`;
+
+  // Neck
+  svg += `<rect x="${cx-8}" y="${cy+faceH/2-2}" width="16" height="12" rx="4" fill="${skin}"/>`;
+
+  // Face
+  svg += `<ellipse cx="${cx}" cy="${cy+2}" rx="${faceW/2}" ry="${faceH/2}" fill="${skin}"/>`;
+
+  // Ears
+  svg += `<ellipse cx="${cx-faceW/2+2}" cy="${cy+4}" rx="${earSize*0.45}" ry="${earSize*0.6}" fill="${skin}"/>`;
+  svg += `<ellipse cx="${cx+faceW/2-2}" cy="${cy+4}" rx="${earSize*0.45}" ry="${earSize*0.6}" fill="${skin}"/>`;
+
+  // Hair
+  if (hairStyle === 0) { // short
+    svg += `<ellipse cx="${cx}" cy="${cy-faceH/2+6}" rx="${faceW/2+1}" ry="14" fill="${hair}"/>`;
+    svg += `<rect x="${cx-faceW/2}" y="${cy-faceH/2+4}" width="${faceW}" height="10" fill="${hair}"/>`;
+  } else if (hairStyle === 1) { // medium
+    svg += `<ellipse cx="${cx}" cy="${cy-faceH/2+4}" rx="${faceW/2+2}" ry="18" fill="${hair}"/>`;
+    svg += `<rect x="${cx-faceW/2-2}" y="${cy-faceH/2}" width="${faceW+4}" height="16" fill="${hair}"/>`;
+    svg += `<rect x="${cx-faceW/2-3}" y="${cy-8}" width="5" height="16" rx="2" fill="${hair}"/>`;
+    svg += `<rect x="${cx+faceW/2-2}" y="${cy-8}" width="5" height="16" rx="2" fill="${hair}"/>`;
+  } else if (hairStyle === 2) { // buzz cut
+    svg += `<ellipse cx="${cx}" cy="${cy-faceH/2+6}" rx="${faceW/2+1}" ry="10" fill="${hair}" opacity="0.7"/>`;
+  } else if (hairStyle === 3) { // curly/afro
+    for (let ci = 0; ci < 7; ci++) {
+      const cx2 = cx + (ci-3)*6, cy2 = cy-faceH/2+2;
+      svg += `<circle cx="${cx2}" cy="${cy2}" r="9" fill="${hair}"/>`;
+    }
+    svg += `<rect x="${cx-faceW/2}" y="${cy-faceH/2}" width="${faceW}" height="12" fill="${hair}"/>`;
+  }
+  // bald = hairStyle 4, no hair drawn
+
+  // Eyebrows
+  const browY = cy - 8;
+  svg += `<rect x="${cx-eyeSpacing-6}" y="${browY-1}" width="11" height="${browThick}" rx="1" fill="${hair === '#f5e6c8' ? '#8B6914' : hair}"/>`;
+  svg += `<rect x="${cx+eyeSpacing-5}" y="${browY-1}" width="11" height="${browThick}" rx="1" fill="${hair === '#f5e6c8' ? '#8B6914' : hair}"/>`;
+
+  // Eyes whites
+  svg += `<ellipse cx="${cx-eyeSpacing}" cy="${browY+8}" rx="5" ry="4" fill="white"/>`;
+  svg += `<ellipse cx="${cx+eyeSpacing}" cy="${browY+8}" rx="5" ry="4" fill="white"/>`;
+  // Iris
+  svg += `<circle cx="${cx-eyeSpacing}" cy="${browY+8}" r="3" fill="${eye}"/>`;
+  svg += `<circle cx="${cx+eyeSpacing}" cy="${browY+8}" r="3" fill="${eye}"/>`;
+  // Pupil
+  svg += `<circle cx="${cx-eyeSpacing}" cy="${browY+8}" r="1.5" fill="#111"/>`;
+  svg += `<circle cx="${cx+eyeSpacing}" cy="${browY+8}" r="1.5" fill="#111"/>`;
+
+  // Nose
+  svg += `<path d="M${cx} ${browY+14} Q${cx-noseW/2} ${browY+22} ${cx-noseW/2+2} ${browY+26} Q${cx} ${browY+28} ${cx+noseW/2-2} ${browY+26} Q${cx+noseW/2} ${browY+22} ${cx} ${browY+14}" fill="none" stroke="${skin}" stroke-width="1.5" opacity="0.5"/>`;
+
+  // Mouth
+  const mouthY = browY + 33;
+  svg += `<path d="M${cx-mouthW/2} ${mouthY} Q${cx} ${mouthY+5} ${cx+mouthW/2} ${mouthY}" fill="none" stroke="#a0522d" stroke-width="2" stroke-linecap="round"/>`;
+
+  // Beard (optional)
+  if (hasBeard) {
+    svg += `<ellipse cx="${cx}" cy="${mouthY+8}" rx="${faceW/2-2}" ry="8" fill="${hair}" opacity="0.45"/>`;
+  }
+
+  svg += `</svg>`;
+  return svg;
+}
 function renderPlayerPage(pid) {
   const p = G.players[pid];
   if (!p) return;
@@ -5734,11 +5841,11 @@ function renderPlayerPage(pid) {
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
       <button class="btn btn-sm" onclick="history.back();renderCurrentPanel();" onclick="showPanel(window._prevPanel||'squad')">← Back</button>
       ${isMyPlayer ? `<button class="btn btn-sm btn-primary" onclick="makeTransferOffer('${pid}')">Make Offer</button>` : `<button class="btn btn-sm btn-primary" onclick="makeTransferOffer('${pid}')">Bid for Player</button>`}
-      <button class="btn btn-sm" onclick="showHeatmap('${pid}')">🔥 Heatmap</button>
+      ${p.stats.apps > 0 ? `<button class="btn btn-sm" onclick="showHeatmap('${pid}')">🔥 Heatmap</button>` : `<button class="btn btn-sm" disabled title="No appearances yet this season" style="opacity:0.4;cursor:not-allowed;">🔥 No match data</button>`}
     </div>
     <!-- HEADER BANNER -->
     <div style="background:linear-gradient(135deg,var(--bg2) 0%,var(--bg3) 100%);border:1px solid var(--border2);border-radius:10px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;gap:20px;">
-      <div style="width:80px;height:80px;border-radius:50%;background:var(--bg4);border:3px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;">${posIcon}</div>
+      <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:3px solid var(--border2);flex-shrink:0;">${generatePlayerFaceSVG(pid, 80)}</div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
           <span style="font-size:24px;font-weight:800;letter-spacing:-.01em;">${p.name}</span>
@@ -5877,6 +5984,10 @@ function renderTeamPage(clubId) {
 function showHeatmap(pid) {
   const p = G.players[pid];
   if (!p) return;
+  if (!p.stats.apps || p.stats.apps === 0) {
+    notify(p.name + ' has no appearances yet this season — heatmap unavailable.', 'warn');
+    return;
+  }
   document.getElementById('hm-player-name').textContent = p.name + ' — Heatmap';
   document.getElementById('hm-player-sub').textContent = `${p.position} · ${p.stats.apps} appearances this season`;
   document.getElementById('hm-stats-row').textContent = `Goals: ${p.stats.goals}  Assists: ${p.stats.assists}  Apps: ${p.stats.apps}  Rating: ${p.rating}`;
@@ -6047,10 +6158,10 @@ function showVARReview(incident, onDecision) {
   // Draw VAR pitch view on canvas
   const canvas = document.getElementById('var-canvas');
   const screen = document.getElementById('var-screen');
-  // Defer canvas draw so overlay layout is flushed first
-  requestAnimationFrame(() => {
-    const vW2 = screen.clientWidth > 10 ? screen.clientWidth : 580;
-    const vH2 = screen.clientHeight > 10 ? screen.clientHeight : 326;
+  // Use setTimeout to guarantee browser has fully painted the overlay before measuring
+  setTimeout(() => {
+    const vW2 = screen.clientWidth > 10 ? screen.clientWidth : 560;
+    const vH2 = screen.clientHeight > 10 ? screen.clientHeight : 315;
     canvas.width = vW2 * 2;
     canvas.height = vH2 * 2;
     canvas.style.width = vW2 + 'px';
@@ -6058,7 +6169,7 @@ function showVARReview(incident, onDecision) {
     drawVARScene(canvas, incident);
     // Show pulsing red box immediately during review
     document.getElementById('var-red-box').style.display = 'block';
-  });
+  }, 80);
 
   const scanTexts = [
     'Checking incident...', 'Reviewing angle 1...', 'Reviewing angle 2...',
@@ -6110,124 +6221,237 @@ function drawVARScene(canvas, incident) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
 
-  // Dark TV-style background
-  ctx.fillStyle = '#0a0a0a';
+  // ── TV broadcast background ──────────────────────────────────
+  ctx.fillStyle = '#060a0e';
   ctx.fillRect(0, 0, W, H);
 
-  // Pitch section (bottom half perspective)
-  const grad = ctx.createLinearGradient(0, H*0.3, 0, H);
+  // Pitch grass gradient (bottom 78% of frame)
+  const pitchTop = H * 0.12;
+  const grad = ctx.createLinearGradient(0, pitchTop, 0, H);
   grad.addColorStop(0, '#1a5c2a');
-  grad.addColorStop(0.5, '#1f7a35');
-  grad.addColorStop(1, '#1a5c2a');
+  grad.addColorStop(0.4, '#1f7a35');
+  grad.addColorStop(0.8, '#1a6030');
+  grad.addColorStop(1, '#144d22');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, H*0.28, W, H);
+  ctx.fillRect(0, pitchTop, W, H - pitchTop);
 
-  // Pitch stripes
-  ctx.globalAlpha = 0.08;
-  for (let i = 0; i < 8; i++) {
-    ctx.fillStyle = i%2===0?'#fff':'#000';
-    ctx.fillRect(i*(W/8), H*0.28, W/8, H);
+  // Pitch mowing stripes
+  ctx.globalAlpha = 0.07;
+  const stripeW = W / 10;
+  for (let i = 0; i < 10; i++) {
+    ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#000000';
+    ctx.fillRect(i * stripeW, pitchTop, stripeW, H - pitchTop);
   }
   ctx.globalAlpha = 1;
 
-  // Penalty box lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-  ctx.lineWidth = 2;
-  const bx = W*0.25, bw = W*0.5, by = H*0.3, bh = H*0.35;
+  // ── Penalty box lines ────────────────────────────────────────
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+  ctx.lineWidth = Math.max(2, W * 0.003);
+  const bx = W * 0.18, bw = W * 0.64, by = pitchTop + H * 0.01, bh = H * 0.54;
   ctx.strokeRect(bx, by, bw, bh);
-  ctx.strokeRect(bx+bw*0.2, by, bw*0.6, bh*0.4);
-  // Goal line
-  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-  ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(W*0.2, by); ctx.lineTo(W*0.8, by); ctx.stroke();
-
-  // Goal posts
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(W*0.35, by-H*0.07, W*0.3, H*0.07);
-
-  // Player dots
-  const players = [
-    {x:0.38,y:0.72,color:'#3b82f6',r:12}, {x:0.5,y:0.68,color:'#3b82f6',r:12},
-    {x:0.62,y:0.72,color:'#3b82f6',r:12}, {x:0.5,y:0.82,color:'#3b82f6',r:12},
-    {x:0.45,y:0.55,color:'#ef4444',r:12}, {x:0.55,y:0.58,color:'#ef4444',r:12},
-    {x:0.48,y:0.45,color:'#ef4444',r:12},
-  ];
-  players.forEach(pl => {
-    ctx.beginPath();
-    ctx.arc(pl.x*W, pl.y*H, pl.r, 0, Math.PI*2);
-    ctx.fillStyle = pl.color;
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  });
-
-  // Ball
-  ctx.beginPath();
-  ctx.arc(W*0.5, H*0.38, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#fff';
-  ctx.fill();
-  ctx.strokeStyle = '#333';
+  // 6-yard box
+  const sx = W * 0.32, sw = W * 0.36, sh = H * 0.18;
+  ctx.strokeRect(sx, by, sw, sh);
+  // Goal
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = Math.max(3, W * 0.004);
+  const gx = W * 0.36, gw = W * 0.28, gh = H * 0.1;
+  ctx.strokeRect(gx, by - gh, gw, gh);
+  // Goal net cross-hatch
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
   ctx.lineWidth = 1;
+  for (let ni = 1; ni < 5; ni++) {
+    ctx.beginPath(); ctx.moveTo(gx, by - gh + ni * gh/5); ctx.lineTo(gx + gw, by - gh + ni * gh/5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gx + ni * gw/5, by - gh); ctx.lineTo(gx + ni * gw/5, by); ctx.stroke();
+  }
+  // Penalty spot
+  ctx.beginPath();
+  ctx.arc(W * 0.5, by + H * 0.22, W * 0.008, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.fill();
+  // Penalty arc
+  ctx.beginPath();
+  ctx.arc(W * 0.5, by + H * 0.22, H * 0.16, Math.PI * 0.18, Math.PI * 0.82);
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = Math.max(1.5, W * 0.002);
   ctx.stroke();
 
-  // Highlight offside line or penalty challenge
-  if (incident.type === 'goal') {
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([8,4]);
-    ctx.beginPath();
-    ctx.moveTo(W*0.47, H*0.28);
-    ctx.lineTo(W*0.47, H*0.75);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    // Label
-    ctx.font = `bold ${W*0.025}px monospace`;
-    ctx.fillStyle = '#ef4444';
-    ctx.fillText('OFFSIDE LINE', W*0.47+4, H*0.35);
-  } else if (incident.type === 'penalty') {
-    // Highlight contact zone — circle around tackle area
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 3;
-    ctx.setLineDash([5,3]);
-    ctx.beginPath();
-    ctx.arc(W*0.52, H*0.56, W*0.07, 0, Math.PI*2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.font = `bold ${W*0.024}px monospace`;
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillText('CONTACT ZONE', W*0.3, H*0.72);
-    // Arrow pointing to incident
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(W*0.38, H*0.7);
-    ctx.lineTo(W*0.5, H*0.58);
-    ctx.stroke();
+  // ── Players ─────────────────────────────────────────────────
+  const isGoal = incident.type === 'goal';
+  const isPenalty = incident.type === 'penalty';
+
+  // Defenders (red shirts)
+  const defenders = isGoal
+    ? [{x:0.38,y:0.52},{x:0.44,y:0.45},{x:0.56,y:0.47},{x:0.62,y:0.53},{x:0.50,y:0.60}]
+    : [{x:0.36,y:0.55},{x:0.44,y:0.48},{x:0.56,y:0.50},{x:0.64,y:0.55}];
+  // Attackers (blue shirts)
+  const attackers = isGoal
+    ? [{x:0.47,y:0.38},{x:0.53,y:0.36},{x:0.41,y:0.32},{x:0.60,y:0.33}]
+    : [{x:0.50,y:0.42},{x:0.43,y:0.50},{x:0.58,y:0.52}];
+
+  const drawPlayer = (x, y, color, r=10) => {
+    const px = x * W, py = by + y * (H - by);
+    // Shadow
+    ctx.beginPath(); ctx.ellipse(px, py + r + 2, r * 0.7, r * 0.25, 0, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fill();
+    // Body circle
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2);
+    const pg = ctx.createRadialGradient(px-r*0.3, py-r*0.3, 1, px, py, r);
+    pg.addColorStop(0, lightenColor(color, 40));
+    pg.addColorStop(1, color);
+    ctx.fillStyle = pg; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+    // Head
+    ctx.beginPath(); ctx.arc(px, py - r - 5, r * 0.52, 0, Math.PI * 2);
+    ctx.fillStyle = '#f5c28a'; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+  };
+
+  function lightenColor(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.min(255, (n >> 16) + amt);
+    const g = Math.min(255, ((n >> 8) & 0xff) + amt);
+    const b = Math.min(255, (n & 0xff) + amt);
+    return '#' + ((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
   }
 
-  // TV overlay — timestamp / camera label
-  ctx.fillStyle = 'rgba(0,0,0,0.65)';
-  ctx.fillRect(0, 0, W, H*0.06);
-  ctx.fillStyle = '#fff';
-  ctx.font = `${W*0.022}px monospace`;
-  const camLabel = incident.type === 'penalty' ? 'CAM 4 — PENALTY SPOT' : 'CAM 2 — PENALTY AREA';
-  ctx.fillText(camLabel, W*0.02, H*0.04);
-  ctx.fillStyle = '#ef4444';
-  ctx.fillRect(W*0.88, H*0.01, W*0.1, H*0.04);
-  ctx.fillStyle = '#fff';
-  ctx.fillText('LIVE', W*0.895, H*0.035);
+  defenders.forEach(d => drawPlayer(d.x, d.y, '#c0392b', W*0.014));
+  attackers.forEach(a => drawPlayer(a.x, a.y, '#2980b9', W*0.014));
 
-  // VAR box indicator (set position for animated box)
+  // Ball
+  const ballX = isGoal ? W * 0.5 : W * 0.52;
+  const ballY = isGoal ? by + H * 0.08 : by + H * 0.48;
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, W * 0.016, 0, Math.PI * 2);
+  const bg = ctx.createRadialGradient(ballX - W*0.008, ballY - W*0.008, 1, ballX, ballY, W*0.016);
+  bg.addColorStop(0, '#ffffff');
+  bg.addColorStop(1, '#cccccc');
+  ctx.fillStyle = bg; ctx.fill();
+  ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.stroke();
+
+  // ── Incident-specific overlays ───────────────────────────────
+  if (isGoal) {
+    // Animated offside VAR line — bright red dashed
+    ctx.save();
+    ctx.strokeStyle = '#ff2222';
+    ctx.lineWidth = Math.max(2.5, W * 0.004);
+    ctx.setLineDash([W * 0.025, W * 0.012]);
+    const lineX = W * 0.47;
+    ctx.beginPath(); ctx.moveTo(lineX, pitchTop); ctx.lineTo(lineX, H); ctx.stroke();
+    ctx.setLineDash([]);
+    // Yellow measurement line (last defender to attacker)
+    ctx.strokeStyle = '#f1c40f';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([W * 0.015, W * 0.008]);
+    ctx.beginPath(); ctx.moveTo(W * 0.44, by + H * 0.3); ctx.lineTo(W * 0.47, by + H * 0.3); ctx.stroke();
+    ctx.setLineDash([]);
+    // Arrow tip
+    ctx.fillStyle = '#f1c40f';
+    ctx.beginPath();
+    ctx.moveTo(W*0.47, by+H*0.3);
+    ctx.lineTo(W*0.455, by+H*0.28);
+    ctx.lineTo(W*0.455, by+H*0.32);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+    // Label
+    ctx.save();
+    ctx.font = `bold ${W*0.028}px 'Arial Narrow', Arial, monospace`;
+    ctx.fillStyle = '#ff4444';
+    ctx.shadowColor = '#000'; ctx.shadowBlur = 8;
+    ctx.fillText('OFFSIDE', W * 0.49, pitchTop + H * 0.12);
+    ctx.restore();
+    // Measurement badge
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,34,34,0.85)';
+    ctx.beginPath(); ctx.roundRect(W*0.49, by+H*0.24, W*0.18, H*0.08, 4); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${W*0.022}px monospace`;
+    ctx.fillText('23.4 cm', W*0.50, by+H*0.295);
+    ctx.restore();
+  } else {
+    // Penalty challenge — highlight contact circle
+    ctx.save();
+    ctx.strokeStyle = '#f39c12';
+    ctx.lineWidth = Math.max(2.5, W * 0.004);
+    ctx.setLineDash([W * 0.02, W * 0.01]);
+    ctx.beginPath();
+    ctx.arc(W * 0.51, by + H * 0.48, W * 0.07, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Filled highlight zone
+    ctx.fillStyle = 'rgba(243,156,18,0.18)';
+    ctx.beginPath();
+    ctx.arc(W * 0.51, by + H * 0.48, W * 0.07, 0, Math.PI * 2);
+    ctx.fill();
+    // Arrow from label to contact
+    ctx.strokeStyle = '#f39c12';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(W*0.33, by+H*0.2); ctx.lineTo(W*0.47, by+H*0.44); ctx.stroke();
+    ctx.fillStyle = '#f39c12';
+    ctx.beginPath();
+    ctx.arc(W*0.33, by+H*0.2, W*0.008, 0, Math.PI*2); ctx.fill();
+    // Label
+    ctx.fillStyle = 'rgba(243,156,18,0.9)';
+    ctx.beginPath(); ctx.roundRect(W*0.16, by+H*0.13, W*0.2, H*0.07, 4); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${W*0.022}px monospace`;
+    ctx.fillText('CONTACT', W*0.175, by+H*0.178);
+    ctx.restore();
+  }
+
+  // ── TV broadcast chrome ──────────────────────────────────────
+  // Top bar
+  ctx.fillStyle = 'rgba(0,0,0,0.82)';
+  ctx.fillRect(0, 0, W, pitchTop);
+  // VAR logo left
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${H * 0.065}px 'Arial Black', Arial, monospace`;
+  ctx.fillText('VAR', W * 0.03, pitchTop * 0.82);
+  // Camera label
+  ctx.font = `${H * 0.045}px monospace`;
+  ctx.fillStyle = '#aaaaaa';
+  const camLabel = isGoal ? 'CAM 3 — OFFSIDE ANGLE' : 'CAM 5 — PENALTY AREA';
+  ctx.fillText(camLabel, W * 0.16, pitchTop * 0.82);
+  // LIVE pill
+  ctx.fillStyle = '#e74c3c';
+  ctx.beginPath(); ctx.roundRect(W * 0.86, pitchTop * 0.12, W * 0.12, pitchTop * 0.72, 3); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${H * 0.05}px monospace`;
+  ctx.fillText('LIVE', W * 0.875, pitchTop * 0.78);
+  // Bottom score ticker
+  ctx.fillStyle = 'rgba(0,0,20,0.88)';
+  ctx.fillRect(0, H * 0.92, W, H * 0.08);
+  ctx.fillStyle = '#3498db';
+  ctx.fillRect(0, H * 0.92, W * 0.12, H * 0.08);
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${H * 0.045}px monospace`;
+  ctx.fillText(isGoal ? 'GOAL UNDER REVIEW' : 'PENALTY REVIEW', W * 0.14, H * 0.965);
+  ctx.fillStyle = '#f39c12';
+  ctx.font = `${H * 0.038}px monospace`;
+  ctx.fillText('Video Assistant Referee', W * 0.62, H * 0.965);
+
+  // ── Red review box (position stored for CSS animation) ───────
   const rb = document.getElementById('var-red-box');
-  const screenEl = document.getElementById('var-screen');
-  const scaleX = screenEl.clientWidth / W;
-  const scaleY = screenEl.clientHeight / H;
-  rb.style.left = Math.round(W*0.44*scaleX) + 'px';
-  rb.style.top = Math.round(H*0.3*scaleY) + 'px';
-  rb.style.width = Math.round(W*0.12*scaleX) + 'px';
-  rb.style.height = Math.round(H*0.12*scaleY) + 'px';
+  if (rb) {
+    const screenEl = document.getElementById('var-screen');
+    const dispW = screenEl.clientWidth || (W/2);
+    const dispH = screenEl.clientHeight || (H/2);
+    const scaleX = dispW / W;
+    const scaleY = dispH / H;
+    if (isGoal) {
+      rb.style.left = Math.round(W * 0.44 * scaleX) + 'px';
+      rb.style.top = Math.round(by * scaleY * 0.5) + 'px';
+      rb.style.width = Math.round(W * 0.14 * scaleX) + 'px';
+      rb.style.height = Math.round(H * 0.55 * scaleY) + 'px';
+    } else {
+      rb.style.left = Math.round((W * 0.44) * scaleX) + 'px';
+      rb.style.top = Math.round((by + H * 0.35) * scaleY) + 'px';
+      rb.style.width = Math.round(W * 0.15 * scaleX) + 'px';
+      rb.style.height = Math.round(H * 0.22 * scaleY) + 'px';
+    }
+  }
+}
+
 }
 
 // ═══════════════════════════════════════════════════════════════
