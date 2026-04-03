@@ -395,10 +395,10 @@ body.on-home { overflow-y: auto; height: auto; min-height: 100vh; }
   border-radius: 8px;
   padding: 24px;
   min-width: 400px;
-  max-width: 820px;
-  max-height: 85vh;
+  max-width: 860px;
+  max-height: 88vh;
   overflow-y: auto;
-  width: 92%;
+  width: 96%;
 }
 #modal-title {
   font-size: 16px;
@@ -610,7 +610,7 @@ body.light-mode {
 
 /* ── CALENDAR ── */
 .cal-header-cell { text-align:center; font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); padding:6px 0; }
-.cal-day { min-height:72px; background:var(--bg2); border:1px solid var(--border); border-radius:4px; padding:5px 6px; font-size:11px; cursor:pointer; transition:background .1s; overflow:hidden; }
+.cal-day { min-height:84px; background:var(--bg2); border:1px solid var(--border); border-radius:4px; padding:5px 6px; font-size:11px; cursor:pointer; transition:background .1s; overflow:hidden; }
 .cal-day:hover { background:var(--bg3); }
 .cal-day.today { border-color:var(--accent); }
 .cal-day.has-match { border-left:3px solid var(--accent); }
@@ -619,7 +619,7 @@ body.light-mode {
 .cal-day.result-loss { border-left:3px solid var(--red); }
 .cal-day.empty { background:transparent; border-color:transparent; cursor:default; }
 .cal-day-num { font-family:var(--mono); font-size:11px; color:var(--text3); margin-bottom:3px; }
-.cal-match-tag { font-size:10px; background:var(--bg4); border-radius:3px; padding:2px 4px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-match-tag { font-size:10px; background:var(--bg4); border-radius:3px; padding:2px 5px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; cursor:default; }
 
 /* ── DASHBOARD TABLE FIX ── */
 #dash-full-table .data-table { table-layout:fixed; width:100%; }
@@ -959,32 +959,34 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
 .headline-tag.new { background: rgba(59,130,246,.2); color: var(--accent); }
 
 /* ═══════════════════════════════
-   RICH MATCH SIM
+   RICH MATCH SIM — UNIFIED LAYOUT
 ═══════════════════════════════ */
 #match-sim-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.88);
+  background: rgba(0,0,0,0.92);
   z-index: 500;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 12px;
 }
 #match-sim-overlay.open { display: flex; }
-.match-scoreboard {
+#match-sim-box {
   background: var(--bg2);
   border: 1px solid var(--border2);
   border-radius: 10px;
-  padding: 20px 28px;
-  width: 560px;
-  max-width: 95vw;
+  padding: 18px 22px 14px;
+  width: min(1100px, 97vw);
+  max-height: 92vh;
+  overflow-y: auto;
 }
 #msim-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   font-size: 11px;
   font-family: var(--mono);
   color: var(--text3);
@@ -995,52 +997,77 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
   border-radius: 10px;
   font-size: 10px;
 }
-.msim-tabs {
-  display: flex;
+/* Three-column body */
+#msim-body-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr 190px;
+  gap: 14px;
+  margin-top: 10px;
+  min-height: 320px;
+}
+.msim-section-title {
+  font-size: 9px;
+  font-family: var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 7px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
-  margin: 10px 0 12px;
-  gap: 0;
 }
-.msim-tab {
-  padding: 6px 16px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text2);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  position: relative; top: 1px;
-  transition: all .15s;
-}
-.msim-tab:hover { color: var(--text); }
-.msim-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.msim-tab-content { display: none; }
-.msim-tab-content.active { display: block; }
 /* Live stat bars */
-#msim-live-stats { padding: 4px 0; }
+#msim-live-stats { padding: 0; }
 .msim-stat-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 7px;
   font-family: var(--mono);
   font-size: 11px;
 }
-.msim-stat-row > span { width: 28px; text-align: center; color: var(--text2); }
+.msim-stat-row > span { width: 26px; text-align: center; color: var(--text2); font-size: 11px; }
 .msim-stat-bar-wrap { flex: 1; }
-.msim-stat-label { font-size: 9px; text-align: center; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
+.msim-stat-label { font-size: 9px; text-align: center; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 2px; }
 .msim-stat-bar { height: 5px; background: var(--bg4); border-radius: 3px; display: flex; overflow: hidden; }
-.msim-bar-l { height: 100%; background: var(--accent); transition: width .4s; border-radius: 3px 0 0 3px; }
-.msim-bar-r { height: 100%; background: var(--orange); transition: width .4s; border-radius: 0 3px 3px 0; }
+.msim-bar-l { height: 100%; background: var(--accent); transition: width .5s; border-radius: 3px 0 0 3px; }
+.msim-bar-r { height: 100%; background: var(--orange); transition: width .5s; border-radius: 0 3px 3px 0; }
+/* Live ratings */
+#msim-live-ratings { font-size: 11px; }
+.msim-rating-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.msim-rating-row:last-child { border-bottom: none; }
+.msim-rat-badge {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 11px;
+  width: 30px;
+  text-align: center;
+  border-radius: 4px;
+  padding: 1px 0;
+}
+/* Commentary */
+#msim-col-commentary { display: flex; flex-direction: column; }
+.match-events { flex: 1; max-height: 380px; overflow-y: auto; font-size: 12px; color: var(--text2); }
+.match-events .ev { padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 6px; }
+.match-events .ev .min { font-family: var(--mono); color: var(--accent); width: 30px; flex-shrink: 0; font-size: 11px; }
+/* Lineups */
+#msim-col-lineups { font-size: 11px; }
+.msim-lineup-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--border); gap: 4px; }
+.msim-lineup-row:last-child { border-bottom: none; }
 /* Post match */
 #post-match-box {
   background: var(--bg2);
   border: 1px solid var(--border2);
   border-radius: 10px;
   padding: 28px 32px;
-  width: 600px;
-  max-width: 95vw;
+  width: 620px;
+  max-width: 96vw;
   max-height: 90vh;
   overflow-y: auto;
   animation: fadeUp .3s ease;
@@ -1510,21 +1537,21 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
   </div>
 </div>
 
-<!-- MATCH SIM OVERLAY — RICH VERSION -->
+<!-- MATCH SIM OVERLAY — UNIFIED LIVE VIEW -->
 <div id="match-sim-overlay">
-  <div class="match-scoreboard" id="match-sim-box">
-    <!-- Header -->
+  <div id="match-sim-box">
+    <!-- Header row -->
     <div id="msim-header">
       <div id="msim-comp-badge">League</div>
-      <div id="msim-weather-badge">⛅ Clear</div>
+      <div id="msim-weather-badge">☀️ Clear</div>
     </div>
-    <!-- Teams + Score -->
+    <!-- Score bar -->
     <div class="match-teams">
       <div style="flex:1;text-align:right;">
         <div class="match-team" id="sim-home"></div>
         <div id="msim-home-form" style="font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono);"></div>
       </div>
-      <div style="text-align:center;">
+      <div style="text-align:center;min-width:120px;">
         <div class="match-score" id="sim-score">0 – 0</div>
         <div class="match-minute" id="sim-minute">Kick off</div>
       </div>
@@ -1535,37 +1562,43 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
     </div>
     <!-- Progress bar -->
     <div class="match-progress"><div class="match-progress-fill" id="sim-progress" style="width:0%"></div></div>
-    <!-- Tabs: Commentary / Stats / Lineups -->
-    <div class="msim-tabs">
-      <button class="msim-tab active" onclick="switchMsimTab('commentary',this)">Commentary</button>
-      <button class="msim-tab" onclick="switchMsimTab('stats',this)">Stats</button>
-      <button class="msim-tab" onclick="switchMsimTab('lineups',this)">Lineups</button>
-    </div>
-    <!-- Commentary -->
-    <div id="msim-tab-commentary" class="msim-tab-content active">
-      <div class="match-events" id="sim-events"></div>
-    </div>
-    <!-- Live stats -->
-    <div id="msim-tab-stats" class="msim-tab-content">
-      <div id="msim-live-stats">
-        <div class="msim-stat-row"><span id="mstat-hshots">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Shots</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hshots"></div><div class="msim-bar-r" id="mbar-ashots"></div></div></div><span id="mstat-ashots">0</span></div>
-        <div class="msim-stat-row"><span id="mstat-hposs">50%</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Possession</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hposs"></div><div class="msim-bar-r" id="mbar-aposs"></div></div></div><span id="mstat-aposs">50%</span></div>
-        <div class="msim-stat-row"><span id="mstat-hpasses">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Passes</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hpasses"></div><div class="msim-bar-r" id="mbar-apasses"></div></div></div><span id="mstat-apasses">0</span></div>
-        <div class="msim-stat-row"><span id="mstat-hfouls">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Fouls</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hfouls"></div><div class="msim-bar-r" id="mbar-afouls"></div></div></div><span id="mstat-afouls">0</span></div>
-        <div class="msim-stat-row"><span id="mstat-hcorners">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Corners</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hcorners"></div><div class="msim-bar-r" id="mbar-acorners"></div></div></div><span id="mstat-acorners">0</span></div>
-        <div class="msim-stat-row"><span id="mstat-hyyellow">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Yellows</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hyellow"></div><div class="msim-bar-r" id="mbar-ayellow"></div></div></div><span id="mstat-ayellow">0</span></div>
-        <div class="msim-stat-row"><span id="mstat-hred">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Reds</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hred"></div><div class="msim-bar-r" id="mbar-ared"></div></div></div><span id="mstat-ared">0</span></div>
+
+    <!-- THREE-COLUMN LIVE BODY -->
+    <div id="msim-body-grid">
+      <!-- LEFT: Live Stats -->
+      <div id="msim-col-stats">
+        <div class="msim-section-title">Live Stats</div>
+        <div id="msim-live-stats">
+          <div class="msim-stat-row"><span id="mstat-hshots">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Shots</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hshots"></div><div class="msim-bar-r" id="mbar-ashots"></div></div></div><span id="mstat-ashots">0</span></div>
+          <div class="msim-stat-row"><span id="mstat-hposs">50%</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Possession</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hposs"></div><div class="msim-bar-r" id="mbar-aposs"></div></div></div><span id="mstat-aposs">50%</span></div>
+          <div class="msim-stat-row"><span id="mstat-hpasses">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Passes</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hpasses"></div><div class="msim-bar-r" id="mbar-apasses"></div></div></div><span id="mstat-apasses">0</span></div>
+          <div class="msim-stat-row"><span id="mstat-hfouls">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Fouls</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hfouls"></div><div class="msim-bar-r" id="mbar-afouls"></div></div></div><span id="mstat-afouls">0</span></div>
+          <div class="msim-stat-row"><span id="mstat-hcorners">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Corners</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hcorners"></div><div class="msim-bar-r" id="mbar-acorners"></div></div></div><span id="mstat-acorners">0</span></div>
+          <div class="msim-stat-row"><span id="mstat-hyyellow">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Yellows</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hyellow"></div><div class="msim-bar-r" id="mbar-ayellow"></div></div></div><span id="mstat-ayellow">0</span></div>
+          <div class="msim-stat-row"><span id="mstat-hred">0</span><div class="msim-stat-bar-wrap"><div class="msim-stat-label">Reds</div><div class="msim-stat-bar"><div class="msim-bar-l" id="mbar-hred"></div><div class="msim-bar-r" id="mbar-ared"></div></div></div><span id="mstat-ared">0</span></div>
+        </div>
+        <!-- Live Ratings -->
+        <div class="msim-section-title" style="margin-top:12px;">Live Ratings</div>
+        <div id="msim-live-ratings"></div>
+      </div>
+
+      <!-- CENTER: Commentary feed -->
+      <div id="msim-col-commentary">
+        <div class="msim-section-title">Commentary</div>
+        <div class="match-events" id="sim-events"></div>
+      </div>
+
+      <!-- RIGHT: Lineups -->
+      <div id="msim-col-lineups">
+        <div class="msim-section-title" id="msim-home-lineup-title">HOME XI</div>
+        <div id="msim-home-lineup" style="margin-bottom:12px;"></div>
+        <div class="msim-section-title" id="msim-away-lineup-title">AWAY XI</div>
+        <div id="msim-away-lineup"></div>
       </div>
     </div>
-    <!-- Lineups -->
-    <div id="msim-tab-lineups" class="msim-tab-content">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px;">
-        <div><div id="msim-home-lineup-title" style="font-weight:600;margin-bottom:6px;font-family:var(--mono);font-size:10px;color:var(--text2);">HOME XI</div><div id="msim-home-lineup"></div></div>
-        <div><div id="msim-away-lineup-title" style="font-weight:600;margin-bottom:6px;font-family:var(--mono);font-size:10px;color:var(--text2);">AWAY XI</div><div id="msim-away-lineup"></div></div>
-      </div>
-    </div>
-    <!-- Controls: ZenGM-style speed picker + pause -->
-    <div style="display:flex;gap:6px;justify-content:center;margin-top:12px;align-items:center;flex-wrap:wrap;">
+
+    <!-- Controls -->
+    <div style="display:flex;gap:6px;justify-content:center;margin-top:10px;align-items:center;flex-wrap:wrap;">
       <button class="btn btn-sm sim-speed-opt active" data-speed="slow" onclick="setSimSpeed('slow')">🐢 Slow</button>
       <button class="btn btn-sm sim-speed-opt" data-speed="normal" onclick="setSimSpeed('normal')">▶ Normal</button>
       <button class="btn btn-sm sim-speed-opt" data-speed="fast" onclick="setSimSpeed('fast')">⚡ Fast</button>
@@ -1793,6 +1826,9 @@ function generateWorld() {
   G.matches = {};
   G.ucCompetitions = {};
 
+  // Reset club name counters for fresh world gen
+  Object.keys(_clubNameCounters).forEach(k => delete _clubNameCounters[k]);
+
   LEAGUES_DATA.forEach(ld => {
     G.leagues[ld.id] = {
       ...ld,
@@ -1820,7 +1856,7 @@ function generateWorld() {
       G.clubs[cid] = {
         id: cid,
         leagueId: ld.id,
-        name: generateClubName(ld.country, i),
+        name: generateClubName(ld.country, ld.id),
         shortName: '',
         reputation: rep,
         stadiumCapacity: cap,
@@ -1953,10 +1989,28 @@ const CLUB_NAMES = {
   Croatia_extra: [],
 };
 
-function generateClubName(country, idx) {
+// Track how many names have been used per country so each league gets unique clubs
+const _clubNameCounters = {};
+function generateClubName(country, leagueId) {
+  if (!_clubNameCounters[country]) _clubNameCounters[country] = 0;
   const arr = CLUB_NAMES[country];
-  if (arr && arr[idx]) return arr[idx];
-  return `${country} FC ${idx+1}`;
+  if (arr && _clubNameCounters[country] < arr.length) {
+    return arr[_clubNameCounters[country]++];
+  }
+  // Fallback: generate a plausible club name if we run out
+  const CITY_PREFIXES = ['FC','AC','SC','BK','IK','SK','FK','GK','NK','AS','SS','AZ','CS','GS','FS','HB','KB','MB','RB','SV'];
+  const fallbackCities = [
+    'Northside','Southport','Eastfield','Westgate','Redbank','Bluewater','Goldhill','Ironside','Steelway','Bridgeton',
+    'Ashford','Crowley','Denton','Elmwood','Foxbury','Greendale','Hillcrest','Ivyton','Jarrow','Kirkham',
+    'Langley','Millford','Newbury','Oakham','Pembrook','Queensbury','Ravenswood','Stoneleigh','Thornton','Upton',
+    'Valeby','Whitmore','Yarborough','Zetland','Alton','Barwick','Castleton','Dunmore','Elsworth','Farncombe',
+    'Garston','Haverhill','Ingleton','Justleton','Kepwick','Loxton','Morden','Neston','Orleton','Paxton'
+  ];
+  const nameIdx = (_clubNameCounters[country] - (arr ? arr.length : 0));
+  const prefix = CITY_PREFIXES[nameIdx % CITY_PREFIXES.length];
+  const city = fallbackCities[nameIdx % fallbackCities.length];
+  _clubNameCounters[country]++;
+  return prefix + ' ' + city;
 }
 
 function generatePlayer(clubId, pos, repFactor, tier, country) {
@@ -2692,6 +2746,7 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
     const awayClub = G.clubs[awayId];
     const lg = leagueId ? G.leagues[leagueId] : null;
 
+    // Init display
     document.getElementById('sim-home').textContent = homeClub.name;
     document.getElementById('sim-away').textContent = awayClub.name;
     document.getElementById('sim-events').innerHTML = '';
@@ -2699,149 +2754,257 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
     document.getElementById('sim-progress').style.width = '0%';
     document.getElementById('sim-minute').textContent = 'Kick off';
     document.getElementById('msim-comp-badge').textContent = lg?.name || 'Cup';
-
-    // Speed buttons init
     document.querySelectorAll('.sim-speed-opt').forEach(b => b.classList.toggle('active', b.dataset.speed === simSpeedKey));
     const pauseBtn = document.getElementById('sim-pause-btn');
-    if (pauseBtn) { pauseBtn.textContent = '⏸ Pause'; }
+    if (pauseBtn) pauseBtn.textContent = '⏸ Pause';
 
-    // Pre-simulate the full match
+    // Pre-simulate full match
     const result = simulateMatchFull(homeId, awayId, leagueId, isPlayerMatch);
     overlay._result = result;
 
-    // Populate lineups tab
-    const homeXI = homeClub.players.slice(0,11).map(pid=>G.players[pid]).filter(Boolean);
-    const awayXI = awayClub.players.slice(0,11).map(pid=>G.players[pid]).filter(Boolean);
-    document.getElementById('msim-home-lineup-title').textContent = homeClub.name.toUpperCase() + ' XI';
-    document.getElementById('msim-away-lineup-title').textContent = awayClub.name.toUpperCase() + ' XI';
-    document.getElementById('msim-home-lineup').innerHTML = homeXI.map(p=>`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);"><span>${p.name}</span><span class="pill pill-blue" style="font-size:9px;">${p.position}</span></div>`).join('');
-    document.getElementById('msim-away-lineup').innerHTML = awayXI.map(p=>`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);"><span>${p.name}</span><span class="pill pill-gray" style="font-size:9px;">${p.position}</span></div>`).join('');
-
-    // Weather
+    // Weather badge
     document.getElementById('msim-weather-badge').textContent = {clear:'☀️ Clear', overcast:'⛅ Overcast', rain:'🌧️ Rain', wind:'🌬️ Windy', snow:'❄️ Snow'}[result.weather]||'☀️ Clear';
 
-    let hg = 0, ag = 0;
-    const sortedEvents = result.events.sort((a,b)=>a.minute-b.minute);
-    let ei = 0;
-    const liveStats = { home:{shots:0,possession:50,passes:0,fouls:0,corners:0,_homeYellow:0,_awayYellow:0,_homeRed:0,_awayRed:0}, away:{shots:0,possession:50,passes:0,fouls:0,corners:0} };
+    // Populate lineups (right column)
+    const homeXI = homeClub.players.slice(0,11).map(pid=>G.players[pid]).filter(Boolean);
+    const awayXI = awayClub.players.slice(0,11).map(pid=>G.players[pid]).filter(Boolean);
+    document.getElementById('msim-home-lineup-title').textContent = homeClub.name.toUpperCase();
+    document.getElementById('msim-away-lineup-title').textContent = awayClub.name.toUpperCase();
+    document.getElementById('msim-home-lineup').innerHTML = homeXI.map(p=>`<div class="msim-lineup-row"><span>${p.name}</span><span style="font-family:var(--mono);font-size:10px;color:var(--accent)">${p.position}</span></div>`).join('');
+    document.getElementById('msim-away-lineup').innerHTML = awayXI.map(p=>`<div class="msim-lineup-row"><span>${p.name}</span><span style="font-family:var(--mono);font-size:10px;color:var(--orange)">${p.position}</span></div>`).join('');
 
-    // Build rich play-by-play commentary bank keyed by minute ranges
-    const pbpBank = {
-      early: ['⚽ Lively start — both sides pressing high.','🔄 Possession play in the middle third, looking for openings.','👀 Early set piece won — keeper deals with it comfortably.','🌀 Fast transitions in the opening minutes, no clear chance yet.','💪 Strong challenge in midfield — ref waves play on.'],
-      mid: ['🎯 Shot from distance — straight at the keeper.','🔀 Quick one-two on the edge — defender clears at the last moment.','📐 Tactical battle developing — neither side giving an inch.','⚡ Pace of the game picking up — crowd getting louder.','🔁 Corner swings in... headed clear.','🧤 Goalkeeper comes out confidently to claim the cross.'],
-      late: ['⏱️ Manager gesturing from the touchline — tactical change coming.','😤 Frustration mounting for the trailing side.','🚀 Final push — long ball pumped into the box.','🌡️ Tense atmosphere — every touch whistled by supporters.','🏃 Counter attack! Pace of the break is electric...','🎪 Drama building — nothing is decided yet.'],
-      halfTime: ['🍊 Half-time whistle! Teams head in for the break.','⏸️ Half-time. Manager will have plenty to say in that dressing room.'],
-      fullTime: ['🔔 Full-time whistle! Game over.','⏱️ The referee brings proceedings to a close.']
+    // Live ratings tracker — start all at 6.0
+    const liveRatings = {}; // pid -> { score, apps }
+    const isPlayerClub = isPlayerMatch ? G.player.clubId : null;
+    const ratingPlayers = (isPlayerClub === homeId ? homeXI : isPlayerClub === awayId ? awayXI : homeXI).slice(0,11);
+    ratingPlayers.forEach(p => { liveRatings[p.id] = { base: 6.0, delta: 0 }; });
+
+    function updateLiveRatings(ev) {
+      // Bump or drop ratings based on events
+      if (!liveRatings) return;
+      if (ev.type === 'goal' && ev.playerId && liveRatings[ev.playerId]) liveRatings[ev.playerId].delta += 1.2;
+      if (ev.type === 'goal' && ev.assistId && liveRatings[ev.assistId]) liveRatings[ev.assistId].delta += 0.6;
+      if (ev.type === 'yellow' && ev.playerId && liveRatings[ev.playerId]) liveRatings[ev.playerId].delta -= 0.4;
+      if (ev.type === 'red' && ev.playerId && liveRatings[ev.playerId]) liveRatings[ev.playerId].delta -= 1.5;
+      if (ev.type === 'miss' && ev.playerId && liveRatings[ev.playerId]) liveRatings[ev.playerId].delta -= 0.3;
+      if (ev.type === 'save' && ev.playerId && liveRatings[ev.playerId]) liveRatings[ev.playerId].delta += 0.4;
+    }
+
+    function renderLiveRatings(teamWinning) {
+      const ratColor = r => r>=8?'#22c55e':r>=7?'#86efac':r>=6?'var(--text)':r>=5?'#eab308':'#ef4444';
+      const ratBg = r => r>=8?'rgba(34,197,94,0.2)':r>=7?'rgba(134,239,172,0.15)':r>=6?'rgba(255,255,255,0.05)':'rgba(239,68,68,0.15)';
+      // Add slight noise each render to simulate live fluctuation
+      const html = ratingPlayers.map(p=>{
+        const noise = (rng()-0.5)*0.2;
+        const base = teamWinning === 'my' ? 6.8 : teamWinning === 'against' ? 5.9 : 6.3;
+        const rating = Math.min(10, Math.max(3.5, base + (liveRatings[p.id]?.delta||0) + noise + (rng()-0.5)*0.3));
+        const r = parseFloat(rating.toFixed(1));
+        return `<div class="msim-rating-row">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;">${p.name.split(' ').pop()}</span>
+          <span style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-right:4px;">${p.position}</span>
+          <span class="msim-rat-badge" style="background:${ratBg(r)};color:${ratColor(r)}">${r.toFixed(1)}</span>
+        </div>`;
+      }).join('');
+      const el = document.getElementById('msim-live-ratings');
+      if (el) el.innerHTML = html;
+    }
+
+    // Extended event bank with missed shots, arguments, fouls, saves, etc.
+    const extEvents = {
+      miss: [
+        (p) => `❌ <b>${p}</b> blazes over from close range! Huge miss!`,
+        (p) => `🚫 <b>${p}</b> shoots straight at the keeper. Wasted chance.`,
+        (p) => `😬 Oh! <b>${p}</b> hits the post! It stays 0-0.`,
+        (p) => `📐 <b>${p}</b> curls one just wide. So close!`,
+        (p) => `🙈 <b>${p}</b> skies it from 8 yards. Can't believe it.`,
+      ],
+      save: [
+        (p) => `🧤 Brilliant save from <b>${p}</b>! Fingertips! Still level.`,
+        (p) => `🧤 <b>${p}</b> dives to his right — tremendous stop!`,
+        (p) => `🛡️ <b>${p}</b> pulls off a point-blank save. Unbelievable!`,
+        (p) => `🧤 <b>${p}</b> spreads himself well — nothing gets past him.`,
+      ],
+      argument: [
+        (p1,p2) => `🔥 <b>${p1}</b> and <b>${p2}</b> get involved — referee quickly steps in.`,
+        (p1,p2) => `😤 Heated exchange between <b>${p1}</b> and <b>${p2}</b>. Ref books both names.`,
+        (p1,p2) => `🗣️ <b>${p1}</b> gets in <b>${p2}</b>'s face. Tempers flaring!`,
+        (p1,p2) => `⚡ Flashpoint! <b>${p1}</b> shoves <b>${p2}</b>. Both players booked.`,
+      ],
+      foul: [
+        (p) => `🦵 Cynical foul from <b>${p}</b>. Referee not happy.`,
+        (p) => `⚠️ <b>${p}</b> catches his man late — dangerous challenge.`,
+        (p) => `🤕 <b>${p}</b> scythes down the attacker. Free kick on the edge.`,
+      ],
+      var: [
+        () => `📺 VAR is checking... reviewing a potential handball.`,
+        () => `📺 VAR review underway! Long wait for the decision.`,
+        () => `📺 Check complete — no intervention. Play resumes.`,
+      ],
+      chance: [
+        (p) => `⚡ <b>${p}</b> bursts through! But the angle is too tight.`,
+        (p) => `🎯 <b>${p}</b> lays it off — shot from distance deflects for a corner.`,
+        (p) => `🏃 Counter-attack! <b>${p}</b> races clear... but the ball runs away.`,
+      ],
     };
 
-    let commentaryIdx = 0;
-    let pbpTotal = 18; // total tick count
+    // Sort pre-simulated events by minute
+    const sortedEvents = result.events.sort((a,b)=>a.minute-b.minute);
+    let ei = 0;
+    let hg = 0, ag = 0;
 
-    function addPbpComment(minute, html, style='') {
+    // Live stats state — fluctuates as game progresses
+    const liveStats = {
+      home: { shots:0, possession:50, passes:0, fouls:0, corners:0, _homeYellow:0, _awayYellow:0, _homeRed:0, _awayRed:0 },
+      away: { shots:0, possession:50, passes:0, fouls:0, corners:0 }
+    };
+
+    // Possession oscillates based on momentum
+    let possMomentum = result.stats.home.possession; // target
+    let currentHomePoss = 50;
+
+    function addEvent(minute, html, style='') {
       const div = document.createElement('div');
       div.className = 'ev';
-      div.style.cssText = `color:var(--text3);font-size:11px;${style}`;
-      div.innerHTML = `<span class="min">${minute}'</span>${html}`;
-      document.getElementById('sim-events').appendChild(div);
-      document.getElementById('sim-events').scrollTop = 9999;
+      div.style.cssText = style;
+      div.innerHTML = `<span class="min">${minute}'</span><span>${html}</span>`;
+      const feed = document.getElementById('sim-events');
+      if (feed) { feed.appendChild(div); feed.scrollTop = 9999; }
     }
 
-    function addGoalDiv(minute, html) {
-      const div = document.createElement('div');
-      div.className = 'ev';
-      div.style.cssText = 'background:rgba(34,197,94,0.1);border-left:3px solid var(--green);padding-left:6px;border-radius:3px;';
-      div.innerHTML = `<span class="min" style="color:var(--green)">${minute}'</span>${html}`;
-      document.getElementById('sim-events').appendChild(div);
-      document.getElementById('sim-events').scrollTop = 9999;
-    }
+    // Commentary banks
+    const pbp = {
+      early: ['Both teams feeling each other out in the opening exchanges.','Bright start — high energy from both sides.','Early pressure from the home side, looking to impose themselves.','Keeper distribution tested — passes straight back out.','Midfield battle taking shape early.'],
+      mid: ['Tempo dropping slightly — both sides finding their rhythm.','Good combination play on the left flank.','Referee has a quiet word with the captain.','Nice interchange between the forwards — nothing comes of it.','Pressure building on the back four.','Long ball over the top — keeper out to collect.'],
+      late: ['Clock ticking — intensity ramping up.','Nervy moments at the back as the game approaches its final stages.','Manager making signals from the technical area.','Set piece opportunity — important not to switch off here.','Incredible commitment from both sets of players.','Drama ahead? Everything still to play for.'],
+      halftime: ['Half-time whistle! Sides head in for the break.','Half-time. Managers will have plenty of words in the dressing room.'],
+      fulltime: ['Full-time whistle! It\'s all over!','The referee ends proceedings. What a game of football.'],
+    };
+    let pbpIdx = { early:0, mid:0, late:0 };
 
-    function addCardDiv(minute, html, isRed) {
-      const div = document.createElement('div');
-      div.className = 'ev';
-      if (isRed) div.style.cssText = 'background:rgba(239,68,68,0.08);border-left:3px solid var(--red);padding-left:6px;border-radius:3px;';
-      div.innerHTML = `<span class="min" style="${isRed?'color:var(--red)':''}">${minute}'</span>${html}`;
-      document.getElementById('sim-events').appendChild(div);
-      document.getElementById('sim-events').scrollTop = 9999;
-    }
-
-    // Loop through 18 ticks (each = ~5 min)
+    // Main tick loop — 18 ticks × 5 minutes
     for (let tick = 1; tick <= 18; tick++) {
       if (_simSkipped) break;
-
-      // Wait while paused
-      while (_simPaused && !_simSkipped) { await sleep(100); }
+      while (_simPaused && !_simSkipped) await sleep(80);
       if (_simSkipped) break;
 
       const minute = tick * 5;
       document.getElementById('sim-minute').textContent = `${minute}'`;
       document.getElementById('sim-progress').style.width = `${(tick/18)*100}%`;
 
-      // Update live stats incrementally
-      liveStats.home.shots = Math.round(result.stats.home.shots * tick/18);
-      liveStats.away.shots = Math.round(result.stats.away.shots * tick/18);
-      liveStats.home.passes = Math.round(result.stats.home.passes * tick/18);
-      liveStats.away.passes = Math.round(result.stats.away.passes * tick/18);
-      liveStats.home.fouls = Math.round(result.stats.home.fouls * tick/18);
-      liveStats.away.fouls = Math.round(result.stats.away.fouls * tick/18);
-      liveStats.home.corners = Math.round(result.stats.home.corners * tick/18);
-      liveStats.away.corners = Math.round(result.stats.away.corners * tick/18);
-      liveStats.home.possession = result.stats.home.possession;
-      liveStats.away.possession = result.stats.away.possession;
+      // Fluctuating stats — smooth but noisy progression toward final values
+      const prog = tick / 18;
+      const noise = () => (rng()-0.5)*0.12;
+      liveStats.home.shots = Math.max(0, Math.round((result.stats.home.shots * prog) + noise()*2));
+      liveStats.away.shots = Math.max(0, Math.round((result.stats.away.shots * prog) + noise()*2));
+      liveStats.home.passes = Math.max(0, Math.round((result.stats.home.passes * prog) + noise()*20));
+      liveStats.away.passes = Math.max(0, Math.round((result.stats.away.passes * prog) + noise()*20));
+      liveStats.home.fouls = Math.max(0, Math.round((result.stats.home.fouls * prog) + noise()*1));
+      liveStats.away.fouls = Math.max(0, Math.round((result.stats.away.fouls * prog) + noise()*1));
+      liveStats.home.corners = Math.max(0, Math.round((result.stats.home.corners * prog) + noise()*1));
+      liveStats.away.corners = Math.max(0, Math.round((result.stats.away.corners * prog) + noise()*1));
+      // Possession oscillates around target with ±5% sway per tick
+      currentHomePoss = Math.round(Math.max(30, Math.min(70, currentHomePoss + (possMomentum - currentHomePoss) * 0.15 + (rng()-0.5)*6)));
+      liveStats.home.possession = currentHomePoss;
+      liveStats.away.possession = 100 - currentHomePoss;
       updateMsimStatBars(liveStats, '');
 
-      // Half-time commentary
+      // Half-time marker
       if (tick === 9) {
-        addPbpComment(45, rngFrom(pbpBank.halfTime), 'color:var(--yellow);font-style:italic;');
-        await sleep(simSpeed * 0.5);
+        addEvent(45, pbp.halftime[rngInt(0,pbp.halftime.length-1)], 'color:var(--yellow);font-style:italic;');
+        await sleep(Math.min(simSpeed, 600));
       }
 
-      // Play-by-play commentary every 2-3 ticks
+      // Standard play-by-play commentary every 2 ticks
       if (tick % 2 === 0) {
-        const bank = tick <= 6 ? pbpBank.early : tick <= 14 ? pbpBank.mid : pbpBank.late;
-        addPbpComment(minute, bank[commentaryIdx % bank.length]);
-        commentaryIdx++;
+        const bank = tick<=6?pbp.early:tick<=14?pbp.mid:pbp.late;
+        const key = tick<=6?'early':tick<=14?'mid':'late';
+        addEvent(minute, bank[pbpIdx[key]++ % bank.length], 'color:var(--text3);font-size:11px;');
       }
 
-      // Process all events in this tick's minute window
+      // Random extra events (missed shots, arguments, saves, fouls, VAR)
+      if (rngBool(0.55)) {
+        const allPids = [...homeClub.players.slice(0,11), ...awayClub.players.slice(0,11)].filter(Boolean);
+        const p1 = G.players[rngFrom(allPids)];
+        const p2 = G.players[rngFrom(allPids.filter(x=>x!==p1?.id))];
+        const p1Name = p1?.name || 'Player';
+        const p2Name = p2?.name || 'Defender';
+        const gkPid = homeClub.players[0]; const gk = G.players[gkPid];
+        const gkName = gk?.name || 'Keeper';
+        const type = rngFrom(['miss','miss','save','argument','foul','chance','var_rarely']);
+        if (type === 'miss') {
+          const tmpl = rngFrom(extEvents.miss);
+          addEvent(minute, tmpl(p1Name), 'color:var(--text2);font-size:11px;');
+          // Track miss for rating delta
+          if (p1 && liveRatings[p1.id]) updateLiveRatings({ type:'miss', playerId: p1.id });
+        } else if (type === 'save') {
+          const tmpl = rngFrom(extEvents.save);
+          addEvent(minute, tmpl(gkName), 'color:var(--teal);font-size:11px;');
+          if (gk && liveRatings[gk.id]) updateLiveRatings({ type:'save', playerId: gk.id });
+        } else if (type === 'argument' && rngBool(0.4)) {
+          const tmpl = rngFrom(extEvents.argument);
+          addEvent(minute, tmpl(p1Name, p2Name), 'color:var(--yellow);font-size:11px;');
+        } else if (type === 'foul') {
+          const tmpl = rngFrom(extEvents.foul);
+          addEvent(minute, tmpl(p1Name), 'color:var(--text2);font-size:11px;');
+        } else if (type === 'chance') {
+          const tmpl = rngFrom(extEvents.chance);
+          addEvent(minute, tmpl(p1Name), 'color:var(--text2);font-size:11px;');
+        } else if (type === 'var_rarely' && rngBool(0.15)) {
+          const tmpl = rngFrom(extEvents.var);
+          addEvent(minute, tmpl(), 'color:var(--purple);font-size:11px;font-style:italic;');
+        }
+      }
+
+      // Process pre-simulated events (goals, cards)
       while (ei < sortedEvents.length && sortedEvents[ei].minute <= minute) {
         const ev = sortedEvents[ei];
         const pName = ev.playerId && G.players[ev.playerId] ? G.players[ev.playerId].name : 'Unknown';
         if (ev.type === 'goal') {
           if (ev.side==='home') hg++; else ag++;
-          const tmpl = rngFrom(COMMENTARY_TEMPLATES.goal);
+          updateLiveRatings(ev);
+          // Shift possession momentum toward the conceding team
+          possMomentum = ev.side==='home' ? Math.min(65, possMomentum+8) : Math.max(35, possMomentum-8);
+          const goalTemplates = [
+            `⚽ <b>GOAL!</b> ${pName} puts it away!`,
+            `⚽ <b>GOAL!</b> ${pName} makes no mistake!`,
+            `⚽ <b>GOAL!</b> Brilliant finish from ${pName}!`,
+            `⚽ <b>GOAL!</b> ${pName} scores! The crowd erupts!`,
+            `⚽ <b>GOAL!</b> ${pName} — right place, right time!`,
+          ];
           const assistName = ev.assistId && G.players[ev.assistId] ? G.players[ev.assistId].name : null;
-          const goalText = `${tmpl(pName,ev.side)}${assistName?COMMENTARY_TEMPLATES.assist[0](assistName):''}`;
-          addGoalDiv(ev.minute, goalText);
-
-          // Score update with pulse
+          const goalHtml = rngFrom(goalTemplates) + (assistName ? ` <span style="color:var(--text3)">(assist: ${assistName})</span>` : '');
+          addEvent(ev.minute, goalHtml, 'background:rgba(34,197,94,0.1);border-left:3px solid var(--green);padding-left:6px;border-radius:3px;font-size:12px;');
           document.getElementById('sim-score').textContent = `${hg} – ${ag}`;
           document.getElementById('sim-score').style.animation = 'goalPulse .5s ease';
-          setTimeout(()=>{ document.getElementById('sim-score').style.animation=''; }, 500);
-
-          // Brief pause after goal for drama
-          await sleep(Math.min(simSpeed * 1.5, 1200));
+          setTimeout(()=>document.getElementById('sim-score').style.animation='', 500);
+          await sleep(Math.min(simSpeed*1.4, 900));
         } else if (ev.type === 'yellow') {
+          updateLiveRatings(ev);
           ev.side==='home' ? liveStats._homeYellow=(liveStats._homeYellow||0)+1 : liveStats._awayYellow=(liveStats._awayYellow||0)+1;
-          addCardDiv(ev.minute, COMMENTARY_TEMPLATES.yellow[0](pName), false);
+          addEvent(ev.minute, `🟨 <b>${pName}</b> is booked.`, 'color:var(--yellow);font-size:11px;');
         } else if (ev.type === 'red') {
+          updateLiveRatings(ev);
           ev.side==='home' ? liveStats._homeRed=(liveStats._homeRed||0)+1 : liveStats._awayRed=(liveStats._awayRed||0)+1;
-          addCardDiv(ev.minute, COMMENTARY_TEMPLATES.red[0](pName), true);
+          addEvent(ev.minute, `🟥 <b>${pName}</b> is shown a RED CARD! Ten men!`, 'background:rgba(239,68,68,0.08);border-left:3px solid var(--red);padding-left:6px;border-radius:3px;font-size:12px;');
         }
         ei++;
       }
+
+      // Update live ratings panel
+      const myWinning = isPlayerClub ? (isPlayerClub===homeId ? (hg>ag?'my':hg<ag?'against':'even') : (ag>hg?'my':ag<hg?'against':'even')) : 'even';
+      renderLiveRatings(myWinning);
 
       await sleep(simSpeed);
     }
 
     // Full-time
     document.getElementById('sim-minute').textContent = 'Full Time';
-    addPbpComment(90, rngFrom(pbpBank.fullTime), 'color:var(--accent);font-weight:600;');
+    addEvent(90, pbp.fulltime[rngInt(0,pbp.fulltime.length-1)], 'color:var(--accent);font-weight:600;font-size:12px;');
+    renderLiveRatings(hg > ag ? (isPlayerClub===homeId?'my':'against') : ag>hg?(isPlayerClub===awayId?'my':'against'):'even');
     await sleep(400);
 
     overlay.classList.remove('open');
     overlay._fullResult = result;
-
-    // Show post-match report
     await showPostMatch(homeId, awayId, result, hg, ag);
     resolve(result);
   });
@@ -2923,27 +3086,76 @@ function closePostMatch() {
   if (window._postMatchResolve) { window._postMatchResolve(); window._postMatchResolve = null; }
 }
 
-// SIM ONE DAY — simulates matches for current week without auto-advancing
-// ── DAILY SIM — just advances time by 1 day, fires events every 2 days ──
-function simOneDay() {
+// SIM ONE DAY — advances one day and plays match if it falls on that day
+async function simOneDay() {
   if (!G.player) return;
   const p = G.player;
-  if (!p.dayOfWeek) p.dayOfWeek = 1; // 1–7
+  if (!p.dayOfWeek) p.dayOfWeek = 1;
 
   p.dayOfWeek++;
   if (p.dayOfWeek > 7) {
     p.dayOfWeek = 1;
-    // Reached end of week — don't auto-advance, just notify
-    notify('End of week — press Advance Week to play your match.', 'warn');
+    notify('End of week — press Advance Week to play the next fixture.', 'warn');
     updateTopBar(); renderCurrentPanel(); return;
   }
 
   const dayNames = ['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   notify(`${dayNames[p.dayOfWeek]} · Week ${p.week}`, '');
 
-  // Every 2 days fire a random event/inbox item
-  if (p.dayOfWeek % 2 === 0) {
-    fireDailyEvent();
+  // Fire random event every 2 days
+  if (p.dayOfWeek % 2 === 0) fireDailyEvent();
+
+  // Check if today (Sat=6 or Wed=3) has a match for my club this week
+  const isMatchDay = p.dayOfWeek === 6 || p.dayOfWeek === 3;
+  if (isMatchDay) {
+    const myClub = G.clubs[p.clubId];
+    const myLeague = G.leagues[myClub.leagueId];
+    const thisRound = p.week;
+    const myMatch = myLeague.fixtures.find(f => f.round === thisRound && !f.played && (f.home === p.clubId || f.away === p.clubId));
+
+    if (myMatch) {
+      // Sim my match with full visual
+      processRandomEvents();
+      Object.values(G.players).forEach(pl => {
+        if (pl.currentInjury) { pl.currentInjury.weeks--; if (pl.currentInjury.weeks<=0) { pl.currentInjury=null; if(pl.contract.clubId===p.clubId) notify(`${pl.name} back from injury!`,'success'); } }
+        if (pl.suspended>0) pl.suspended--;
+      });
+
+      await showMatchSim(myMatch.home, myMatch.away, myClub.leagueId, true);
+      const result = simulateMatchFull(myMatch.home, myMatch.away, myClub.leagueId, true);
+      myMatch.played = true; myMatch.result = { home: result.homeGoals, away: result.awayGoals }; myMatch.events = result.events; myMatch.stats = result.stats;
+      updateLeagueTable(myClub.leagueId, myMatch.home, myMatch.away, result.homeGoals, result.awayGoals);
+      addNews(`Result: ${G.clubs[myMatch.home].name} ${result.homeGoals}–${result.awayGoals} ${G.clubs[myMatch.away].name}`, `Week ${p.week}`, result.homeGoals>result.awayGoals?'Home win':result.awayGoals>result.homeGoals?'Away win':'Draw');
+
+      // Sim rest of league fixtures
+      myLeague.fixtures.filter(f=>f.round===thisRound&&!f.played).forEach(f=>{
+        const r2 = simulateMatchFull(f.home,f.away,myClub.leagueId,false);
+        f.played=true; f.result={home:r2.homeGoals,away:r2.awayGoals}; f.events=r2.events;
+        updateLeagueTable(myClub.leagueId,f.home,f.away,r2.homeGoals,r2.awayGoals);
+      });
+
+      // Sim other leagues
+      Object.keys(G.leagues).forEach(lid=>{
+        if(lid===myClub.leagueId) return;
+        G.leagues[lid].fixtures.filter(f=>f.round===thisRound&&!f.played).forEach(f=>{
+          const r3=simulateMatchFull(f.home,f.away,lid,false);
+          f.played=true; f.result={home:r3.homeGoals,away:r3.awayGoals}; f.events=r3.events;
+          updateLeagueTable(lid,f.home,f.away,r3.homeGoals,r3.awayGoals);
+        });
+      });
+
+      doFinancialTick();
+      if(p.transferWindowOpen) processAITransfers();
+      processIncomingOffers();
+
+      // Advance week after match day
+      p.week++;
+      p.dayOfWeek = 1;
+      const totalRounds = myLeague.totalRounds;
+      if(p.week > totalRounds){ endSeason(); return; }
+      if(p.week===13||p.week===31){ p.transferWindowOpen=false; notify('Transfer window closed','warn'); }
+      if(p.week===28){ p.transferWindowOpen=true; notify('Winter transfer window open!','success'); }
+    }
   }
 
   updateTopBar();
@@ -3392,15 +3604,16 @@ function renderCalendar() {
       const f = currentWeekFixtures[0];
       const isHome = f.home === myClub.id;
       const opp = G.clubs[isHome ? f.away : f.home];
+      const oppName = opp?.name || '?';
       if (f.played) {
         const myG = isHome ? f.result?.home : f.result?.away;
         const theirG = isHome ? f.result?.away : f.result?.home;
         const outcome = myG > theirG ? 'result-win' : myG < theirG ? 'result-loss' : 'result-draw';
         cls += ' ' + outcome;
-        content += `<div class="cal-match-tag" style="color:var(--text)">${isHome?'H':'A'} ${opp?.name?.slice(0,8)} ${myG}-${theirG}</div>`;
+        content += `<div class="cal-match-tag" title="${isHome?'Home':'Away'} vs ${oppName}" style="color:var(--text)">${isHome?'H':'A'} ${oppName} ${myG}-${theirG}</div>`;
       } else {
         cls += ' has-match';
-        content += `<div class="cal-match-tag">${isHome?'H':'A'} ${opp?.name?.slice(0,8)||'?'}</div>`;
+        content += `<div class="cal-match-tag" title="${isHome?'Home':'Away'} vs ${oppName}">${isHome?'H':'A'} ${oppName}</div>`;
       }
     }
 
@@ -3409,8 +3622,9 @@ function renderCalendar() {
       const f = uefaWeekFix[0];
       const isHome = f.home === myClub.id;
       const opp = G.clubs[isHome ? f.away : f.home];
+      const oppName = opp?.name || '?';
       cls += ' has-match';
-      content += `<div class="cal-match-tag" style="color:var(--purple)">${f.compName} ${isHome?'H':'A'} ${opp?.name?.slice(0,8)||'?'}</div>`;
+      content += `<div class="cal-match-tag" title="${f.compName}: ${isHome?'Home':'Away'} vs ${oppName}" style="color:var(--purple)">${f.compName} ${isHome?'H':'A'} ${oppName}</div>`;
     }
 
     html += `<div class="${cls}" onclick="calDayClick(${weekNum},${dowIdx})">${content}</div>`;
@@ -3520,155 +3734,185 @@ function renderSquad() {
 function openPlayerDetail(pid) {
   const p = G.players[pid];
   if (!p) return;
-  const attrs = p.attributes;
+  const attrs = p.attributes || {};
   const club = G.clubs[p.contract.clubId];
-  const isMyPlayer = club?.id === G.player.clubId;
+  const isMyPlayer = club?.id === G.player?.clubId;
 
-  // Generate per-match ratings history for this season
+  // Generate match-by-match ratings for this season
   const matchRatings = [];
+  const teamRatBase = p.stats.apps > 0 ? (5.0 + (p.rating - 50) * 0.05) : 6.0;
   for (let i = 0; i < p.stats.apps; i++) {
-    const r = (4.5 + rng()*5.5).toFixed(1);
-    matchRatings.push(parseFloat(r));
+    const r = Math.min(10, Math.max(3.5, teamRatBase + (rng()-0.48)*3.2));
+    matchRatings.push(parseFloat(r.toFixed(1)));
   }
-  const avgRating = matchRatings.length ? (matchRatings.reduce((s,r)=>s+r,0)/matchRatings.length).toFixed(2) : '—';
-
-  const ratingColor = r => {
-    if (r>=9) return '#22c55e';
-    if (r>=7.5) return '#86efac';
-    if (r>=6.5) return '#3b82f6';
-    if (r>=5.5) return '#eab308';
-    return '#ef4444';
-  };
-
-  const attrSections = {
-    'Technical': ['passing','shooting','dribbling','crossing','firstTouch'],
-    'Physical': ['pace','strength','stamina','jumping','heading'],
-    'Mental': ['vision','tackling','positioning','leadership','creativity'],
-  };
-
-  const attrSectionHtml = Object.entries(attrSections).map(([section, keys])=>{
-    const validKeys = keys.filter(k=>attrs[k]!==undefined);
-    if (!validKeys.length) return '';
-    return `<div class="mb12">
-      <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">${section}</div>
-      ${validKeys.map(k=>`<div class="stat-row">
-        <div class="stat-label" style="width:130px;">${k.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase())}</div>
-        <div class="stat-bar"><div class="stat-fill" style="width:${attrs[k]}%;background:${barColor(attrs[k])}"></div></div>
-        <div class="stat-val ${ratColor(attrs[k])}">${attrs[k]}</div>
-      </div>`).join('')}
-    </div>`;
-  }).join('');
-
-  // Mini ratings grid — FotMob style
-  const ratingsHtml = matchRatings.length ? `
-    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">
-      ${matchRatings.map((r,i)=>`<div title="Match ${i+1}" style="width:34px;height:34px;border-radius:6px;background:${ratingColor(r)};display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;">${r}</div>`).join('')}
-    </div>` : '<div class="muted" style="margin-bottom:12px;">No matches played yet</div>';
-
-  // Heatmap-style position overview (simple emoji grid)
-  const posEmoji = {'GK':'🧤','CB':'🛡️','LB':'⬅️','RB':'➡️','CDM':'🔒','CM':'⚙️','CAM':'🎯','LW':'⚡','RW':'⚡','ST':'🎯','CF':'🔥','SS':'✨','LM':'◀️','RM':'▶️','LWB':'⬅️','RWB':'➡️','CDM':'🔒'};
+  const avgRating = matchRatings.length ? (matchRatings.reduce((s,r)=>s+r,0)/matchRatings.length).toFixed(1) : null;
+  const ratingColor = r => r>=8.5?'#22c55e':r>=7.5?'#4ade80':r>=6.5?'#3b82f6':r>=5.5?'#eab308':'#ef4444';
+  const ratingBg = r => r>=8.5?'rgba(34,197,94,0.18)':r>=7.5?'rgba(74,222,128,0.15)':r>=6.5?'rgba(59,130,246,0.15)':r>=5.5?'rgba(234,179,8,0.15)':'rgba(239,68,68,0.15)';
+  const posEmoji = {'GK':'🧤','CB':'🛡️','LB':'⬅️','RB':'➡️','CDM':'🔒','CM':'⚙️','CAM':'🎯','LW':'⚡','RW':'⚡','ST':'⭐','CF':'🔥','SS':'✨','LM':'◀️','RM':'▶️','LWB':'⬅️','RWB':'➡️'};
   const posIcon = posEmoji[p.position]||'⚽';
 
-  const statBarHtml = (label, val, max, color='var(--accent)') =>
-    `<div style="margin-bottom:8px;">
-      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--text2)">${label}</span><span style="font-family:var(--mono);font-weight:600">${val}</span></div>
-      <div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;"><div style="width:${Math.min(100,(val/max)*100)}%;height:100%;background:${color};border-radius:2px;"></div></div>
+  // Top stats for position
+  const posStats = {
+    GK: ['Goals Conceded','Clean Sheets','Saves','Errors'],
+    CB: ['Tackles','Clearances','Headers Won','Goals'],
+    LB: ['Crosses','Tackles','Assists','Goals'],
+    RB: ['Crosses','Tackles','Assists','Goals'],
+    CM: ['Passes','Key Passes','Goals','Assists'],
+    CAM: ['Key Passes','Assists','Goals','Dribbles'],
+    CDM: ['Tackles','Interceptions','Passes','Goals'],
+    LW: ['Dribbles','Assists','Goals','Crosses'],
+    RW: ['Dribbles','Assists','Goals','Crosses'],
+    ST: ['Goals','Shots','Assists','Dribbles'],
+    CF: ['Goals','Assists','Key Passes','Shots'],
+  };
+  const statLabels = posStats[p.position] || ['Goals','Assists','Apps','Rating'];
+  const statVals = [p.stats.goals, p.stats.assists, p.stats.apps, avgRating||'—'];
+
+  // Build attribute radar-style summary bars
+  const attrGroups = {
+    Technical: ['passing','shooting','dribbling'],
+    Physical: ['pace','strength','stamina'],
+    Mental: ['vision','tackling','positioning'],
+  };
+
+  const attrBar = (label, val) => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+      <div style="width:90px;font-size:11px;color:var(--text2);flex-shrink:0;">${label.replace(/([A-Z])/g,' $1').trim()}</div>
+      <div style="flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;">
+        <div style="width:${val||0}%;height:100%;background:${val>=80?'var(--green)':val>=65?'#86efac':val>=50?'var(--accent)':val>=35?'var(--yellow)':'var(--red)'};border-radius:3px;transition:width .3s;"></div>
+      </div>
+      <div style="width:24px;text-align:right;font-family:var(--mono);font-size:11px;color:${val>=80?'var(--green)':val>=65?'#86efac':val>=50?'var(--text)':val>=35?'var(--yellow)':'var(--red)'};">${val||'—'}</div>
     </div>`;
 
+  // Match rating history grid (FotMob style coloured squares)
+  const matchRatingGrid = matchRatings.length ? matchRatings.map((r,i)=>`
+    <div title="Match ${i+1}: ${r}" style="width:32px;height:32px;border-radius:6px;background:${ratingBg(r)};border:1px solid ${ratingColor(r)}33;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:${ratingColor(r)};">${r}</div>`).join('') : '<div style="color:var(--text3);font-size:12px;padding:8px;">No appearances yet this season</div>';
+
   openModal(p.name, `
-    <!-- PLAYER HEADER -->
-    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
-      <div style="width:64px;height:64px;border-radius:50%;background:var(--bg4);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">${posIcon}</div>
-      <div style="flex:1;">
+    <!-- FotMob-style HEADER BANNER -->
+    <div style="background:linear-gradient(135deg,var(--bg3) 0%,var(--bg4) 100%);border-radius:8px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;">
+      <div style="width:70px;height:70px;border-radius:50%;background:var(--bg2);border:3px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;">${posIcon}</div>
+      <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-          <span style="font-size:18px;font-weight:700;">${p.name}</span>
-          <span class="pill pill-blue">${p.position}</span>
-          ${p.currentInjury?`<span class="pill pill-red">Injured</span>`:''}
-          ${p.suspended>0?`<span class="pill pill-yellow">Suspended</span>`:''}
+          <span style="font-size:20px;font-weight:800;letter-spacing:-.01em;">${p.name}</span>
+          ${p.currentInjury?`<span class="pill pill-red" style="font-size:10px;">🏥 Injured</span>`:''}
+          ${p.suspended>0?`<span class="pill pill-yellow" style="font-size:10px;">⚠️ Suspended</span>`:''}
         </div>
-        <div style="font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:8px;">${p.nationality} · ${p.age}y · ${club?.name||'Free Agent'}</div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;">
-          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:${ratingColor(parseFloat(avgRating)||0)}">${avgRating}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Season Avg</div></div>
-          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--green)">${p.stats.goals}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Goals</div></div>
-          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--accent)">${p.stats.assists}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Assists</div></div>
-          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono)">${p.stats.apps}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Apps</div></div>
-          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:${p.rating>=75?'var(--green)':p.rating>=60?'var(--accent)':'var(--yellow)'}">${p.rating}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Rating</div></div>
-          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--purple)">${p.potential}</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Potential</div></div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;font-family:var(--mono);">${p.nationality} · Age ${p.age} · ${p.position} · ${club?.name||'Free Agent'}</div>
+        <!-- Key stat boxes -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${avgRating ? `<div style="background:${ratingBg(parseFloat(avgRating))};border-radius:8px;padding:8px 14px;text-align:center;min-width:52px;">
+            <div style="font-size:22px;font-weight:900;font-family:var(--mono);color:${ratingColor(parseFloat(avgRating))};line-height:1;">${avgRating}</div>
+            <div style="font-size:9px;color:${ratingColor(parseFloat(avgRating))};text-transform:uppercase;letter-spacing:.08em;opacity:.8;">Rating</div>
+          </div>` : ''}
+          <div style="background:rgba(34,197,94,0.12);border-radius:8px;padding:8px 14px;text-align:center;min-width:52px;">
+            <div style="font-size:22px;font-weight:900;font-family:var(--mono);color:var(--green);line-height:1;">${p.stats.goals}</div>
+            <div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.08em;opacity:.8;">Goals</div>
+          </div>
+          <div style="background:rgba(59,130,246,0.12);border-radius:8px;padding:8px 14px;text-align:center;min-width:52px;">
+            <div style="font-size:22px;font-weight:900;font-family:var(--mono);color:var(--accent);line-height:1;">${p.stats.assists}</div>
+            <div style="font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;opacity:.8;">Assists</div>
+          </div>
+          <div style="background:var(--bg2);border-radius:8px;padding:8px 14px;text-align:center;min-width:52px;">
+            <div style="font-size:22px;font-weight:900;font-family:var(--mono);line-height:1;">${p.stats.apps}</div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Apps</div>
+          </div>
+          <div style="background:rgba(168,85,247,0.12);border-radius:8px;padding:8px 14px;text-align:center;min-width:52px;">
+            <div style="font-size:22px;font-weight:900;font-family:var(--mono);color:var(--purple);line-height:1;">${p.potential}</div>
+            <div style="font-size:9px;color:var(--purple);text-transform:uppercase;letter-spacing:.08em;opacity:.8;">Pot.</div>
+          </div>
+          <div style="background:rgba(234,179,8,0.12);border-radius:8px;padding:8px 14px;text-align:center;min-width:52px;">
+            <div style="font-size:22px;font-weight:900;font-family:var(--mono);color:var(--yellow);line-height:1;">${p.rating}</div>
+            <div style="font-size:9px;color:var(--yellow);text-transform:uppercase;letter-spacing:.08em;opacity:.8;">OVR</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- TABS ROW -->
-    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px;">
-      <button class="msim-tab active" onclick="switchPlayerDetailTab(event,'pd-match-ratings')">Match Ratings</button>
-      <button class="msim-tab" onclick="switchPlayerDetailTab(event,'pd-attributes')">Attributes</button>
-      <button class="msim-tab" onclick="switchPlayerDetailTab(event,'pd-stats')">Season Stats</button>
-      <button class="msim-tab" onclick="switchPlayerDetailTab(event,'pd-contract')">Contract</button>
-    </div>
+    <!-- TWO-COLUMN BODY -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <!-- LEFT: Attributes -->
+      <div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid var(--border);">Attributes</div>
+        ${Object.entries(attrGroups).map(([group, keys])=>`
+          <div style="font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:8px 0 5px;">${group}</div>
+          ${keys.map(k=>attrBar(k, attrs[k])).join('')}
+        `).join('')}
 
-    <!-- MATCH RATINGS TAB -->
-    <div id="pd-match-ratings" class="msim-tab-content active">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="background:${ratingColor(parseFloat(avgRating)||0)};padding:8px 16px;border-radius:8px;text-align:center;">
-          <div style="font-size:24px;font-weight:800;font-family:var(--mono);color:#fff">${avgRating}</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:.08em">Avg Rating</div>
+        <!-- Fitness / Form / Morale mini bars -->
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+          <div style="font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Condition</div>
+          ${[['Fitness', p.fitness, p.fitness<60?'var(--red)':'var(--green)'],['Morale', p.morale, p.morale<40?'var(--red)':p.morale>70?'var(--green)':'var(--yellow)'],['Form', p.form, 'var(--purple)']].map(([label,val,color])=>`
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+              <div style="width:50px;font-size:11px;color:var(--text2);flex-shrink:0;">${label}</div>
+              <div style="flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;"><div style="width:${val}%;height:100%;background:${color};border-radius:3px;"></div></div>
+              <div style="width:28px;text-align:right;font-family:var(--mono);font-size:11px;color:${color};">${val}%</div>
+            </div>`).join('')}
         </div>
-        <div style="font-size:12px;color:var(--text2);">
-          ${matchRatings.filter(r=>r>=7).length} good games (7.0+)<br>
-          ${matchRatings.filter(r=>r>=8).length} great games (8.0+)<br>
-          ${matchRatings.filter(r=>r<5.5).length} poor games (&lt;5.5)
-        </div>
-      </div>
-      <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Match by match — Season</div>
-      ${ratingsHtml}
-    </div>
 
-    <!-- ATTRIBUTES TAB -->
-    <div id="pd-attributes" class="msim-tab-content">
-      ${attrSectionHtml}
-    </div>
-
-    <!-- SEASON STATS TAB -->
-    <div id="pd-stats" class="msim-tab-content">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        <div class="card">
-          <div class="card-title">Attacking</div>
-          ${statBarHtml('Goals', p.stats.goals, Math.max(20, p.stats.goals+5), 'var(--green)')}
-          ${statBarHtml('Assists', p.stats.assists, Math.max(15, p.stats.assists+5), 'var(--accent)')}
-        </div>
-        <div class="card">
-          <div class="card-title">Discipline</div>
-          ${statBarHtml('Yellow Cards', p.stats.yellows, 10, 'var(--yellow)')}
-          ${statBarHtml('Red Cards', p.stats.reds||0, 3, 'var(--red)')}
+        <!-- Personality -->
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+          <div style="font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Personality</div>
+          ${[['Ambition', p.personality.ambition*10],['Loyalty', p.personality.loyalty*10],['Professionalism', p.personality.professionalism*10]].map(([label,val])=>`
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+              <div style="width:90px;font-size:11px;color:var(--text2);flex-shrink:0;">${label}</div>
+              <div style="flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;"><div style="width:${val}%;height:100%;background:${val>=70?'var(--green)':val>=45?'var(--accent)':'var(--yellow)'};border-radius:3px;"></div></div>
+              <div style="width:24px;text-align:right;font-family:var(--mono);font-size:11px;">${Math.round(val/10)}/10</div>
+            </div>`).join('')}
         </div>
       </div>
-      <div class="card">
-        <div class="card-title">Appearance & Fitness</div>
-        ${statBarHtml('Appearances', p.stats.apps, 38, 'var(--accent)')}
-        ${statBarHtml('Minutes Played', p.stats.minutesPlayed||p.stats.apps*90, 3420, 'var(--teal)')}
-        ${statBarHtml('Current Fitness', p.fitness, 100, p.fitness<60?'var(--red)':'var(--green)')}
-        ${statBarHtml('Morale', p.morale, 100, p.morale<40?'var(--red)':p.morale>70?'var(--green)':'var(--yellow)')}
-        ${statBarHtml('Form', p.form, 100, 'var(--purple)')}
-      </div>
-    </div>
 
-    <!-- CONTRACT TAB -->
-    <div id="pd-contract" class="msim-tab-content">
-      <div class="grid-2" style="margin-bottom:14px;">
-        <div class="card"><div class="card-title">Weekly Wage</div><div class="card-value" style="font-size:18px;color:var(--yellow)">£${fmt(p.contract.wage)}</div></div>
-        <div class="card"><div class="card-title">Contract Length</div><div class="card-value" style="font-size:18px;">${p.contract.expiresSeasons} season(s)</div></div>
-        ${p.contract.buyoutClause?`<div class="card"><div class="card-title">Buyout Clause</div><div class="card-value" style="font-size:18px;color:var(--red)">£${fmt(p.contract.buyoutClause)}</div></div>`:''}
-        <div class="card"><div class="card-title">Transfer Value</div><div class="card-value" style="font-size:18px;color:var(--green)">£${fmt(p.transferValue)}</div></div>
-      </div>
-      <div class="card mb12">
-        <div class="card-title">Personality</div>
-        <div class="stat-row"><div class="stat-label">Ambition</div><div class="stat-bar"><div class="stat-fill" style="width:${p.personality.ambition*10}%;background:${barColor(p.personality.ambition*10)}"></div></div><div class="stat-val">${p.personality.ambition}/10</div></div>
-        <div class="stat-row"><div class="stat-label">Loyalty</div><div class="stat-bar"><div class="stat-fill" style="width:${p.personality.loyalty*10}%;background:${barColor(p.personality.loyalty*10)}"></div></div><div class="stat-val">${p.personality.loyalty}/10</div></div>
-        <div class="stat-row"><div class="stat-label">Professionalism</div><div class="stat-bar"><div class="stat-fill" style="width:${p.personality.professionalism*10}%;background:${barColor(p.personality.professionalism*10)}"></div></div><div class="stat-val">${p.personality.professionalism}/10</div></div>
+      <!-- RIGHT: Match ratings + contract -->
+      <div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">
+          Season Ratings — ${p.stats.apps} appearances
+        </div>
+        ${avgRating ? `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+          <div style="background:${ratingBg(parseFloat(avgRating))};border-radius:10px;padding:10px 16px;text-align:center;">
+            <div style="font-size:26px;font-weight:900;font-family:var(--mono);color:${ratingColor(parseFloat(avgRating))};line-height:1;">${avgRating}</div>
+            <div style="font-size:9px;color:${ratingColor(parseFloat(avgRating))};text-transform:uppercase;letter-spacing:.08em;margin-top:2px;">Season Avg</div>
+          </div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+            <div>🟢 ${matchRatings.filter(r=>r>=7.5).length} great (7.5+)</div>
+            <div>🔵 ${matchRatings.filter(r=>r>=6.5&&r<7.5).length} good (6.5–7.5)</div>
+            <div>🟡 ${matchRatings.filter(r=>r>=5.5&&r<6.5).length} average</div>
+            <div>🔴 ${matchRatings.filter(r=>r<5.5).length} poor</div>
+          </div>
+        </div>` : ''}
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">${matchRatingGrid}</div>
+
+        <!-- Contract info -->
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;padding-bottom:4px;border-top:1px solid var(--border);padding-top:10px;">Contract</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;">
+            <div style="font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;margin-bottom:3px;">Weekly Wage</div>
+            <div style="font-size:15px;font-weight:700;font-family:var(--mono);color:var(--yellow);">£${fmt(p.contract.wage)}</div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;">
+            <div style="font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;margin-bottom:3px;">Remaining</div>
+            <div style="font-size:15px;font-weight:700;font-family:var(--mono);">${p.contract.expiresSeasons}y</div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;">
+            <div style="font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;margin-bottom:3px;">Market Value</div>
+            <div style="font-size:15px;font-weight:700;font-family:var(--mono);color:var(--green);">£${fmt(p.transferValue)}</div>
+          </div>
+          ${p.contract.buyoutClause ? `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;">
+            <div style="font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;margin-bottom:3px;">Release Clause</div>
+            <div style="font-size:15px;font-weight:700;font-family:var(--mono);color:var(--red);">£${fmt(p.contract.buyoutClause)}</div>
+          </div>` : ''}
+        </div>
+
+        <!-- Discipline this season -->
+        <div style="display:flex;gap:12px;font-size:12px;margin-top:4px;">
+          <span>🟨 ${p.stats.yellows||0} yellow${p.stats.yellows!==1?'s':''}</span>
+          <span>🟥 ${p.stats.reds||0} red${p.stats.reds!==1?'s':''}</span>
+          <span>⏱️ ${(p.stats.minutesPlayed||p.stats.apps*90).toLocaleString()} min</span>
+        </div>
       </div>
     </div>
   `, isMyPlayer ? [
-    {label:'List for Transfer', cls: p._listedForTransfer?'btn-danger':'btn', fn:()=>{ listPlayerForTransfer(pid); closeModal(); renderSquad(); }},
+    {label: p._listedForTransfer?'Remove from List':'List for Transfer', cls: p._listedForTransfer?'btn-danger':'btn', fn:()=>{ listPlayerForTransfer(pid); closeModal(); renderSquad(); }},
   ] : [
     {label:'Make Offer', cls:'btn-primary', fn:()=>{ closeModal(); makeTransferOffer(pid); }},
   ]);
@@ -3732,6 +3976,31 @@ function renderTactics() {
     </div>`).join('');
 }
 
+function positionRating(player, targetPos) {
+  // Calculate how well this player fits the target position
+  const pos = player.position;
+  const attrs = player.attributes || {};
+  const base = player.rating;
+  // Perfect match
+  if (pos === targetPos) return base;
+  // Group positions
+  const gk = ['GK'];
+  const def = ['CB','LB','RB','LWB','RWB'];
+  const mid = ['CM','CDM','CAM','LM','RM'];
+  const att = ['ST','CF','LW','RW','SS'];
+  const group = g => g.includes(pos);
+  const tGroup = g => g.includes(targetPos);
+  // GK playing outfield or outfield playing GK → big penalty
+  if (gk.includes(pos) !== gk.includes(targetPos)) return Math.max(30, base - 25);
+  // Same group → small penalty
+  if ((group(def)&&tGroup(def))||(group(mid)&&tGroup(mid))||(group(att)&&tGroup(att))) return Math.max(40, base - rngInt(2,6));
+  // Adjacent groups → medium penalty
+  if ((group(def)&&tGroup(mid))||(group(mid)&&tGroup(def))) return Math.max(40, base - rngInt(6,12));
+  if ((group(mid)&&tGroup(att))||(group(att)&&tGroup(mid))) return Math.max(40, base - rngInt(6,12));
+  // Opposite ends (def↔att) → large penalty
+  return Math.max(40, base - rngInt(14,22));
+}
+
 function assignPlayer(slotIdx) {
   const myClub = G.clubs[G.player.clubId];
   const formation = document.getElementById('tactic-formation')?.value || '4-3-3';
@@ -3739,11 +4008,28 @@ function assignPlayer(slotIdx) {
   const slot = slots[slotIdx] || { pos: 'CM' };
   const available = myClub.players.map(pid => G.players[pid]).filter(p => p && !p.currentInjury && !p.suspended);
   const inXI = G.player.startingXI.filter(a => a.slotIndex !== slotIdx).map(a => a.playerId);
-  const sorted = available.filter(p => !inXI.includes(p.id)).sort((a, b) => b.rating - a.rating);
+  // Sort by position-adjusted rating for this slot
+  const sorted = available
+    .filter(p => !inXI.includes(p.id))
+    .map(p => ({ p, posRat: positionRating(p, slot.pos) }))
+    .sort((a,b) => b.posRat - a.posRat);
+
+  const ratColor2 = r => r>=80?'var(--green)':r>=65?'#86efac':r>=50?'var(--text)':r>=35?'var(--yellow)':'var(--red)';
+
   openModal(`Select player for ${slot.pos}`, `
-    <table class="data-table"><thead><tr><th>Name</th><th>Pos</th><th>Rating</th><th>Fitness</th><th></th></tr></thead><tbody>${sorted.slice(0, 20).map(p => `
-      <tr><td>${p.name}</td><td>${p.position}</td><td class="mono ${ratColor(p.rating)}">${p.rating}</td><td class="mono">${p.fitness}%</td>
-      <td><button class="btn btn-sm btn-primary" onclick="setXIPlayer(${slotIdx},'${p.id}')">Select</button></td></tr>`).join('')}
+    <table class="data-table"><thead><tr>
+      <th>Name</th><th>Nat. Pos</th><th class="c">Base</th><th class="c" style="color:var(--accent)">At ${slot.pos}</th><th>Fitness</th><th></th>
+    </tr></thead><tbody>${sorted.slice(0, 20).map(({p, posRat}) => {
+      const fit = p.position === slot.pos;
+      return `<tr style="${fit?'background:rgba(34,197,94,0.06)':''}">
+        <td><b>${p.name}</b></td>
+        <td><span class="pill ${fit?'pill-green':'pill-gray'}">${p.position}</span></td>
+        <td class="c mono ${ratColor(p.rating)}">${p.rating}</td>
+        <td class="c mono" style="color:${ratColor2(posRat)};font-weight:700">${posRat}</td>
+        <td class="mono">${p.fitness}%</td>
+        <td><button class="btn btn-sm btn-primary" onclick="setXIPlayer(${slotIdx},'${p.id}')">Select</button></td>
+      </tr>`;
+    }).join('')}
     </tbody></table>
   `, [{ label: 'Clear Slot', cls: 'btn-danger', fn: () => { G.player.startingXI = G.player.startingXI.filter(a => a.slotIndex !== slotIdx); closeModal(); renderTactics(); } }]);
 }
