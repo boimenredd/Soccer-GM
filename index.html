@@ -512,6 +512,8 @@ body.on-home { overflow-y: auto; height: auto; min-height: 100vh; }
 
 @keyframes goalPulse { 0%{transform:scale(1)} 50%{transform:scale(1.18);color:var(--green)} 100%{transform:scale(1)} }
 
+.sim-speed-opt.active { background:var(--accent); border-color:var(--accent2); color:#fff; }
+
 /* ── LIGHT MODE ── */
 body.light-mode {
   --bg: #f0f2f5; --bg2: #ffffff; --bg3: #f5f7fa; --bg4: #e8edf3;
@@ -698,6 +700,10 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
 .tweet-tag.scout { background: rgba(34,197,94,0.15); color: var(--green); }
 .tweet-tag.pundit { background: rgba(59,130,246,0.15); color: var(--accent); }
 .tweet-tag.breaking { background: rgba(239,68,68,0.15); color: var(--red); }
+.tweet-tag.fan { background: rgba(168,85,247,0.15); color: var(--purple); }
+.tweet-tag.injury { background: rgba(239,68,68,0.12); color: var(--red); }
+.tweet-tag.official { background: rgba(20,184,166,0.15); color: var(--teal); }
+.tweet-tag.reaction { background: rgba(249,115,22,0.15); color: var(--orange); }
 .scout-card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -1147,7 +1153,7 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
       <div id="dash-main-grid">
         <!-- LEFT: Conference standings -->
         <div id="dash-left-col">
-          <div class="card-title">Conference / League</div>
+          <div class="card-title">League Table</div>
           <div class="table-wrap" id="dash-full-table"></div>
         </div>
 
@@ -1481,6 +1487,8 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
           <button class="btn btn-sm" onclick="setSocialTab('transfers',this)">Transfers</button>
           <button class="btn btn-sm" onclick="setSocialTab('scouting',this)">Scouting</button>
           <button class="btn btn-sm" onclick="setSocialTab('pundits',this)">Pundits</button>
+          <button class="btn btn-sm" onclick="setSocialTab('fans',this)">Fans</button>
+          <button class="btn btn-sm" onclick="setSocialTab('reactions',this)">Match Reactions</button>
           <button class="btn btn-sm btn-primary" onclick="renderSocialFeed()">↻ Refresh</button>
         </div>
       </div>
@@ -1556,10 +1564,15 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
         <div><div id="msim-away-lineup-title" style="font-weight:600;margin-bottom:6px;font-family:var(--mono);font-size:10px;color:var(--text2);">AWAY XI</div><div id="msim-away-lineup"></div></div>
       </div>
     </div>
-    <!-- Controls -->
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;align-items:center;">
-      <button class="btn btn-sm" id="sim-speed-btn" onclick="toggleSimSpeed()">Speed: Normal</button>
-      <button class="btn btn-sm" onclick="skipMatchSim()" id="msim-skip-btn">Skip to FT</button>
+    <!-- Controls: ZenGM-style speed picker + pause -->
+    <div style="display:flex;gap:6px;justify-content:center;margin-top:12px;align-items:center;flex-wrap:wrap;">
+      <button class="btn btn-sm sim-speed-opt active" data-speed="slow" onclick="setSimSpeed('slow')">🐢 Slow</button>
+      <button class="btn btn-sm sim-speed-opt" data-speed="normal" onclick="setSimSpeed('normal')">▶ Normal</button>
+      <button class="btn btn-sm sim-speed-opt" data-speed="fast" onclick="setSimSpeed('fast')">⚡ Fast</button>
+      <button class="btn btn-sm sim-speed-opt" data-speed="turbo" onclick="setSimSpeed('turbo')">🚀 Turbo</button>
+      <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+      <button class="btn btn-sm" id="sim-pause-btn" onclick="toggleSimPause()">⏸ Pause</button>
+      <button class="btn btn-sm" onclick="skipMatchSim()" id="msim-skip-btn">⏭ Skip to FT</button>
     </div>
   </div>
 </div>
@@ -2148,52 +2161,87 @@ function simulateMatchFull(homeId, awayId, compId, isPlayerClub) {
   const awayClub = G.clubs[awayId];
   const weather = rngFrom(WEATHER_TYPES);
   const wmod = WEATHER_MOD[weather];
-  const homeRat = getClubRating(homeId) * wmod * 1.08; // home advantage
-  const awayRat = getClubRating(awayId) * wmod;
+
+  // Raw ratings — pure average, no noise yet
+  const homeBase = homeClub.players.slice(0,11).map(pid=>G.players[pid]).filter(Boolean);
+  const awayBase = awayClub.players.slice(0,11).map(pid=>G.players[pid]).filter(Boolean);
+  const homeAvg = homeBase.length ? homeBase.reduce((s,p)=>s+p.rating,0)/homeBase.length : 60;
+  const awayAvg = awayBase.length ? awayBase.reduce((s,p)=>s+p.rating,0)/awayBase.length : 60;
+
+  // Home advantage: +3 rating points
+  const homeRat = (homeAvg + 3) * wmod;
+  const awayRat = awayAvg * wmod;
+
+  // Strength ratio — steeper curve so big rating gaps matter more
+  // rating diff of 10 → ~60/40 odds. diff of 20 → ~75/25
+  const ratingDiff = homeRat - awayRat;
+  const homeStrength = Math.pow(10, homeRat / 30);
+  const awayStrength = Math.pow(10, awayRat / 30);
+  const totalStrength = homeStrength + awayStrength;
+  const homeWinProb = homeStrength / totalStrength;
+
+  // Expected goals using Poisson-ish approach: better teams score more
+  // Scale xG by quality; base ~2.6 total goals per game
+  const homeXG = (1.3 + ratingDiff * 0.018) * (0.8 + rng()*0.4);
+  const awayXG = (1.3 - ratingDiff * 0.018) * (0.8 + rng()*0.4);
+
   const events = [];
   let homeGoals = 0, awayGoals = 0;
   let momentum = 50;
 
+  // Distribute goal ticks across 18 5-minute slots
+  // Each slot: chance proportional to xG/18 * Poisson variance
   for (let tick = 1; tick <= 18; tick++) {
-    const minute = tick * 5;
-    const homeMod = (momentum - 50) * 0.002;
-    const awayMod = -(momentum - 50) * 0.002;
-    const homeAtk = homeRat * (0.9 + rng()*0.2) * (1 + homeMod);
-    const awayAtk = awayRat * (0.9 + rng()*0.2) * (1 + awayMod);
+    const minute = tick * 5 - rngInt(0,4); // slight randomness in minute
+    const homeMod = (momentum - 50) * 0.003;
+    const awayMod = -(momentum - 50) * 0.003;
 
-    // Home attack
-    const hShotChance = (homeAtk - awayRat*0.9) / 1800 + 0.1;
-    if (rngBool(Math.max(0.05, hShotChance))) {
-      if (rngBool(0.3)) {
-        homeGoals++;
-        momentum = Math.min(100, momentum + 15);
-        const scorer = homeClub.players[rngInt(0,homeClub.players.length-1)];
-        const assister = rngBool(0.7) ? homeClub.players[rngInt(0,homeClub.players.length-1)] : null;
-        events.push({ minute, type:'goal', side:'home', playerId: scorer, assistId: assister });
-        if (scorer && G.players[scorer]) G.players[scorer].stats.goals++;
-        if (assister && G.players[assister]) G.players[assister].stats.assists++;
-      }
+    // Per-tick goal probability from xG
+    const hGProb = Math.max(0.015, Math.min(0.25, (homeXG / 18) * (1 + homeMod)));
+    const aGProb = Math.max(0.01, Math.min(0.22, (awayXG / 18) * (1 + awayMod)));
+
+    if (rngBool(hGProb)) {
+      homeGoals++;
+      momentum = Math.min(100, momentum + 18);
+      // Weight scoring toward attacking players
+      const scorerPool = homeClub.players.slice(0, Math.min(11, homeClub.players.length));
+      const scorer = rngFrom(scorerPool);
+      const assister = rngBool(0.72) ? rngFrom(scorerPool.filter(x=>x!==scorer)) : null;
+      events.push({ minute: Math.min(90, Math.max(1, minute)), type:'goal', side:'home', playerId: scorer, assistId: assister });
+      if (scorer && G.players[scorer]) G.players[scorer].stats.goals++;
+      if (assister && G.players[assister]) G.players[assister].stats.assists++;
     }
-    // Away attack
-    const aShotChance = (awayAtk - homeRat*0.85) / 1800 + 0.08;
-    if (rngBool(Math.max(0.04, aShotChance))) {
-      if (rngBool(0.28)) {
-        awayGoals++;
-        momentum = Math.max(0, momentum - 15);
-        const scorer = awayClub.players[rngInt(0,awayClub.players.length-1)];
-        const assister = rngBool(0.7) ? awayClub.players[rngInt(0,awayClub.players.length-1)] : null;
-        events.push({ minute, type:'goal', side:'away', playerId: scorer, assistId: assister });
-        if (scorer && G.players[scorer]) G.players[scorer].stats.goals++;
-        if (assister && G.players[assister]) G.players[assister].stats.assists++;
-      }
+
+    if (rngBool(aGProb)) {
+      awayGoals++;
+      momentum = Math.max(0, momentum - 18);
+      const scorerPool = awayClub.players.slice(0, Math.min(11, awayClub.players.length));
+      const scorer = rngFrom(scorerPool);
+      const assister = rngBool(0.72) ? rngFrom(scorerPool.filter(x=>x!==scorer)) : null;
+      events.push({ minute: Math.min(90, Math.max(1, minute)), type:'goal', side:'away', playerId: scorer, assistId: assister });
+      if (scorer && G.players[scorer]) G.players[scorer].stats.goals++;
+      if (assister && G.players[assister]) G.players[assister].stats.assists++;
     }
+
+    // Extra time goals (injury time in ticks 17-18)
+    if (tick >= 17 && rngBool(0.12)) {
+      const side = rngBool(homeWinProb) ? 'home' : 'away';
+      const club = side === 'home' ? homeClub : awayClub;
+      const scorerPool = club.players.slice(0, Math.min(11, club.players.length));
+      const scorer = rngFrom(scorerPool);
+      const eMin = rngInt(90, 96);
+      events.push({ minute: eMin, type:'goal', side, playerId: scorer, assistId: null });
+      if (scorer && G.players[scorer]) G.players[scorer].stats.goals++;
+      if (side === 'home') homeGoals++; else awayGoals++;
+    }
+
     // Card events
-    if (rngBool(0.04)) {
+    if (rngBool(0.045)) {
       const side = rngBool(0.5) ? 'home':'away';
       const club = side==='home' ? homeClub : awayClub;
       const pid = club.players[rngInt(0,club.players.length-1)];
       const isRed = rngBool(0.1);
-      events.push({ minute, type: isRed?'red':'yellow', side, playerId: pid });
+      events.push({ minute: Math.min(90, Math.max(1, minute)), type: isRed?'red':'yellow', side, playerId: pid });
       if (pid && G.players[pid]) {
         if (isRed) G.players[pid].stats.reds++;
         else G.players[pid].stats.yellows++;
@@ -2201,11 +2249,14 @@ function simulateMatchFull(homeId, awayId, compId, isPlayerClub) {
     }
   }
 
-  // Stats
-  const homePoss = Math.round(40 + rng()*20);
+  // Stats — weighted by rating difference for realism
+  const homePossBase = 50 + (ratingDiff * 0.3);
+  const homePoss = Math.round(Math.max(30, Math.min(70, homePossBase + rng()*10 - 5)));
+  const homeShots = Math.round(Math.max(3, 7 + ratingDiff * 0.15 + rng()*6));
+  const awayShots = Math.round(Math.max(2, 7 - ratingDiff * 0.15 + rng()*5));
   const matchStats = {
-    home: { shots: rngInt(5,18), possession: homePoss, passes: rngInt(200,500), fouls: rngInt(6,20), corners: rngInt(2,10) },
-    away: { shots: rngInt(4,16), possession: 100-homePoss, passes: rngInt(180,450), fouls: rngInt(6,20), corners: rngInt(2,10) }
+    home: { shots: homeShots, possession: homePoss, passes: rngInt(180,520), fouls: rngInt(6,18), corners: rngInt(2,12) },
+    away: { shots: awayShots, possession: 100-homePoss, passes: rngInt(160,480), fouls: rngInt(6,18), corners: rngInt(2,10) }
   };
 
   // Update player stats for player's club
@@ -2241,13 +2292,29 @@ function updateLeagueTable(leagueId, homeId, awayId, homeGoals, awayGoals) {
 // ═══════════════════════════════════════════════════════════════
 // WEEK ADVANCE
 // ═══════════════════════════════════════════════════════════════
-let simSpeed = 800; // ms per event
-let simSpeedFast = false;
+// ── SIM SPEED SYSTEM ──
+const SIM_SPEEDS = { slow: 1200, normal: 600, fast: 200, turbo: 60 };
+let simSpeedKey = 'normal';
+let simSpeed = SIM_SPEEDS.normal;
+let _simPaused = false;
+
+function setSimSpeed(key) {
+  simSpeedKey = key;
+  simSpeed = SIM_SPEEDS[key];
+  document.querySelectorAll('.sim-speed-opt').forEach(b => b.classList.toggle('active', b.dataset.speed === key));
+}
+
+function toggleSimPause() {
+  _simPaused = !_simPaused;
+  const btn = document.getElementById('sim-pause-btn');
+  if (btn) btn.textContent = _simPaused ? '▶ Resume' : '⏸ Pause';
+}
 
 function toggleSimSpeed() {
-  simSpeedFast = !simSpeedFast;
-  simSpeed = simSpeedFast ? 100 : 800;
-  document.getElementById('sim-speed-btn').textContent = `Speed: ${simSpeedFast ? 'Fast' : 'Normal'}`;
+  // Legacy compat — cycle through speeds
+  const keys = Object.keys(SIM_SPEEDS);
+  const idx = keys.indexOf(simSpeedKey);
+  setSimSpeed(keys[(idx+1)%keys.length]);
 }
 
 async function advanceWeek() {
@@ -2557,7 +2624,7 @@ function endSeason() {
 // ═══════════════════════════════════════════════════════════════
 // Match sim skip flag
 let _simSkipped = false;
-function skipMatchSim() { _simSkipped = true; }
+function skipMatchSim() { _simSkipped = true; _simPaused = false; }
 
 function switchMsimTab(name, btn) {
   document.querySelectorAll('.msim-tab-content').forEach(el=>el.classList.remove('active'));
@@ -2618,6 +2685,7 @@ const COMMENTARY_TEMPLATES = {
 function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
   return new Promise(async resolve => {
     _simSkipped = false;
+    _simPaused = false;
     const overlay = document.getElementById('match-sim-overlay');
     overlay.classList.add('open');
     const homeClub = G.clubs[homeId];
@@ -2632,7 +2700,12 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
     document.getElementById('sim-minute').textContent = 'Kick off';
     document.getElementById('msim-comp-badge').textContent = lg?.name || 'Cup';
 
-    // Pre-simulate
+    // Speed buttons init
+    document.querySelectorAll('.sim-speed-opt').forEach(b => b.classList.toggle('active', b.dataset.speed === simSpeedKey));
+    const pauseBtn = document.getElementById('sim-pause-btn');
+    if (pauseBtn) { pauseBtn.textContent = '⏸ Pause'; }
+
+    // Pre-simulate the full match
     const result = simulateMatchFull(homeId, awayId, leagueId, isPlayerMatch);
     overlay._result = result;
 
@@ -2651,15 +2724,59 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
     const sortedEvents = result.events.sort((a,b)=>a.minute-b.minute);
     let ei = 0;
     const liveStats = { home:{shots:0,possession:50,passes:0,fouls:0,corners:0,_homeYellow:0,_awayYellow:0,_homeRed:0,_awayRed:0}, away:{shots:0,possession:50,passes:0,fouls:0,corners:0} };
-    let commentaryIdx = 0;
 
+    // Build rich play-by-play commentary bank keyed by minute ranges
+    const pbpBank = {
+      early: ['⚽ Lively start — both sides pressing high.','🔄 Possession play in the middle third, looking for openings.','👀 Early set piece won — keeper deals with it comfortably.','🌀 Fast transitions in the opening minutes, no clear chance yet.','💪 Strong challenge in midfield — ref waves play on.'],
+      mid: ['🎯 Shot from distance — straight at the keeper.','🔀 Quick one-two on the edge — defender clears at the last moment.','📐 Tactical battle developing — neither side giving an inch.','⚡ Pace of the game picking up — crowd getting louder.','🔁 Corner swings in... headed clear.','🧤 Goalkeeper comes out confidently to claim the cross.'],
+      late: ['⏱️ Manager gesturing from the touchline — tactical change coming.','😤 Frustration mounting for the trailing side.','🚀 Final push — long ball pumped into the box.','🌡️ Tense atmosphere — every touch whistled by supporters.','🏃 Counter attack! Pace of the break is electric...','🎪 Drama building — nothing is decided yet.'],
+      halfTime: ['🍊 Half-time whistle! Teams head in for the break.','⏸️ Half-time. Manager will have plenty to say in that dressing room.'],
+      fullTime: ['🔔 Full-time whistle! Game over.','⏱️ The referee brings proceedings to a close.']
+    };
+
+    let commentaryIdx = 0;
+    let pbpTotal = 18; // total tick count
+
+    function addPbpComment(minute, html, style='') {
+      const div = document.createElement('div');
+      div.className = 'ev';
+      div.style.cssText = `color:var(--text3);font-size:11px;${style}`;
+      div.innerHTML = `<span class="min">${minute}'</span>${html}`;
+      document.getElementById('sim-events').appendChild(div);
+      document.getElementById('sim-events').scrollTop = 9999;
+    }
+
+    function addGoalDiv(minute, html) {
+      const div = document.createElement('div');
+      div.className = 'ev';
+      div.style.cssText = 'background:rgba(34,197,94,0.1);border-left:3px solid var(--green);padding-left:6px;border-radius:3px;';
+      div.innerHTML = `<span class="min" style="color:var(--green)">${minute}'</span>${html}`;
+      document.getElementById('sim-events').appendChild(div);
+      document.getElementById('sim-events').scrollTop = 9999;
+    }
+
+    function addCardDiv(minute, html, isRed) {
+      const div = document.createElement('div');
+      div.className = 'ev';
+      if (isRed) div.style.cssText = 'background:rgba(239,68,68,0.08);border-left:3px solid var(--red);padding-left:6px;border-radius:3px;';
+      div.innerHTML = `<span class="min" style="${isRed?'color:var(--red)':''}">${minute}'</span>${html}`;
+      document.getElementById('sim-events').appendChild(div);
+      document.getElementById('sim-events').scrollTop = 9999;
+    }
+
+    // Loop through 18 ticks (each = ~5 min)
     for (let tick = 1; tick <= 18; tick++) {
       if (_simSkipped) break;
+
+      // Wait while paused
+      while (_simPaused && !_simSkipped) { await sleep(100); }
+      if (_simSkipped) break;
+
       const minute = tick * 5;
       document.getElementById('sim-minute').textContent = `${minute}'`;
       document.getElementById('sim-progress').style.width = `${(tick/18)*100}%`;
 
-      // Grow live stats incrementally
+      // Update live stats incrementally
       liveStats.home.shots = Math.round(result.stats.home.shots * tick/18);
       liveStats.away.shots = Math.round(result.stats.away.shots * tick/18);
       liveStats.home.passes = Math.round(result.stats.home.passes * tick/18);
@@ -2672,49 +2789,55 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
       liveStats.away.possession = result.stats.away.possession;
       updateMsimStatBars(liveStats, '');
 
-      // Add commentary
-      if (tick % 3 === 0) {
-        const tmpl = COMMENTARY_TEMPLATES.commentary[commentaryIdx % COMMENTARY_TEMPLATES.commentary.length];
-        commentaryIdx++;
-        const div = document.createElement('div');
-        div.className = 'ev';
-        div.style.color = 'var(--text3)';
-        div.style.fontSize = '11px';
-        div.innerHTML = `<span class="min">${minute}'</span>${tmpl(minute)}`;
-        document.getElementById('sim-events').appendChild(div);
+      // Half-time commentary
+      if (tick === 9) {
+        addPbpComment(45, rngFrom(pbpBank.halfTime), 'color:var(--yellow);font-style:italic;');
+        await sleep(simSpeed * 0.5);
       }
 
-      // Process events at this minute
+      // Play-by-play commentary every 2-3 ticks
+      if (tick % 2 === 0) {
+        const bank = tick <= 6 ? pbpBank.early : tick <= 14 ? pbpBank.mid : pbpBank.late;
+        addPbpComment(minute, bank[commentaryIdx % bank.length]);
+        commentaryIdx++;
+      }
+
+      // Process all events in this tick's minute window
       while (ei < sortedEvents.length && sortedEvents[ei].minute <= minute) {
         const ev = sortedEvents[ei];
-        const evDiv = document.createElement('div');
-        evDiv.className = 'ev';
         const pName = ev.playerId && G.players[ev.playerId] ? G.players[ev.playerId].name : 'Unknown';
         if (ev.type === 'goal') {
           if (ev.side==='home') hg++; else ag++;
           const tmpl = rngFrom(COMMENTARY_TEMPLATES.goal);
           const assistName = ev.assistId && G.players[ev.assistId] ? G.players[ev.assistId].name : null;
-          evDiv.innerHTML = `<span class="min" style="color:var(--green)">${ev.minute}'</span>${tmpl(pName,ev.side)}${assistName?COMMENTARY_TEMPLATES.assist[0](assistName):''}`;
-          evDiv.style.background = 'rgba(34,197,94,0.08)';
+          const goalText = `${tmpl(pName,ev.side)}${assistName?COMMENTARY_TEMPLATES.assist[0](assistName):''}`;
+          addGoalDiv(ev.minute, goalText);
+
+          // Score update with pulse
           document.getElementById('sim-score').textContent = `${hg} – ${ag}`;
-          document.getElementById('sim-score').style.animation = 'goalPulse .4s ease';
-          setTimeout(()=>{ document.getElementById('sim-score').style.animation=''; }, 400);
+          document.getElementById('sim-score').style.animation = 'goalPulse .5s ease';
+          setTimeout(()=>{ document.getElementById('sim-score').style.animation=''; }, 500);
+
+          // Brief pause after goal for drama
+          await sleep(Math.min(simSpeed * 1.5, 1200));
         } else if (ev.type === 'yellow') {
           ev.side==='home' ? liveStats._homeYellow=(liveStats._homeYellow||0)+1 : liveStats._awayYellow=(liveStats._awayYellow||0)+1;
-          evDiv.innerHTML = `<span class="min">${ev.minute}'</span>${COMMENTARY_TEMPLATES.yellow[0](pName)}`;
+          addCardDiv(ev.minute, COMMENTARY_TEMPLATES.yellow[0](pName), false);
         } else if (ev.type === 'red') {
           ev.side==='home' ? liveStats._homeRed=(liveStats._homeRed||0)+1 : liveStats._awayRed=(liveStats._awayRed||0)+1;
-          evDiv.innerHTML = `<span class="min" style="color:var(--red)">${ev.minute}'</span>${COMMENTARY_TEMPLATES.red[0](pName)}`;
-          evDiv.style.background = 'rgba(239,68,68,0.08)';
+          addCardDiv(ev.minute, COMMENTARY_TEMPLATES.red[0](pName), true);
         }
-        document.getElementById('sim-events').appendChild(evDiv);
-        document.getElementById('sim-events').scrollTop = 9999;
         ei++;
       }
-      await sleep(simSpeed / 18);
+
+      await sleep(simSpeed);
     }
 
-    document.getElementById('sim-minute').textContent = 'Full time';
+    // Full-time
+    document.getElementById('sim-minute').textContent = 'Full Time';
+    addPbpComment(90, rngFrom(pbpBank.fullTime), 'color:var(--accent);font-weight:600;');
+    await sleep(400);
+
     overlay.classList.remove('open');
     overlay._fullResult = result;
 
@@ -4410,7 +4533,7 @@ function renderDashboard() {
   const myIdx = tableRows.findIndex(r=>r.clubId===G.player.clubId);
   const ld = LEAGUES_DATA.find(l=>l.id===myClub.leagueId);
   document.getElementById('dash-full-table').innerHTML = `
-  <div style="font-size:9px;font-family:var(--mono);letter-spacing:.08em;color:var(--text3);text-transform:uppercase;padding:6px 8px 3px;border-bottom:1px solid var(--border);">CONFERENCE / LEAGUE</div>
+  <div style="font-size:9px;font-family:var(--mono);letter-spacing:.08em;color:var(--text3);text-transform:uppercase;padding:6px 8px 3px;border-bottom:1px solid var(--border);">LEAGUE TABLE</div>
   <table class="data-table"><colgroup><col style="width:26px"><col><col style="width:24px"><col style="width:28px"><col style="width:30px"></colgroup><thead><tr>
     <th style="padding:5px 6px;">#</th><th>Club</th><th class="c">P</th><th class="c">Pts</th><th class="c">GD</th>
   </tr></thead><tbody>${tableRows.map((r,i)=>{
@@ -4526,6 +4649,14 @@ const PUNDITS = [
   { name:'BundesligaWatcher', handle:'@BundesWatch', avatar:'🦅', country:'Germany', style:'journalist' },
   { name:'La Liga Insider', handle:'@LaLigaInside', avatar:'☀️', country:'Spain', style:'journalist' },
   { name:'SerieA Expert', handle:'@SerieAExpert', avatar:'🍕', country:'Italy', style:'journalist' },
+  { name:'FootballLeaks', handle:'@FootballLeaksX', avatar:'🕵️', country:'Global', style:'journalist' },
+  { name:'Injury Room', handle:'@InjuryRoomFC', avatar:'🏥', country:'Global', style:'injury' },
+  { name:'The Ultras Den', handle:'@UltrasDen', avatar:'🎺', country:'Global', style:'fan' },
+  { name:'Manager Quotes', handle:'@PresserWatch', avatar:'🎤', country:'Global', style:'pundit' },
+  { name:'Club Official', handle:'@OfficialAnnounce', avatar:'📢', country:'Global', style:'official' },
+  { name:'Football Finance', handle:'@FFIntelligence', avatar:'📊', country:'Global', style:'journalist' },
+  { name:'Stadium Noise', handle:'@StadiumNoise', avatar:'📣', country:'Global', style:'fan' },
+  { name:'The Scout Network', handle:'@ScoutNetwork_EU', avatar:'🌍', country:'Europe', style:'scout' },
 ];
 
 function setSocialTab(tab, btn) {
@@ -4535,7 +4666,7 @@ function setSocialTab(tab, btn) {
   renderSocialFeed();
 }
 
-function generateTweetText(type) {
+function generateTweetText(type, punditStyle) {
   if (!G.player) return '';
   const myClub = G.clubs[G.player.clubId];
   const myLeague = G.leagues[myClub.leagueId];
@@ -4549,18 +4680,23 @@ function generateTweetText(type) {
   const hotPlayer = lgPlayers.sort((a,b)=>b.stats.goals-a.stats.goals)[0];
   const youngStar = Object.values(G.players).filter(p=>p.age<=21&&p.potential>=78).sort(()=>rng()-0.5)[0];
   const randomClub = rngFrom(Object.values(G.clubs).filter(c=>c.id!==myClub.id));
+  const randomClub2 = rngFrom(Object.values(G.clubs).filter(c=>c.id!==myClub.id&&c.id!==randomClub?.id));
+  const injuredPlayer = Object.values(G.players).filter(p=>p.currentInjury&&G.clubs[p.contract.clubId]?.leagueId===myClub.leagueId)[0];
 
   if (type === 'transfer') {
     const targets = Object.values(G.players).filter(p=>p.transferValue>500000&&p.contract.clubId!==myClub.id).sort(()=>rng()-0.5);
     const t = targets[0];
     const c1 = rngFrom(Object.values(G.clubs));
-    const c2 = rngFrom(Object.values(G.clubs).filter(c=>c.id!==c1.id));
+    const c2 = rngFrom(Object.values(G.clubs).filter(c=>c.id!==c1?.id));
     const tweets = [
       t && `🚨 EXCLUSIVE: ${c1?.name} have made an official approach for ${t?.name}. Personal terms not yet discussed. Here we go soon? 🤝 #Transfers`,
       t && `Sources close to ${t?.name}'s camp tell me he WANTS the move. His current club are holding out for over £${fmt(t?.transferValue*1.2)}. Saga continues. 👀`,
       `${randomClub?.name} are monitoring the situation of multiple attackers ahead of the January window. Budget limited but ambitions high. #Transfer`,
       t && `${t?.name} to ${c2?.name}? Agent confirmed talks are at 'early stages'. Nothing concrete yet but worth watching. #FootballRumours`,
       `BREAKING: ${c1?.name} had a £${fmt(Math.floor(rng()*20000000+5000000))} bid rejected. Club want 30% more. Standoff. 💥`,
+      t && `📋 CONTRACT UPDATE: ${t?.name} has informed ${G.clubs[t?.contract?.clubId]?.name||'his club'} he will NOT renew. Free agent in ${t?.contract?.expiresSeasons} season(s). Several clubs circling.`,
+      `💰 ${randomClub?.name} are set to announce a new shirt sponsorship deal reportedly worth £${fmt(rngInt(5,40)*1000000)}/yr. Significant financial boost.`,
+      t && `Agent of ${t?.name} spotted in ${rngFrom(['London','Madrid','Paris','Milan','Munich'])} yesterday. Make of that what you will. 👀`,
     ].filter(Boolean);
     return rngFrom(tweets);
   }
@@ -4576,6 +4712,65 @@ function generateTweetText(type) {
       `Biggest problem in modern football? Managers not trusting young players. Give the kids a chance! #YouthDevelopment`,
       pos===1 ? `${myClub.name} top of the table. Looking VERY good. The league is theirs to lose.` : `${myClub.name} have the squad to push for the top. But consistency is key. No more slip-ups!`,
       tableRow.won>=3 ? `Three wins in a row for ${myClub.name}. Momentum is EVERYTHING in football.` : `${myClub.name} need to string results together. One win is nice. A run of wins changes everything.`,
+      `Anyone else notice how much better ${randomClub?.name} look this season? Different squad, different mentality. Impressive.`,
+      `The goalkeeper is criminally underrated as a position. A top GK is worth 10+ points a season. Fight me.`,
+      `Managers get too much blame when things go wrong and not enough credit when things go right. Unpopular opinion? Maybe.`,
+      randomClub && randomClub2 && `${randomClub.name} vs ${randomClub2.name} this week is the game of the round for me. Two sides in great form. Should be a cracker. 🔥`,
+    ].filter(Boolean);
+    return rngFrom(tweets);
+  }
+
+  if (type === 'fan') {
+    const recentResult = myLeague.fixtures.filter(f=>f.played&&(f.home===G.player.clubId||f.away===G.player.clubId)).slice(-1)[0];
+    const tweets = [
+      pos<=5 ? `CANNOT believe how good we look this season!! 😭🔥 ${myClub.name} are FLYING. Come on!!` :
+               `Tough week for us ${myClub.name} fans. We need to be better. The manager needs to sort this out. #${myClub.name.replace(/\s/,'')}`,
+      `Up at 6am to watch ${randomClub?.name} train on their open training day video. That's the life of a proper football fan 😅⚽`,
+      `The atmosphere at the game yesterday was INCREDIBLE. Best in years. This is why we love football ❤️🏟️`,
+      `${hotPlayer?.name||'The striker'} right now: ⚽⚽⚽ Absolute unit. Someone give him a better contract before a big club nicks him 😤`,
+      `Rival fans really talking themselves up before the derby lmao. We'll see on match day 😂 #Derby`,
+      pos<=3 ? `If we win this weekend we go 3 points clear. I can't breathe. This is too stressful. Football is a nightmare and I love it.` : `We're not where we want to be but the season is long. Keep the faith. #Believers`,
+      `Ten years ago today I watched my first game at the stadium. Still the same feeling every matchday. Pure magic. ❤️`,
+      `The banter between ${randomClub?.name} and ${randomClub2?.name} fans this week has been TOP quality entertainment 😂⚽`,
+    ].filter(Boolean);
+    return rngFrom(tweets);
+  }
+
+  if (type === 'injury') {
+    const tweets = [
+      injuredPlayer ? `🏥 INJURY UPDATE: ${injuredPlayer.name} has been confirmed out with ${injuredPlayer.currentInjury?.type||'an injury'}. Significant blow for ${G.clubs[injuredPlayer.contract.clubId]?.name||'the club'}.` :
+        `🏥 Several players across the league nursing knocks this week. Busy fixture schedule taking its toll on squads.`,
+      `Medical teams across the league working overtime this week. Congested fixture list is the real enemy of football. 🩺`,
+      hotPlayer && `Fingers crossed ${hotPlayer.name} passes his fitness test ahead of the weekend. Too important to be missing. 🤞`,
+      `The science of injury prevention has come SO far in the last decade. Clubs investing in sports science is paying dividends. 💪`,
+    ].filter(Boolean);
+    return rngFrom(tweets);
+  }
+
+  if (type === 'official') {
+    const tweets = [
+      `📢 ${myClub.name} are pleased to confirm the signing of a new kit manufacturer deal for the upcoming season. Details to follow.`,
+      `📢 ${randomClub?.name} would like to clarify reports in the media. The club has no comment on transfer speculation at this time.`,
+      `🏟️ ${myClub.name} announce plans for stadium improvements this off-season. Works to begin in June, fully completed before pre-season.`,
+      `📢 ${randomClub?.name} confirm that tickets for the upcoming fixture are SOLD OUT. Season ticket holders given priority access.`,
+      `🏆 The ${myLeague.name} is pleased to announce the Team of the Month nominations. Voting open now.`,
+    ].filter(Boolean);
+    return rngFrom(tweets);
+  }
+
+  if (type === 'match_reaction') {
+    const recentFixtures = myLeague.fixtures.filter(f=>f.played).slice(-6);
+    const bigResult = recentFixtures.find(f=>f.result&&(f.result.home+f.result.away)>=5);
+    const upset = recentFixtures.find(f=>f.played&&f.result);
+    const tweets = [
+      bigResult ? `🔥 ${G.clubs[bigResult.home]?.name} ${bigResult.result.home}–${bigResult.result.away} ${G.clubs[bigResult.away]?.name}. What a game that was! Goals everywhere.` :
+        `Another wild weekend of football in the ${myLeague.name}. The table is absolutely wild. #${myLeague.name?.replace(/\s/g,'')||'Football'}`,
+      `The ${myLeague.name} just doesn't stop delivering. Every weekend is a drama. Genuinely the best league to follow right now.`,
+      pos<=5 && tableRow.won>0 ? `What a result for ${myClub.name} this week! Big three points. Onwards and upwards 📈` :
+        `Hard to take that result. ${myClub.name} deserved more from that. Referee questions. Heads up and move on. 💪`,
+      `VAR controversy again this weekend. Three decisions being debated across the league. Football is never boring. 🤦`,
+      hotPlayer && hotPlayer.stats.goals > 3 ? `Someone take a minute to appreciate ${hotPlayer.name}'s season so far: ${hotPlayer.stats.goals} goals. In ${hotPlayer.stats.apps} appearances. Ridiculous output.` :
+        `Top scorer race is going to go down to the wire in the ${myLeague.name} this season. So many candidates.`,
     ].filter(Boolean);
     return rngFrom(tweets);
   }
@@ -4590,6 +4785,9 @@ function generateTweetText(type) {
     hotPlayer && `Can we talk about ${hotPlayer.name}? Absolute machine. ${hotPlayer.stats.goals}G ${hotPlayer.stats.assists}A — elite numbers.`,
     `Set piece preparation is THE most underrated aspect of football management. Goals from corners WIN leagues.`,
     `I've watched every game in the ${myLeague.name} this season. The quality is genuinely exceptional. Loving it.`,
+    youngStar && `Keep an eye on ${youngStar?.name} — ${youngStar?.age} years old, already showing signs of something special. The future of the game 🌟`,
+    `Financial Fair Play enforcement is getting stricter. Clubs that overspent are going to feel the squeeze soon. Watch this space. 💰`,
+    `The evolution of the false 9 role is something I could talk about for hours. Game-changing tactical invention.`,
   ].filter(Boolean);
   return rngFrom(general);
 }
@@ -4618,11 +4816,23 @@ function renderSocialFeed() {
   if (!feed) return;
 
   let html = '';
-  const numTweets = 12;
-  const types = _socialTab === 'all' ? ['pundit','transfer','pundit','scout','transfer','pundit','pundit','transfer','scout','pundit','transfer','pundit'] :
-                _socialTab === 'transfers' ? Array(numTweets).fill('transfer') :
-                _socialTab === 'scouting' ? Array(numTweets).fill('scout') :
-                Array(numTweets).fill('pundit');
+  const numTweets = 14;
+
+  // All tab: rich mix of all types
+  const ALL_TYPES = ['pundit','transfer','fan','match_reaction','scout','transfer','pundit','injury','official','fan','transfer','pundit','match_reaction','scout'];
+  const TRANSFER_TYPES = Array(numTweets).fill('transfer');
+  const SCOUT_TYPES = Array(numTweets).fill('scout');
+  const PUNDIT_TYPES = ['pundit','pundit','fan','match_reaction','pundit','injury','official','pundit','fan','pundit','match_reaction','pundit','injury','fan'];
+
+  const FAN_TYPES = ['fan','fan','match_reaction','fan','injury','fan','match_reaction','fan','official','fan','match_reaction','fan','fan','fan'];
+  const REACTION_TYPES = ['match_reaction','match_reaction','fan','match_reaction','pundit','match_reaction','fan','match_reaction','injury','match_reaction','official','match_reaction','fan','match_reaction'];
+
+  const types = _socialTab === 'all' ? ALL_TYPES :
+                _socialTab === 'transfers' ? TRANSFER_TYPES :
+                _socialTab === 'scouting' ? SCOUT_TYPES :
+                _socialTab === 'fans' ? FAN_TYPES :
+                _socialTab === 'reactions' ? REACTION_TYPES :
+                PUNDIT_TYPES;
 
   const usedPundits = new Set();
 
@@ -4655,23 +4865,39 @@ function renderSocialFeed() {
       return;
     }
 
-    const pundit = rngFrom(PUNDITS.filter(pu=>{
-      if (_socialTab==='transfers') return pu.style==='transfer'||pu.style==='journalist';
-      if (_socialTab==='pundits') return pu.style==='pundit';
-      return true;
-    }).filter(pu=>!usedPundits.has(pu.handle)));
+    // Pick a pundit that matches the type
+    const styleMap = {
+      transfer: ['transfer','journalist'],
+      pundit: ['pundit'],
+      fan: ['fan'],
+      injury: ['injury','pundit'],
+      official: ['official','journalist'],
+      match_reaction: ['pundit','fan','journalist'],
+    };
+    const allowedStyles = styleMap[type] || ['pundit'];
+    const pundit = rngFrom(PUNDITS.filter(pu => allowedStyles.includes(pu.style) && !usedPundits.has(pu.handle)))
+      || rngFrom(PUNDITS.filter(pu => !usedPundits.has(pu.handle)))
+      || rngFrom(PUNDITS);
     if (!pundit) return;
     usedPundits.add(pundit.handle);
 
-    const tweetType = _socialTab === 'all' ? (i%3===0?'transfer':i%3===1?'pundit':'general') : type;
-    const text = generateTweetText(tweetType);
+    const text = generateTweetText(type, pundit.style);
     if (!text) return;
 
-    const tagType = pundit.style === 'transfer' ? 'transfer' : pundit.style === 'scout' ? 'scout' : 'pundit';
-    const tagLabel = pundit.style === 'transfer' ? '💸 Transfer' : pundit.style === 'scout' ? '🔭 Scout' : '🎙️ Pundit';
-    const likes = rngInt(120, 48000);
-    const rts = rngInt(20, 8000);
-    const mins = rngInt(1, 180);
+    // Tag styling
+    const tagMap = {
+      transfer: ['transfer', '💸 Transfer'],
+      pundit: ['pundit', '🎙️ Pundit'],
+      fan: ['fan', '🙋 Fan'],
+      injury: ['injury', '🏥 Injury'],
+      official: ['official', '📢 Official'],
+      match_reaction: ['reaction', '🔥 Match'],
+    };
+    const [tagClass, tagLabel] = tagMap[type] || ['pundit','🎙️ Pundit'];
+
+    const likes = rngInt(120, 52000);
+    const rts = rngInt(20, 9000);
+    const mins = rngInt(1, 240);
     const timeStr = mins < 60 ? `${mins}m` : `${Math.round(mins/60)}h`;
 
     // Highlight mentions and hashtags
@@ -4680,7 +4906,7 @@ function renderSocialFeed() {
       .replace(/@(\w+)/g, '<span class="mention">@$1</span>');
 
     html += `<div class="tweet-card">
-      <div style="margin-bottom:6px;"><span class="tweet-tag ${tagType}">${tagLabel}</span></div>
+      <div style="margin-bottom:6px;"><span class="tweet-tag ${tagClass}">${tagLabel}</span></div>
       <div class="tweet-header">
         <div class="tweet-avatar">${pundit.avatar}</div>
         <div>
@@ -4693,7 +4919,8 @@ function renderSocialFeed() {
       <div class="tweet-footer">
         <span>♥ ${likes>=1000?(likes/1000).toFixed(1)+'K':likes}</span>
         <span>↺ ${rts>=1000?(rts/1000).toFixed(1)+'K':rts}</span>
-        <span>💬 ${rngInt(5,400)}</span>
+        <span>💬 ${rngInt(5,500)}</span>
+        <span style="margin-left:auto;cursor:pointer;color:var(--accent)">🔖</span>
       </div>
     </div>`;
   });
