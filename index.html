@@ -5251,7 +5251,7 @@ function renderDashboard() {
   // League headlines / news
   const newsItems = G.player.news.slice(0,6);
   document.getElementById('dash-headlines').innerHTML = newsItems.length ?
-    newsItems.map((n,i)=>`<div class="headline-item" style="cursor:${n.clubId?'pointer':'default'}" onclick="${n.clubId?'openTeamPage(''+n.clubId+'')':''}" onmouseover="${n.clubId?'this.style.background='var(--bg3)'':''}" onmouseout="this.style.background=''"><span class="headline-tag ${i===0?'new':''}">${i===0?'NEW':'NEWS'}</span>${n.headline}${n.detail?`<div style="font-size:10px;color:var(--text3);margin-top:2px;">${n.detail}</div>`:''}</div>`).join('') +
+    newsItems.map((n,i)=>`<div class="headline-item" style="cursor:${n.clubId?'pointer':'default'}" onclick="${n.clubId?'openTeamPage(\'' +n.clubId+ '\')':''}" onmouseover="${n.clubId?'this.style.background=\"var(--bg3)\"':''}" onmouseout="this.style.background=''"><span class="headline-tag ${i===0?'new':''}">${i===0?'NEW':'NEWS'}</span>${n.headline}${n.detail?`<div style="font-size:10px;color:var(--text3);margin-top:2px;">${n.detail}</div>`:''}</div>`).join('') +
     `<div style="margin-top:6px;"><span class="dash-link" onclick="showPanel('news')">» News Feed</span></div>` :
     '<div class="muted">No news yet</div>';
 
@@ -6450,8 +6450,6 @@ function drawVARScene(canvas, incident) {
       rb.style.height = Math.round(H * 0.22 * scaleY) + 'px';
     }
   }
-}
-
 }
 
 // ═══════════════════════════════════════════════════════════════
