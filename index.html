@@ -2383,7 +2383,7 @@ function generatePlayer(clubId, pos, repFactor, tier, country) {
     personality: { ambition: rngInt(1,10), loyalty: rngInt(1,10), professionalism: rngInt(1,10), temperament: rngInt(1,10) },
     contract: { clubId, wage, expiresSeasons: rngInt(1,4), buyoutClause: rating > 75 ? rating * 150000 : null },
     transferValue: Math.floor(rating * rating * 200 * (tier === 1 ? 1 : 0.4) * (1 + rng())),
-    stats: { apps:0, goals:0, assists:0, yellows:0, reds:0, avgRating:0, ratingTotal:0, ratingCount:0, minutesPlayed:0 },
+    stats: { apps:0, goals:0, assists:0, yellows:0, reds:0, avgRating:0, ratingTotal:0, ratingCount:0, minutesPlayed:0, matchHistory:[] },
     history: [], currentInjury: null, suspended: 0,
     onLoan: false, loanClub: null
   };
@@ -2677,8 +2677,16 @@ function simulateMatchFull(homeId, awayId, compId, isPlayerClub) {
   };
 
   // Update player stats for player's club
-  const updateClub = (cid, gf, ga) => {
+  const updateClub = (cid, gf, ga, oppId, isHome, weekNum) => {
     const isWin = gf > ga, isDraw = gf === ga;
+    const myClubLocal = G.clubs[cid];
+    const seasonYear = new Date().getFullYear() + ((G.player?.season||1) - 1);
+    // Compute the real match date from week number
+    const seasonStartMs = new Date(seasonYear, 7, 1).getTime();
+    const satMs = seasonStartMs + ((weekNum||G.player?.week||1) - 1) * 7 * 86400000 + 5 * 86400000;
+    const matchDate = new Date(satMs);
+    const dateStr = matchDate.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    const oppName = G.clubs[oppId]?.name || '?';
     G.clubs[cid].players.forEach(pid => {
       const pl = G.players[pid];
       if (!pl) return;
@@ -2686,17 +2694,25 @@ function simulateMatchFull(homeId, awayId, compId, isPlayerClub) {
       pl.stats.minutesPlayed += 90;
       pl.fitness = Math.max(30, pl.fitness - rngInt(5,15));
       pl.form = Math.round(pl.form * 0.8 + rngInt(50,90) * 0.2);
-      // Compute a match rating based on player rating, goals involvement, win/loss
       const baseRat = 5.0 + (pl.rating - 60) * 0.04;
       const winBonus = isWin ? 0.5 : isDraw ? 0.1 : -0.3;
-      const goalBonus = (pl.stats.goals > 0 && pl.stats.apps <= 1) ? 1.2 : 0; // rough approximation
       const matchRat = Math.min(9.9, Math.max(3.5, baseRat + winBonus + (rng()-0.5)*1.2));
       pl.stats.ratingTotal = (pl.stats.ratingTotal || 0) + matchRat;
       pl.stats.ratingCount = (pl.stats.ratingCount || 0) + 1;
       pl.stats.avgRating = parseFloat((pl.stats.ratingTotal / pl.stats.ratingCount).toFixed(2));
+      if (!pl.stats.matchHistory) pl.stats.matchHistory = [];
+      pl.stats.matchHistory.push({
+        date: dateStr,
+        opp: oppName,
+        home: isHome,
+        gf, ga,
+        result: isWin ? 'W' : isDraw ? 'D' : 'L',
+        rating: parseFloat(matchRat.toFixed(1)),
+        week: weekNum || G.player?.week || 1
+      });
     });
   };
-  updateClub(homeId, homeGoals, awayGoals); updateClub(awayId, awayGoals, homeGoals);
+  updateClub(homeId, homeGoals, awayGoals, awayId, true, null); updateClub(awayId, awayGoals, homeGoals, homeId, false, null);
 
   return { homeGoals, awayGoals, events, stats: matchStats, weather };
 }
@@ -3069,7 +3085,7 @@ function endSeason() {
         if (pl.contract.clubId === p.clubId) notify(`${pl.name} retired`, 'warn');
       }
     }
-    pl.stats = { apps:0,goals:0,assists:0,yellows:0,reds:0,avgRating:0,ratingTotal:0,ratingCount:0,minutesPlayed:0 };
+    pl.stats = { apps:0,goals:0,assists:0,yellows:0,reds:0,avgRating:0,ratingTotal:0,ratingCount:0,minutesPlayed:0,matchHistory:[] };
     pl.fitness = Math.min(100, pl.fitness + rngInt(10,25));
   });
 
@@ -3426,22 +3442,23 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
           const tmpl = rngFrom(extEvents.foul);
           addEvent(minute, tmpl(p1Name), 'color:var(--text2);font-size:11px;');
         } else if (type === 'var_rarely') {
-          // Trigger real VAR overlay occasionally (25% of var events)
-          if (rngBool(0.40) && !window._inVARReview) {
+          // Trigger real VAR overlay — always show for all var_rarely events
+          if (!window._inVARReview) {
             window._inVARReview = true;
-            // Pause sim until user closes the VAR window
+            // IMMEDIATELY pause — set flag and yield so browser renders before continuing
             _simPaused = true;
             addEvent(minute, `📺 <b>VAR CHECK</b> — Reviewing the incident...`, 'color:var(--yellow);font-weight:600;');
-            const varIncident = { type: rngBool(0.5) ? 'goal' : 'penalty', minute };
+            await sleep(50); // yield to browser so overlay can open before any further awaits
+            const varType = rngFrom(['goal','goal','penalty','handball','offside','foul']);
+            const varIncident = { type: varType === 'goal' || varType === 'offside' ? 'goal' : 'penalty', subType: varType, minute };
             await new Promise(resolve => {
-              // onDecision fires when verdict is reached (auto, after delay)
               showVARReview(varIncident, (decision) => {
                 window._inVARReview = false;
+                const typeLabel = { goal:'goal check', offside:'offside check', penalty:'penalty check', handball:'handball check', foul:'foul check' }[varType] || 'VAR check';
                 const resultText = varIncident.type === 'goal'
-                  ? (decision ? '✅ Goal stands after VAR check' : '❌ Goal disallowed — offside!')
-                  : (decision ? '🚨 Penalty confirmed by VAR!' : '✅ No penalty — VAR overturns decision');
+                  ? (decision ? '✅ Goal confirmed by VAR' : '❌ Goal disallowed — offside!')
+                  : (decision ? '🚨 Penalty awarded by VAR!' : '✅ No penalty — VAR overturns');
                 addEvent(minute, resultText, `color:${decision?'var(--green)':'var(--red)'};font-weight:700;font-size:12px;`);
-                // Store resume callback so closeVAR can call it
                 window._varResumeCallback = () => {
                   _simPaused = false;
                   window._varResumeCallback = null;
@@ -4062,7 +4079,7 @@ function daysInMonth(month, year) {
 // Season starts Aug 1 of G.player.season. Week 1 = Aug 1–7.
 // Given a week number (1-based), return { year, month (0-based), day } for Mon of that week.
 function weekToDate(weekNum) {
-  const seasonYear = G.player ? G.player.season : new Date().getFullYear();
+  const seasonYear = G.player ? (new Date().getFullYear() + (G.player.season - 1)) : new Date().getFullYear();
   const seasonStart = new Date(seasonYear, 7, 1); // Aug 1
   const dayOffset = (weekNum - 1) * 7;
   const d = new Date(seasonStart.getTime() + dayOffset * 86400000);
@@ -4071,9 +4088,9 @@ function weekToDate(weekNum) {
 
 // Returns {month, year} for a given _calMonthIdx slot
 function calMonthYear(idx) {
-  const seasonYear = G.player ? G.player.season : new Date().getFullYear();
+  const baseYear = G.player ? (new Date().getFullYear() + (G.player.season - 1)) : new Date().getFullYear();
   const jsMonth = SEASON_MONTHS[idx];
-  const year = (idx <= 4) ? seasonYear : seasonYear + 1; // Aug-Dec = season year, Jan-May = season+1
+  const year = (idx <= 4) ? baseYear : baseYear + 1; // Aug-Dec = season year, Jan-May = season+1
   return { jsMonth, year };
 }
 
@@ -4091,7 +4108,8 @@ function renderCalendar() {
   const firstDow = new Date(year, jsMonth, 1).getDay();
   const gridStartDow = firstDow === 0 ? 6 : firstDow - 1;
 
-  const seasonStart = new Date(G.player.season, 7, 1); // Aug 1
+  const seasonYear = new Date().getFullYear() + (G.player.season - 1);
+  const seasonStart = new Date(seasonYear, 7, 1); // Aug 1
   const MS_DAY = 86400000;
 
   // For each game-week, compute its exact Saturday and Wednesday dates
@@ -4349,13 +4367,14 @@ function openPlayerDetail_MODAL_OLD(pid) {
   const club = G.clubs[p.contract.clubId];
   const isMyPlayer = club?.id === G.player?.clubId;
 
-  // Generate match-by-match ratings for this season
-  const matchRatings = [];
-  const teamRatBase = p.stats.apps > 0 ? (5.0 + (p.rating - 50) * 0.05) : 6.0;
-  for (let i = 0; i < p.stats.apps; i++) {
-    const r = Math.min(10, Math.max(3.5, teamRatBase + (rng()-0.48)*3.2));
-    matchRatings.push(parseFloat(r.toFixed(1)));
-  }
+  // Use real stored match history — fall back to simulated if none yet
+  const matchHistory = p.stats.matchHistory || [];
+  const matchRatings = matchHistory.length > 0
+    ? matchHistory.map(m => m.rating)
+    : (() => {
+        const base = 5.0 + (p.rating - 50) * 0.05;
+        return Array.from({length: p.stats.apps}, () => parseFloat(Math.min(10,Math.max(3.5,base+(rng()-0.48)*3.2)).toFixed(1)));
+      })();
   const avgRating = matchRatings.length ? (matchRatings.reduce((s,r)=>s+r,0)/matchRatings.length).toFixed(1) : null;
   const ratingColor = r => r>=8.5?'#22c55e':r>=7.5?'#4ade80':r>=6.5?'#3b82f6':r>=5.5?'#eab308':'#ef4444';
   const ratingBg = r => r>=8.5?'rgba(34,197,94,0.18)':r>=7.5?'rgba(74,222,128,0.15)':r>=6.5?'rgba(59,130,246,0.15)':r>=5.5?'rgba(234,179,8,0.15)':'rgba(239,68,68,0.15)';
@@ -4395,9 +4414,40 @@ function openPlayerDetail_MODAL_OLD(pid) {
       <div style="width:24px;text-align:right;font-family:var(--mono);font-size:11px;color:${val>=80?'var(--green)':val>=65?'#86efac':val>=50?'var(--text)':val>=35?'var(--yellow)':'var(--red)'};">${val||'—'}</div>
     </div>`;
 
-  // Match rating history grid (FotMob style coloured squares)
-  const matchRatingGrid = matchRatings.length ? matchRatings.map((r,i)=>`
-    <div title="Match ${i+1}: ${r}" style="width:32px;height:32px;border-radius:6px;background:${ratingBg(r)};border:1px solid ${ratingColor(r)}33;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:${ratingColor(r)};">${r}</div>`).join('') : '<div style="color:var(--text3);font-size:12px;padding:8px;">No appearances yet this season</div>';
+  // Match rating history — FotMob-style table with date/opponent/result/rating
+  const matchRatingGrid = matchHistory.length > 0 ? `
+    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);">
+          <th style="text-align:left;padding:4px 6px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Date</th>
+          <th style="text-align:left;padding:4px 6px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Opponent</th>
+          <th style="text-align:center;padding:4px 6px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Result</th>
+          <th style="text-align:center;padding:4px 4px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Score</th>
+          <th style="text-align:center;padding:4px 6px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">⭐</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${[...matchHistory].reverse().map(m => {
+          const rColor = ratingColor(m.rating);
+          const rBg = ratingBg(m.rating);
+          const resColor = m.result==='W'?'var(--green)':m.result==='D'?'var(--yellow)':'var(--red)';
+          return `<tr style="border-bottom:1px solid var(--border);cursor:default;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+            <td style="padding:5px 6px;color:var(--text2);font-family:var(--mono);font-size:10px;">${m.date}</td>
+            <td style="padding:5px 6px;font-weight:500;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.home?'vs':'@'} ${m.opp}</td>
+            <td style="padding:5px 6px;text-align:center;">
+              <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${resColor};">${m.result}</span>
+            </td>
+            <td style="padding:5px 4px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text2);">${m.gf}–${m.ga}</td>
+            <td style="padding:5px 6px;text-align:center;">
+              <span style="display:inline-block;padding:2px 7px;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:800;background:${rBg};color:${rColor};border:1px solid ${rColor}33;">${m.rating}</span>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>` :
+    matchRatings.length ? matchRatings.map((r,i)=>`
+      <div title="Match ${i+1}: ${r}" style="width:32px;height:32px;border-radius:6px;background:${ratingBg(r)};border:1px solid ${ratingColor(r)}33;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:${ratingColor(r)};">${r}</div>`).join('')
+    : '<div style="color:var(--text3);font-size:12px;padding:8px;">No appearances yet this season</div>';
 
   openModal(p.name, `
     <!-- FotMob-style HEADER BANNER -->
@@ -6577,334 +6627,205 @@ function closeVAR() {
   if (window._varResumeCallback) window._varResumeCallback();
 }
 
+function _varPlayer(ctx, px, py, r, shirt, hasBall, label) {
+  ctx.beginPath(); ctx.ellipse(px, py+r+2, r*0.7, r*0.3, 0, 0, Math.PI*2);
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fill();
+  const g = ctx.createRadialGradient(px-r*0.3, py-r*0.35, r*0.1, px, py, r);
+  const lighter = (hex,a) => { const n=parseInt(hex.replace('#',''),16); const rr=Math.min(255,(n>>16)+a), gg=Math.min(255,((n>>8)&0xff)+a), bb=Math.min(255,(n&0xff)+a); return '#'+((rr<<16)|(gg<<8)|bb).toString(16).padStart(6,'0'); };
+  g.addColorStop(0, lighter(shirt,60)); g.addColorStop(1, shirt);
+  ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI*2); ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(px, py-r-4, r*0.52, 0, Math.PI*2); ctx.fillStyle='#f5c28a'; ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.lineWidth=1; ctx.stroke();
+  if (hasBall) {
+    ctx.beginPath(); ctx.arc(px+r+4, py+2, r*0.45, 0, Math.PI*2);
+    const bg=ctx.createRadialGradient(px+r+2,py,1,px+r+4,py+2,r*0.45);
+    bg.addColorStop(0,'#fff'); bg.addColorStop(1,'#ccc');
+    ctx.fillStyle=bg; ctx.fill(); ctx.strokeStyle='#555'; ctx.lineWidth=0.8; ctx.stroke();
+  }
+  if (label) {
+    ctx.save();
+    ctx.font=`bold ${Math.max(8,r*0.85)}px monospace`;
+    const lw=ctx.measureText(label).width+8;
+    ctx.fillStyle='rgba(200,0,0,0.85)';
+    if(ctx.roundRect) ctx.roundRect(px-lw/2, py-r-22, lw, 14, 3); else ctx.rect(px-lw/2,py-r-22,lw,14);
+    ctx.fill();
+    ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.fillText(label, px, py-r-11); ctx.textAlign='left';
+    ctx.restore();
+  }
+}
+
 function drawVARScene(canvas, incident) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
-  const isGoal = incident.type === 'goal';
-  const isPenalty = !isGoal;
-
-  // ── Animated frame counter (stored on canvas) ──────────────────
+  const subType = incident.subType || (incident.type === 'goal' ? 'offside' : 'penalty');
   if (canvas._varFrame === undefined) canvas._varFrame = 0;
   const frame = canvas._varFrame++;
-  const t = frame / 60; // time in seconds
+  const t = frame / 60;
 
-  // ── TV background ──────────────────────────────────────────────
-  ctx.fillStyle = '#050810';
-  ctx.fillRect(0, 0, W, H);
-
-  // ── Pitch area ─────────────────────────────────────────────────
-  const pitchTop = H * 0.13;
-  const pitchH = H * 0.75;
-  const pitchBot = pitchTop + pitchH;
-
-  // Grass gradient — two-tone stripes for broadcast look
-  const stripeW = W / 8;
-  for (let i = 0; i < 8; i++) {
-    ctx.fillStyle = i % 2 === 0 ? '#1a6830' : '#1d7535';
-    ctx.fillRect(i * stripeW, pitchTop, stripeW, pitchH);
+  // Pitch background
+  ctx.fillStyle='#0a1a0f'; ctx.fillRect(0,0,W,H);
+  for (let i=0;i<9;i++) {
+    ctx.fillStyle = i%2===0 ? '#1a6830' : '#1e7836';
+    ctx.fillRect(i*W/9, 0, W/9, H);
   }
 
-  // Pitch lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-  ctx.lineWidth = Math.max(1.5, W * 0.002);
-  ctx.setLineDash([]);
+  const pH = H*0.14; // pitchTop offset (TV chrome at top)
 
-  if (isGoal) {
-    // ── OFFSIDE SCENE ──────────────────────────────────────────
-    // Penalty box at top (goal end near top of frame)
-    const bx = W * 0.15, bw = W * 0.7, by = pitchTop, bh = pitchH * 0.45;
-    // Box outline
-    ctx.strokeRect(bx, by, bw, bh);
-    // Goal line
-    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + bw, by); ctx.stroke();
-    // Goal (rectangular)
-    const goalW = W * 0.28, goalH = pitchH * 0.1;
-    const goalX = (W - goalW) / 2;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(goalX, by - goalH, goalW, goalH);
-    // Net hatching
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 0.8;
-    for (let x = goalX; x < goalX + goalW; x += goalW / 5) {
-      ctx.beginPath(); ctx.moveTo(x, by - goalH); ctx.lineTo(x, by); ctx.stroke();
-    }
-    for (let y = by - goalH; y < by; y += goalH / 3) {
-      ctx.beginPath(); ctx.moveTo(goalX, y); ctx.lineTo(goalX + goalW, y); ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-    ctx.lineWidth = Math.max(1.5, W * 0.002);
-
-    // Penalty spot
-    ctx.beginPath(); ctx.arc(W * 0.5, by + bh * 0.7, W * 0.008, 0, Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.fill();
-
-    // ── Players: attacker near goal, defenders behind ──────────
-    function drawPlayer(px, py, shirtColor, hasBall=false, isOffside=false) {
-      const r = W * 0.016;
-      // Shadow
-      ctx.beginPath(); ctx.ellipse(px, py+r+2, r*0.7, r*0.25, 0, 0, Math.PI*2);
-      ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fill();
-      // Body
-      ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI*2);
-      ctx.fillStyle = isOffside ? '#ff4444' : shirtColor; ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth=1.5; ctx.stroke();
-      // Head
-      ctx.beginPath(); ctx.arc(px, py - r - 5, r*0.52, 0, Math.PI*2);
-      ctx.fillStyle = '#f5c28a'; ctx.fill();
-      // Ball
-      if (hasBall) {
-        ctx.beginPath(); ctx.arc(px + r + 5, py + 3, r*0.45, 0, Math.PI*2);
-        ctx.fillStyle = '#ffffff'; ctx.fill();
-        ctx.strokeStyle = '#333'; ctx.lineWidth=1; ctx.stroke();
-      }
-      // Offside arrow above head
-      if (isOffside) {
-        const pulse = 0.7 + 0.3 * Math.sin(t * 6);
-        ctx.fillStyle = `rgba(255,50,50,${pulse})`;
-        ctx.beginPath();
-        const ax = px, ay = py - r - 18;
-        ctx.moveTo(ax, ay - 10);
-        ctx.lineTo(ax - 7, ay);
-        ctx.lineTo(ax + 7, ay);
-        ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#ff3333'; ctx.font = `bold ${W*0.018}px monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText('OFFSIDE', ax, ay - 16);
-        ctx.textAlign = 'left';
-      }
-    }
-
-    // Attacker: just past the last defender (flagged offside)
-    const attackerX = W * 0.54 + Math.sin(t * 0.3) * 2; // slight sway for live feel
-    const attackerY = by + bh * 0.22;
-    drawPlayer(attackerX, attackerY, '#2980b9', true, true); // blue shirt, has ball, offside
-
-    // Two defenders (last two)
-    drawPlayer(W * 0.44, by + bh * 0.28, '#c0392b'); // red shirt defender 1
-    drawPlayer(W * 0.37, by + bh * 0.32, '#c0392b'); // red shirt defender 2
-
-    // Other attacking player (onside)
-    drawPlayer(W * 0.30, by + bh * 0.18, '#2980b9');
-
-    // ── Animated offside line ──────────────────────────────────
-    // Pulsing bright red dashed line through last defender (W*0.44)
-    const offsideX = W * 0.455; // between attacker and last defender
-    const pulseA = 0.6 + 0.4 * Math.sin(t * 4);
-    ctx.save();
-    ctx.strokeStyle = `rgba(255,30,30,${pulseA})`;
-    ctx.lineWidth = Math.max(3, W * 0.005);
-    ctx.setLineDash([W * 0.03, W * 0.015]);
-    ctx.beginPath(); ctx.moveTo(offsideX, pitchTop); ctx.lineTo(offsideX, pitchBot); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-
-    // Attacker offside arrow (horizontal gap indicator)
-    const gapPulse = 0.5 + 0.5 * Math.abs(Math.sin(t * 3));
-    ctx.save();
-    ctx.strokeStyle = `rgba(255,200,0,${gapPulse})`;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.moveTo(offsideX, attackerY);
-    ctx.lineTo(attackerX - W*0.016, attackerY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-
-    // Ball trajectory arc (where the pass came from)
-    const ballX = attackerX, ballY = attackerY;
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,100,0.5)';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([5, 8]);
-    ctx.beginPath();
-    ctx.moveTo(W * 0.25, by + bh * 0.55);
-    ctx.quadraticCurveTo(W * 0.35, by + bh * 0.05, ballX, ballY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-
-    // Measurement labels
-    ctx.fillStyle = 'rgba(255,255,80,0.9)';
-    ctx.font = `bold ${W*0.02}px monospace`;
-    ctx.textAlign = 'center';
-    ctx.fillText('OFFSIDE', offsideX, pitchTop + 12);
-    ctx.fillStyle = 'rgba(255,100,100,0.85)';
-    ctx.font = `${W*0.016}px monospace`;
-    ctx.fillText('+0.3m', (offsideX + attackerX)/2, attackerY - 22);
-    ctx.textAlign = 'left';
-
+  if (subType==='offside' || subType==='goal') {
+    _drawVAR_Offside(ctx, W, H, pH, t);
+  } else if (subType==='handball') {
+    _drawVAR_Handball(ctx, W, H, pH, t);
   } else {
-    // ── PENALTY / FOUL SCENE ──────────────────────────────────
-    // Wide angle - full penalty area
-    const bx = W * 0.10, bw = W * 0.8, by2 = pitchTop + pitchH * 0.05, bh2 = pitchH * 0.6;
-    ctx.strokeRect(bx, by2, bw, bh2);
-    // 6-yard box
-    const sixbx = W * 0.32, sixbw = W * 0.36, sixbh = pitchH * 0.18;
-    ctx.strokeRect(sixbx, by2, sixbw, sixbh);
-    // Penalty spot
-    const spotX = W * 0.5, spotY = by2 + bh2 * 0.4;
-    ctx.beginPath(); ctx.arc(spotX, spotY, W * 0.01, 0, Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.fill();
-    // Penalty arc
-    ctx.beginPath();
-    ctx.arc(spotX, spotY, pitchH * 0.2, Math.PI * 0.15, Math.PI * 0.85);
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke();
-    // Goal
-    const goalW = W * 0.3, goalH = pitchH * 0.12;
-    const goalX = (W - goalW) / 2;
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
-    ctx.strokeRect(goalX, pitchTop, goalW, goalH);
-    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-    ctx.lineWidth = Math.max(1.5, W * 0.002);
-
-    // ── Tackle scene players ──────────────────────────────────
-    function drawPlayerP(px, py, color, r=W*0.015) {
-      ctx.beginPath(); ctx.ellipse(px, py+r+2, r*0.7, r*0.25, 0, 0, Math.PI*2);
-      ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fill();
-      ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI*2);
-      ctx.fillStyle = color; ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=1.5; ctx.stroke();
-      ctx.beginPath(); ctx.arc(px, py - r - 5, r*0.5, 0, Math.PI*2);
-      ctx.fillStyle='#f5c28a'; ctx.fill();
-    }
-
-    // Attacker falling / going down — animated lean
-    const leanAngle = Math.sin(t * 3) * 0.3;
-    const fallProgress = Math.min(1, (t * 0.4));  // gradually falls
-    const attackerFX = W * 0.52 + fallProgress * 8;
-    const attackerFY = by2 + bh2 * 0.38 + fallProgress * 6;
-    ctx.save();
-    ctx.translate(attackerFX, attackerFY);
-    ctx.rotate(fallProgress * 0.5); // tipping over
-    drawPlayerP(0, 0, '#2980b9');
-    ctx.restore();
-
-    // Defender — sliding tackle, body extended
-    const tacklerX = W * 0.45;
-    const tacklerY = by2 + bh2 * 0.45;
-    ctx.save();
-    ctx.translate(tacklerX, tacklerY);
-    ctx.rotate(-0.35); // diving leg first
-    // Body
-    ctx.beginPath();
-    ctx.ellipse(0, 0, W*0.025, W*0.012, 0, 0, Math.PI*2);
-    ctx.fillStyle = '#c0392b'; ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.5; ctx.stroke();
-    // Head
-    ctx.beginPath(); ctx.arc(-W*0.025, -W*0.008, W*0.012, 0, Math.PI*2);
-    ctx.fillStyle='#f5c28a'; ctx.fill();
-    // Outstretched leg
-    ctx.beginPath(); ctx.moveTo(W*0.015, 0); ctx.lineTo(W*0.055, W*0.005);
-    ctx.strokeStyle='#c0392b'; ctx.lineWidth=W*0.012; ctx.stroke();
-    ctx.restore();
-
-    // Contact zone — animated highlight ring
-    const contactX = (attackerFX + tacklerX) / 2 + 5;
-    const contactY = (attackerFY + tacklerY) / 2 + 5;
-    const ringPulse = 0.4 + 0.6 * Math.abs(Math.sin(t * 5));
-    ctx.save();
-    ctx.strokeStyle = `rgba(255,200,0,${ringPulse})`;
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(contactX, contactY, W*0.045, 0, Math.PI*2); ctx.stroke();
-    ctx.strokeStyle = `rgba(255,80,80,${ringPulse * 0.7})`;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(contactX, contactY, W*0.06, 0, Math.PI*2); ctx.stroke();
-    ctx.restore();
-
-    // Ball near the contact zone
-    const bBallX = contactX + W*0.04;
-    const bBallY = contactY - W*0.01;
-    ctx.beginPath(); ctx.arc(bBallX, bBallY, W*0.014, 0, Math.PI*2);
-    const bg = ctx.createRadialGradient(bBallX-4, bBallY-4, 1, bBallX, bBallY, W*0.014);
-    bg.addColorStop(0, '#ffffff'); bg.addColorStop(1, '#cccccc');
-    ctx.fillStyle=bg; ctx.fill();
-    ctx.strokeStyle='#444'; ctx.lineWidth=1; ctx.stroke();
-
-    // VAR annotation box — "CONTACT ZONE"
-    const boxPulse = 0.8 + 0.2 * Math.sin(t * 2);
-    ctx.fillStyle = `rgba(255,150,0,${boxPulse * 0.85})`;
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(W*0.12, by2 + bh2*0.1, W*0.22, pitchH*0.07, 4);
-    else ctx.rect(W*0.12, by2 + bh2*0.1, W*0.22, pitchH*0.07);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold ${W*0.022}px monospace`;
-    ctx.textAlign = 'center';
-    ctx.fillText('CONTACT ZONE', W*0.23, by2 + bh2*0.15);
-    ctx.textAlign = 'left';
-
-    // Dotted line from box to contact
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,150,0,0.7)';
-    ctx.setLineDash([4,4]); ctx.lineWidth=1.5;
-    ctx.beginPath();
-    ctx.moveTo(W*0.34, by2 + bh2*0.135);
-    ctx.lineTo(contactX - W*0.05, contactY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-
-    // Other players in box
-    drawPlayerP(W*0.35, by2 + bh2*0.25, '#c0392b');
-    drawPlayerP(W*0.65, by2 + bh2*0.3, '#2980b9');
-    drawPlayerP(W*0.72, by2 + bh2*0.2, '#c0392b');
+    _drawVAR_Foul(ctx, W, H, pH, t);
   }
 
-  // ── TV broadcast chrome ────────────────────────────────────────
-  // Top bar
-  ctx.fillStyle = 'rgba(0,0,0,0.88)';
-  ctx.fillRect(0, 0, W, pitchTop);
-  // VAR logo left
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${pitchTop * 0.55}px 'Arial Black', Arial, monospace`;
-  ctx.fillText('VAR', W * 0.03, pitchTop * 0.82);
-  // Camera label
-  const camLabel = isGoal ? 'CAM 7 — OFFSIDE PRECISION ANGLE' : 'CAM 4 — PENALTY AREA HIGH';
-  ctx.font = `${pitchTop * 0.38}px monospace`;
-  ctx.fillStyle = '#aaaaaa';
-  ctx.fillText(camLabel, W * 0.18, pitchTop * 0.82);
-  // LIVE pill
-  ctx.fillStyle = '#e74c3c';
-  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(W * 0.84, pitchTop * 0.12, W * 0.14, pitchTop * 0.72, 3); ctx.fill(); }
-  else ctx.fillRect(W*0.84, pitchTop*0.12, W*0.14, pitchTop*0.72);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${pitchTop * 0.45}px monospace`;
-  ctx.fillText('LIVE', W * 0.856, pitchTop * 0.78);
+  // TV chrome top bar
+  ctx.fillStyle='rgba(0,0,0,0.9)'; ctx.fillRect(0,0,W,pH);
+  ctx.fillStyle='#fff'; ctx.font=`bold ${pH*0.55}px 'Arial Black',Arial,monospace`;
+  ctx.fillText('VAR', W*0.025, pH*0.82);
+  const cams={offside:'CAM 7 — OFFSIDE PRECISION',goal:'CAM 7 — OFFSIDE PRECISION',penalty:'CAM 4 — PENALTY AREA',handball:'CAM 3 — HANDBALL AREA',foul:'CAM 5 — CHALLENGE REVIEW'};
+  ctx.font=`${pH*0.36}px monospace`; ctx.fillStyle='#aaa'; ctx.fillText(cams[subType]||'CAM 1 — WIDE', W*0.17, pH*0.82);
+  ctx.fillStyle='#e74c3c';
+  if(ctx.roundRect){ctx.beginPath();ctx.roundRect(W*0.84,pH*0.12,W*0.14,pH*0.72,3);ctx.fill();}
+  else ctx.fillRect(W*0.84,pH*0.12,W*0.14,pH*0.72);
+  ctx.fillStyle='#fff'; ctx.font=`bold ${pH*0.44}px monospace`; ctx.fillText('LIVE',W*0.856,pH*0.78);
+  // Bottom ticker
+  const tH=H-H*0.88; ctx.fillStyle='rgba(0,0,20,0.92)'; ctx.fillRect(0,H*0.88,W,tH);
+  ctx.fillStyle='#3498db'; ctx.fillRect(0,H*0.88,W*0.12,tH);
+  const tl={offside:'OFFSIDE CHECK',goal:'GOAL UNDER REVIEW',penalty:'PENALTY REVIEW',handball:'HANDBALL CHECK',foul:'FOUL CHECK'};
+  ctx.fillStyle='#fff'; ctx.font=`bold ${tH*0.42}px monospace`; ctx.fillText(tl[subType]||'VAR REVIEW',W*0.14,H*0.88+tH*0.72);
+  ctx.fillStyle='#f39c12'; ctx.font=`${tH*0.36}px monospace`; ctx.fillText('Video Assistant Referee',W*0.58,H*0.88+tH*0.72);
 
-  // Bottom score ticker
-  ctx.fillStyle = 'rgba(0,0,20,0.9)';
-  ctx.fillRect(0, pitchBot, W, H - pitchBot);
-  ctx.fillStyle = '#3498db';
-  ctx.fillRect(0, pitchBot, W * 0.13, H - pitchBot);
-  ctx.fillStyle = '#fff';
-  ctx.font = `bold ${(H - pitchBot) * 0.42}px monospace`;
-  ctx.fillText(isGoal ? 'GOAL UNDER REVIEW' : 'PENALTY REVIEW', W * 0.15, pitchBot + (H - pitchBot) * 0.72);
-  ctx.fillStyle = '#f39c12';
-  ctx.font = `${(H - pitchBot) * 0.36}px monospace`;
-  ctx.fillText('Video Assistant Referee • ' + (isGoal ? 'Offside Check' : 'Foul in Area'), W * 0.55, pitchBot + (H - pitchBot) * 0.72);
-
-  // ── Red review box on DOM element ─────────────────────────────
+  // Red review box
   const rb = document.getElementById('var-red-box');
   if (rb) {
-    const screenEl = document.getElementById('var-screen');
-    const dispW = screenEl.clientWidth || W;
-    const dispH = screenEl.clientHeight || H;
-    const scaleX = dispW / W, scaleY = dispH / H;
-    if (isGoal) {
-      rb.style.left  = Math.round(W * 0.44 * scaleX) + 'px';
-      rb.style.top   = Math.round((pitchTop + H * 0.05) * scaleY) + 'px';
-      rb.style.width = Math.round(W * 0.15 * scaleX) + 'px';
-      rb.style.height= Math.round(H * 0.35 * scaleY) + 'px';
+    const scr=document.getElementById('var-screen');
+    const dW=scr.clientWidth||W/2, dH=scr.clientHeight||H/2;
+    const sX=dW/W, sY=dH/H;
+    if (subType==='offside'||subType==='goal') {
+      rb.style.left=Math.round(W*0.42*sX)+'px'; rb.style.top=Math.round(H*0.2*sY)+'px';
+      rb.style.width=Math.round(W*0.18*sX)+'px'; rb.style.height=Math.round(H*0.4*sY)+'px';
+    } else if (subType==='handball') {
+      rb.style.left=Math.round(W*0.42*sX)+'px'; rb.style.top=Math.round(H*0.22*sY)+'px';
+      rb.style.width=Math.round(W*0.18*sX)+'px'; rb.style.height=Math.round(H*0.3*sY)+'px';
     } else {
-      rb.style.left  = Math.round(W * 0.38 * scaleX) + 'px';
-      rb.style.top   = Math.round((pitchTop + H * 0.22) * scaleY) + 'px';
-      rb.style.width = Math.round(W * 0.20 * scaleX) + 'px';
-      rb.style.height= Math.round(H * 0.28 * scaleY) + 'px';
+      rb.style.left=Math.round(W*0.36*sX)+'px'; rb.style.top=Math.round(H*0.28*sY)+'px';
+      rb.style.width=Math.round(W*0.24*sX)+'px'; rb.style.height=Math.round(H*0.34*sY)+'px';
     }
   }
 }
+
+function _drawVAR_Offside(ctx, W, H, pH, t) {
+  const by=pH, bh=H*0.74;
+  ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=Math.max(2,W*0.003);
+  ctx.strokeRect(W*0.12,by,W*0.76,bh*0.5);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=3;
+  ctx.strokeRect(W*0.34,by-H*0.1,W*0.32,H*0.1);
+  ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=0.8;
+  for(let x=W*0.34;x<W*0.66;x+=W*0.06){ctx.beginPath();ctx.moveTo(x,by-H*0.1);ctx.lineTo(x,by);ctx.stroke();}
+  for(let y=by-H*0.1;y<by;y+=H*0.025){ctx.beginPath();ctx.moveTo(W*0.34,y);ctx.lineTo(W*0.66,y);ctx.stroke();}
+  // Players
+  const attX=W*0.565, attY=by+bh*0.22;
+  _varPlayer(ctx,attX,attY,W*0.019,'#1d4ed8',true,'OFFSIDE');
+  const glow=0.3+0.35*Math.sin(t*5);
+  ctx.beginPath();ctx.arc(attX,attY,W*0.03,0,Math.PI*2);ctx.strokeStyle=`rgba(255,40,40,${glow})`;ctx.lineWidth=3;ctx.stroke();
+  _varPlayer(ctx,W*0.445,by+bh*0.26,W*0.019,'#dc2626');
+  _varPlayer(ctx,W*0.375,by+bh*0.31,W*0.019,'#dc2626');
+  _varPlayer(ctx,W*0.28,by+bh*0.19,W*0.017,'#1d4ed8');
+  // Offside line
+  const lX=W*0.455; const pulse=0.55+0.45*Math.sin(t*4);
+  ctx.save(); ctx.strokeStyle=`rgba(255,25,25,${pulse})`; ctx.lineWidth=Math.max(3.5,W*0.006);
+  ctx.setLineDash([W*0.025,W*0.013]); ctx.beginPath(); ctx.moveTo(lX,by); ctx.lineTo(lX,by+bh*0.62); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  // "OFFSIDE LINE" label on the line
+  ctx.save(); ctx.fillStyle=`rgba(255,25,25,${pulse})`; ctx.font=`bold ${W*0.016}px monospace`; ctx.textAlign='center';
+  ctx.fillText('OFFSIDE LINE', lX, by+bh*0.65); ctx.textAlign='left'; ctx.restore();
+  // Gap arrow
+  const gP=0.5+0.5*Math.abs(Math.sin(t*3));
+  ctx.save(); ctx.strokeStyle=`rgba(255,220,0,${gP})`; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(lX+2,attY); ctx.lineTo(attX-W*0.02,attY); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  ctx.save(); ctx.fillStyle=`rgba(255,220,0,${gP})`; ctx.font=`bold ${W*0.018}px monospace`; ctx.textAlign='center';
+  ctx.fillText('+0.3m',(lX+attX)/2,attY-9); ctx.textAlign='left'; ctx.restore();
+  // Pass arc
+  ctx.save(); ctx.strokeStyle='rgba(255,255,100,0.45)'; ctx.lineWidth=1.8; ctx.setLineDash([5,9]);
+  ctx.beginPath(); ctx.moveTo(W*0.21,by+bh*0.52); ctx.quadraticCurveTo(W*0.31,by+bh*0.04,attX,attY); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+}
+
+function _drawVAR_Foul(ctx, W, H, pH, t) {
+  const by=pH, bh=H*0.74;
+  ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=Math.max(2,W*0.003);
+  ctx.strokeRect(W*0.08,by+bh*0.05,W*0.84,bh*0.55);
+  ctx.strokeRect(W*0.3,by+bh*0.05,W*0.4,bh*0.2);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.strokeRect(W*0.35,by,W*0.3,bh*0.12);
+  ctx.beginPath(); ctx.arc(W*0.5,by+bh*0.38,W*0.01,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(W*0.5,by+bh*0.38,bh*0.18,Math.PI*0.15,Math.PI*0.85); ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1.5; ctx.stroke();
+  // Attacker falling
+  const lean=Math.min(0.65,t*0.42);
+  ctx.save(); ctx.translate(W*0.525+lean*11,by+bh*0.33+lean*9); ctx.rotate(lean*0.5);
+  _varPlayer(ctx,0,0,W*0.018,'#1d4ed8'); ctx.restore();
+  // Defender sliding
+  ctx.save(); ctx.translate(W*0.435,by+bh*0.42); ctx.rotate(-0.42);
+  ctx.beginPath(); ctx.ellipse(0,0,W*0.034,W*0.014,0,0,Math.PI*2); ctx.fillStyle='#dc2626'; ctx.fill(); ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(-W*0.03,-W*0.009,W*0.014,0,Math.PI*2); ctx.fillStyle='#f5c28a'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(W*0.018,0); ctx.lineTo(W*0.065,W*0.007); ctx.strokeStyle='#dc2626'; ctx.lineWidth=W*0.015; ctx.stroke();
+  ctx.restore();
+  // Contact zone rings
+  const cX=(W*0.525+lean*11+W*0.435)/2+5, cY=(by+bh*0.33+lean*9+by+bh*0.42)/2+5;
+  const rP=0.4+0.6*Math.abs(Math.sin(t*5));
+  ctx.beginPath();ctx.arc(cX,cY,W*0.05,0,Math.PI*2);ctx.strokeStyle=`rgba(255,200,0,${rP})`;ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.arc(cX,cY,W*0.066,0,Math.PI*2);ctx.strokeStyle=`rgba(255,80,80,${rP*0.55})`;ctx.lineWidth=2;ctx.stroke();
+  // Ball
+  const bX=cX+W*0.044, bY=cY-W*0.01;
+  ctx.beginPath();ctx.arc(bX,bY,W*0.016,0,Math.PI*2);
+  const bg=ctx.createRadialGradient(bX-4,bY-4,1,bX,bY,W*0.016); bg.addColorStop(0,'#fff'); bg.addColorStop(1,'#ccc');
+  ctx.fillStyle=bg;ctx.fill();ctx.strokeStyle='#444';ctx.lineWidth=0.8;ctx.stroke();
+  // Label
+  const bP=0.8+0.2*Math.sin(t*2);
+  ctx.fillStyle=`rgba(255,140,0,${bP})`;
+  const lx2=W*0.1, ly2=by+bh*0.08, lw2=W*0.25, lh2=bh*0.075;
+  if(ctx.roundRect) ctx.roundRect(lx2,ly2,lw2,lh2,4); else ctx.rect(lx2,ly2,lw2,lh2); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font=`bold ${W*0.022}px monospace`; ctx.textAlign='center';
+  ctx.fillText('CONTACT ZONE',lx2+lw2/2,ly2+lh2*0.72); ctx.textAlign='left';
+  ctx.save(); ctx.strokeStyle='rgba(255,140,0,0.7)'; ctx.setLineDash([3,4]); ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(lx2+lw2,ly2+lh2/2); ctx.lineTo(cX-W*0.058,cY); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  _varPlayer(ctx,W*0.31,by+bh*0.22,W*0.016,'#dc2626');
+  _varPlayer(ctx,W*0.69,by+bh*0.28,W*0.016,'#1d4ed8');
+  _varPlayer(ctx,W*0.76,by+bh*0.18,W*0.016,'#dc2626');
+}
+
+function _drawVAR_Handball(ctx, W, H, pH, t) {
+  const by=pH, bh=H*0.74;
+  ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=Math.max(2,W*0.003);
+  ctx.strokeRect(W*0.1,by+bh*0.08,W*0.8,bh*0.5);
+  const px=W*0.50, py=by+bh*0.26;
+  _varPlayer(ctx,px,py,W*0.02,'#dc2626');
+  // Extended arm
+  const aAng=-0.32+0.1*Math.sin(t*2);
+  ctx.save(); ctx.translate(px+W*0.022,py-W*0.005); ctx.rotate(aAng);
+  ctx.fillStyle='#dc2626'; ctx.fillRect(0,-W*0.011,W*0.065,W*0.022); ctx.restore();
+  // Ball trajectory arc to arm contact point
+  const bX=px+W*0.07, bY=py-W*0.008;
+  ctx.save(); ctx.strokeStyle='rgba(255,220,0,0.65)'; ctx.lineWidth=2; ctx.setLineDash([6,8]);
+  ctx.beginPath(); ctx.moveTo(W*0.2,by+bh*0.55); ctx.quadraticCurveTo(W*0.33,by+bh*0.12,bX,bY); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  ctx.beginPath(); ctx.arc(bX,bY,W*0.019,0,Math.PI*2);
+  const bg=ctx.createRadialGradient(bX-5,bY-5,1,bX,bY,W*0.019); bg.addColorStop(0,'#fff'); bg.addColorStop(1,'#ccc');
+  ctx.fillStyle=bg; ctx.fill(); ctx.strokeStyle='#555'; ctx.lineWidth=1; ctx.stroke();
+  // Impact rings
+  const hP=0.4+0.6*Math.abs(Math.sin(t*4.5));
+  ctx.beginPath();ctx.arc(bX,bY,W*0.033,0,Math.PI*2);ctx.strokeStyle=`rgba(255,40,40,${hP})`;ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.arc(bX,bY,W*0.048,0,Math.PI*2);ctx.strokeStyle=`rgba(255,40,40,${hP*0.45})`;ctx.lineWidth=2;ctx.stroke();
+  // Label
+  ctx.fillStyle=`rgba(200,30,30,${0.85+0.15*Math.sin(t*2)})`;
+  const lw3=W*0.22,lh3=bh*0.078,lx3=W*0.1,ly3=by+bh*0.1;
+  if(ctx.roundRect) ctx.roundRect(lx3,ly3,lw3,lh3,4); else ctx.rect(lx3,ly3,lw3,lh3); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font=`bold ${W*0.022}px monospace`; ctx.textAlign='center';
+  ctx.fillText('HANDBALL?',lx3+lw3/2,ly3+lh3*0.72); ctx.textAlign='left';
+  _varPlayer(ctx,W*0.29,by+bh*0.45,W*0.017,'#1d4ed8');
+  _varPlayer(ctx,W*0.69,by+bh*0.25,W*0.017,'#1d4ed8');
+  _varPlayer(ctx,W*0.36,by+bh*0.22,W*0.017,'#dc2626');
+}
+
+
 
 // ═══════════════════════════════════════════════════════════════
 // HOOK VAR INTO MATCH SIM
