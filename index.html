@@ -734,6 +734,7 @@ body.light-mode {
 .cal-header-cell { text-align:center; font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); padding:6px 0; }
 .cal-day { min-height:84px; background:var(--bg2); border:1px solid var(--border); border-radius:4px; padding:5px 6px; font-size:11px; cursor:pointer; transition:background .1s; overflow:hidden; }
 .cal-day:hover { background:var(--bg3); }
+.cal-day-empty { background: transparent !important; border: 1px solid transparent !important; cursor: default; pointer-events: none; }
 .cal-day.today { border-color:var(--accent); }
 .cal-day.has-match { border-left:3px solid var(--accent); }
 .cal-day.result-win { border-left:3px solid var(--green); }
@@ -2606,16 +2607,26 @@ function simulateMatchFull(homeId, awayId, compId, isPlayerClub) {
   };
 
   // Update player stats for player's club
-  const updateClub = (cid) => {
+  const updateClub = (cid, gf, ga) => {
+    const isWin = gf > ga, isDraw = gf === ga;
     G.clubs[cid].players.forEach(pid => {
-      if (!G.players[pid]) return;
-      G.players[pid].stats.apps++;
-      G.players[pid].stats.minutesPlayed += 90;
-      G.players[pid].fitness = Math.max(30, G.players[pid].fitness - rngInt(5,15));
-      G.players[pid].form = Math.round(G.players[pid].form * 0.8 + rngInt(50,90) * 0.2);
+      const pl = G.players[pid];
+      if (!pl) return;
+      pl.stats.apps++;
+      pl.stats.minutesPlayed += 90;
+      pl.fitness = Math.max(30, pl.fitness - rngInt(5,15));
+      pl.form = Math.round(pl.form * 0.8 + rngInt(50,90) * 0.2);
+      // Compute a match rating based on player rating, goals involvement, win/loss
+      const baseRat = 5.0 + (pl.rating - 60) * 0.04;
+      const winBonus = isWin ? 0.5 : isDraw ? 0.1 : -0.3;
+      const goalBonus = (pl.stats.goals > 0 && pl.stats.apps <= 1) ? 1.2 : 0; // rough approximation
+      const matchRat = Math.min(9.9, Math.max(3.5, baseRat + winBonus + (rng()-0.5)*1.2));
+      pl.stats.ratingTotal = (pl.stats.ratingTotal || 0) + matchRat;
+      pl.stats.ratingCount = (pl.stats.ratingCount || 0) + 1;
+      pl.stats.avgRating = parseFloat((pl.stats.ratingTotal / pl.stats.ratingCount).toFixed(2));
     });
   };
-  updateClub(homeId); updateClub(awayId);
+  updateClub(homeId, homeGoals, awayGoals); updateClub(awayId, awayGoals, homeGoals);
 
   return { homeGoals, awayGoals, events, stats: matchStats, weather };
 }
@@ -3346,7 +3357,7 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
           addEvent(minute, tmpl(p1Name), 'color:var(--text2);font-size:11px;');
         } else if (type === 'var_rarely') {
           // Trigger real VAR overlay occasionally (25% of var events)
-          if (rngBool(0.25) && !window._inVARReview) {
+          if (rngBool(0.40) && !window._inVARReview) {
             window._inVARReview = true;
             // Truly pause the sim — await a promise that resolves on VAR decision
             _simPaused = true;
@@ -3959,78 +3970,123 @@ function toggleTheme() {
 }
 
 // ── CALENDAR ──
-const MONTH_NAMES = ['August','September','October','November','December','January','February','March','April','May','June','July'];
+const MONTH_NAMES_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-let _calMonthIdx = 0; // 0=Aug, 11=Jul (season months)
+// Season months in order: Aug(7) Sep(8) Oct(9) Nov(10) Dec(11) Jan(0) Feb(1) Mar(2) Apr(3) May(4)
+const SEASON_MONTHS = [7,8,9,10,11,0,1,2,3,4]; // js month indices (0=Jan)
+let _calMonthIdx = 0; // 0=Aug of season year, up to 9=May
 
 function calPrevMonth() { _calMonthIdx = Math.max(0, _calMonthIdx - 1); renderCalendar(); }
-function calNextMonth() { _calMonthIdx = Math.min(11, _calMonthIdx + 1); renderCalendar(); }
+function calNextMonth() { _calMonthIdx = Math.min(9, _calMonthIdx + 1); renderCalendar(); }
+
+// Returns how many days a given JS month/year has
+function daysInMonth(month, year) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+// Season starts Aug 1 of G.player.season. Week 1 = Aug 1–7.
+// Given a week number (1-based), return { year, month (0-based), day } for Mon of that week.
+function weekToDate(weekNum) {
+  const seasonYear = G.player ? G.player.season : new Date().getFullYear();
+  const seasonStart = new Date(seasonYear, 7, 1); // Aug 1
+  const dayOffset = (weekNum - 1) * 7;
+  const d = new Date(seasonStart.getTime() + dayOffset * 86400000);
+  return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate(), dow: d.getDay() };
+}
+
+// Returns {month, year} for a given _calMonthIdx slot
+function calMonthYear(idx) {
+  const seasonYear = G.player ? G.player.season : new Date().getFullYear();
+  const jsMonth = SEASON_MONTHS[idx];
+  const year = (idx <= 4) ? seasonYear : seasonYear + 1; // Aug-Dec = season year, Jan-May = season+1
+  return { jsMonth, year };
+}
 
 function renderCalendar() {
   if (!G.player) return;
   const myClub = G.clubs[G.player.clubId];
   const myLeague = G.leagues[myClub.leagueId];
+  const { jsMonth, year } = calMonthYear(_calMonthIdx);
+  const monthName = MONTH_NAMES_FULL[jsMonth];
+
   const label = document.getElementById('cal-month-label');
-  if (label) label.textContent = MONTH_NAMES[_calMonthIdx] + ' ' + (G.player.season + (_calMonthIdx >= 5 ? 1 : 0));
+  if (label) label.textContent = monthName + ' ' + year;
 
-  // Map week numbers to calendar: season runs Aug–May, ~38 weeks
-  // Weeks 1-4: Aug, 5-8: Sep, 9-12: Oct, 13-17: Nov, 18-21: Dec,
-  // 22-25: Jan, 26-28: Feb, 29-31: Mar, 32-34: Apr, 35-38: May
-  const weekRanges = [
-    [1,4],[5,8],[9,12],[13,17],[18,21],   // Aug–Dec
-    [22,25],[26,28],[29,31],[32,34],[35,38], // Jan–May
-    [39,40],[41,42]  // extra months buffer
-  ];
-  const [wkStart, wkEnd] = weekRanges[_calMonthIdx] || [1,4];
+  // Days in this real calendar month
+  const numDays = daysInMonth(jsMonth, year);
+  // What day-of-week does the 1st fall on? (0=Sun → we want 0=Mon grid)
+  const firstDow = new Date(year, jsMonth, 1).getDay(); // 0=Sun,1=Mon...6=Sat
+  const gridStartDow = firstDow === 0 ? 6 : firstDow - 1; // convert to Mon-based (0=Mon,6=Sun)
 
-  // Build all fixtures for my team in these weeks
-  const myFixtures = myLeague.fixtures.filter(f =>
-    (f.home === myClub.id || f.away === myClub.id) && f.round >= wkStart && f.round <= wkEnd
-  );
+  // Map each calendar date to a game-week number
+  // Week 1 starts Aug 1 of season year
+  const seasonStart = new Date(G.player.season, 7, 1);
+  function dateToWeek(d) {
+    const diff = d - seasonStart;
+    return Math.max(1, Math.floor(diff / (7 * 86400000)) + 1);
+  }
 
-  // Also include UEFA fixtures if any
-  const uefaFixtures = [];
+  // Build fixture lookups for my club
+  const domFixMap = {}; // weekNum -> fixture
+  myLeague.fixtures.forEach(f => {
+    if (f.home === myClub.id || f.away === myClub.id) domFixMap[f.round] = f;
+  });
+
+  const euroFixMap = {}; // weekNum -> [{...fix, compName}]
   if (G.ucCompetitions) {
     ['cl','el','ecl'].forEach(comp => {
       const uc = G.ucCompetitions[comp];
       if (!uc || !uc.fixtures) return;
       uc.fixtures.forEach(f => {
-        if ((f.home === myClub.id || f.away === myClub.id) && f.round >= wkStart && f.round <= wkEnd) {
-          uefaFixtures.push({ ...f, compName: uc.name.slice(0,3).toUpperCase() });
+        if (f.home === myClub.id || f.away === myClub.id) {
+          if (!euroFixMap[f.round]) euroFixMap[f.round] = [];
+          euroFixMap[f.round].push({ ...f, compName: uc.name.replace(/ League$/,'').replace(/Conference$/,'ECL').slice(0,3).toUpperCase() });
         }
       });
     });
   }
 
-  // Grid: 7 columns (Mon-Sun), rows = weeks in month
-  // Simulate days: week 1 = day 1-7, etc.
-  const totalDays = (wkEnd - wkStart + 1) * 7;
-  const baseDay = (wkStart - 1) * 7 + 1;
-
-  // Day-of-week headers
   const grid = document.getElementById('cal-grid');
   if (!grid) return;
+
   let html = DAY_NAMES.map(d => `<div class="cal-header-cell">${d}</div>`).join('');
 
-  // Which day of week does this month start? (simulate from week offset)
-  const startDow = 0; // Mon
+  // Leading blank cells
+  for (let i = 0; i < gridStartDow; i++) {
+    html += `<div class="cal-day cal-day-empty"></div>`;
+  }
 
-  for (let day = 1; day <= totalDays; day++) {
-    const weekNum = wkStart + Math.floor((day - 1) / 7);
-    const dowIdx = (day - 1) % 7; // 0=Mon...6=Sun
-    const dayLabel = baseDay + day - 1;
-    const isMatchDay = dowIdx === 5 || dowIdx === 2; // Sat & Wed are typical match days
-    const currentWeekFixtures = myFixtures.filter(f => f.round === weekNum);
-    const uefaWeekFix = uefaFixtures.filter(f => f.round === weekNum);
+  for (let day = 1; day <= numDays; day++) {
+    const date = new Date(year, jsMonth, day);
+    const dowJs = date.getDay(); // 0=Sun..6=Sat
+    const dowMon = dowJs === 0 ? 6 : dowJs - 1; // 0=Mon..6=Sun
+    const weekNum = dateToWeek(date);
 
     let cls = 'cal-day';
     let content = `<div class="cal-day-num">${day}</div>`;
 
+    // Mark current week
     if (weekNum === G.player.week) cls += ' today';
 
-    // Add league match on Saturday of that week
-    if (dowIdx === 5 && currentWeekFixtures.length) {
-      const f = currentWeekFixtures[0];
+    // ── Domestic league: normally Saturday (dowMon=5) ──
+    const domFix = domFixMap[weekNum];
+    const euroFixes = euroFixMap[weekNum] || [];
+
+    // Detect clash: euro is on Wed(2), domestic on Sat(5) — no overlap by default.
+    // But if euro week === domestic week AND same dowMon, reschedule domestic to Sun(6).
+    // Actually: domestic goes on Sat(5), euro on Wed(2) or Thu(3). Only clash if
+    // domestic was somehow assigned Wed — which can't happen with this logic.
+    // So just: domestic = Sat, euro = Wed. If euro and domestic both fall on same day
+    // (only possible if someone rescheduled), bump domestic to Sun.
+    const euroOnThisDay = euroFixes.length > 0 && dowMon === 2;
+    const domOnSat = domFix && dowMon === 5;
+    // If there's somehow a euro fixture that was assigned to Sat (round collision check):
+    const euroOnSat = euroFixes.length > 0 && dowMon === 5;
+    const domOnWed = domFix && dowMon === 2;
+
+    if (domOnSat && !euroOnSat) {
+      // Normal domestic Saturday
+      const f = domFix;
       const isHome = f.home === myClub.id;
       const opp = G.clubs[isHome ? f.away : f.home];
       const oppName = opp?.name || '?';
@@ -4039,31 +4095,70 @@ function renderCalendar() {
         const theirG = isHome ? f.result?.away : f.result?.home;
         const outcome = myG > theirG ? 'result-win' : myG < theirG ? 'result-loss' : 'result-draw';
         cls += ' ' + outcome;
-        content += `<div class="cal-match-tag" title="${isHome?'Home':'Away'} vs ${oppName}" style="color:var(--text)">${isHome?'H':'A'} ${oppName} ${myG}-${theirG}</div>`;
+        content += `<div class="cal-match-tag">${isHome?'H':'A'} ${oppName} ${myG}-${theirG}</div>`;
       } else {
         cls += ' has-match';
-        content += `<div class="cal-match-tag" title="${isHome?'Home':'Away'} vs ${oppName}">${isHome?'H':'A'} ${oppName}</div>`;
+        content += `<div class="cal-match-tag">${isHome?'H':'A'} ${oppName}</div>`;
       }
     }
 
-    // UEFA on Wednesday
-    if (dowIdx === 2 && uefaWeekFix.length) {
-      const f = uefaWeekFix[0];
+    if (euroOnThisDay && !domOnWed) {
+      // UEFA on Wednesday
+      const f = euroFixes[0];
+      const isHome = f.home === myClub.id;
+      const opp = G.clubs[isHome ? f.away : f.home];
+      const oppName = opp?.name || '?';
+      if (f.played) {
+        const myG = isHome ? f.result?.home : f.result?.away;
+        const theirG = isHome ? f.result?.away : f.result?.home;
+        const outcome = myG > theirG ? 'result-win' : myG < theirG ? 'result-loss' : 'result-draw';
+        cls += ' ' + outcome;
+        content += `<div class="cal-match-tag" style="color:var(--purple)">${f.compName} ${isHome?'H':'A'} ${oppName} ${myG}-${theirG}</div>`;
+      } else {
+        cls += ' has-match';
+        content += `<div class="cal-match-tag" style="color:var(--purple)">${f.compName} ${isHome?'H':'A'} ${oppName}</div>`;
+      }
+    }
+
+    // Clash: euro was on Saturday (same week, euro round lands on sat)
+    // In this case, show euro on Sat and move domestic label to Sun of same week
+    if (euroOnSat) {
+      const f = euroFixes[0];
       const isHome = f.home === myClub.id;
       const opp = G.clubs[isHome ? f.away : f.home];
       const oppName = opp?.name || '?';
       cls += ' has-match';
-      content += `<div class="cal-match-tag" title="${f.compName}: ${isHome?'Home':'Away'} vs ${oppName}" style="color:var(--purple)">${f.compName} ${isHome?'H':'A'} ${oppName}</div>`;
+      content += `<div class="cal-match-tag" style="color:var(--purple)">${f.compName} ${isHome?'H':'A'} ${oppName}</div>`;
+    }
+    if (domFix && dowMon === 6 /* Sun fallback when clash */) {
+      // Check if this week's euro was on Sat
+      const prevSat = new Date(year, jsMonth, day - 1);
+      const prevWeekNum = dateToWeek(prevSat);
+      if (prevWeekNum === weekNum && (euroFixMap[weekNum]||[]).length > 0) {
+        const f = domFix;
+        const isHome = f.home === myClub.id;
+        const opp = G.clubs[isHome ? f.away : f.home];
+        const oppName = opp?.name || '?';
+        cls += ' has-match';
+        content += `<div class="cal-match-tag" style="color:var(--text2);font-style:italic;">${isHome?'H':'A'} ${oppName} <span style="font-size:9px;">(rescheduled)</span></div>`;
+      }
     }
 
-    html += `<div class="${cls}" onclick="calDayClick(${weekNum},${dowIdx})">${content}</div>`;
+    html += `<div class="${cls}" onclick="calDayClick(${weekNum},${dowMon},${day},${jsMonth},${year})">${content}</div>`;
+  }
+
+  // Trailing blank cells to complete the last row
+  const totalCells = gridStartDow + numDays;
+  const trailingBlanks = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let i = 0; i < trailingBlanks; i++) {
+    html += `<div class="cal-day cal-day-empty"></div>`;
   }
 
   grid.innerHTML = html;
   document.getElementById('cal-day-detail').innerHTML = `<div class="muted" style="font-size:12px;padding:8px">Click a match day to see details</div>`;
 }
 
-function calDayClick(week, dow) {
+function calDayClick(week, dow, day, month, year) {
   if (!G.player) return;
   const myClub = G.clubs[G.player.clubId];
   const myLeague = G.leagues[myClub.leagueId];
@@ -4087,8 +4182,12 @@ function calDayClick(week, dow) {
 
   const allMatches = [...domFixtures.map(f=>({...f, compName: myLeague.name, isDomestic: true})), ...euroMatches];
 
+  // Format a date label if day/month/year provided
+  const dateLabel = (day && month !== undefined && year)
+    ? `${day} ${MONTH_NAMES_FULL[month]} ${year}` : `Week ${week}`;
+
   if (!allMatches.length) {
-    document.getElementById('cal-day-detail').innerHTML = `<div class="muted" style="padding:10px;font-size:12px;">No match scheduled — training day</div>`;
+    document.getElementById('cal-day-detail').innerHTML = `<div class="muted" style="padding:10px;font-size:12px;">${dateLabel} — no match scheduled (training day)</div>`;
     return;
   }
 
@@ -4100,12 +4199,12 @@ function calDayClick(week, dow) {
     const compColor = isEuro ? 'var(--purple)' : 'var(--accent)';
     html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);">
       <div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:1px;">${dateLabel}</div>
         <div style="font-size:10px;font-family:var(--mono);color:${compColor};letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;">${f.compName}</div>
         <b>${myClub.name}</b> <span class="muted">vs</span> <b>${opp?.name||'?'}</b>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="pill ${isHome?'pill-blue':'pill-gray'}">${isHome?'HOME':'AWAY'}</span>
-        <span class="pill pill-gray">Wk ${week}</span>`;
+        <span class="pill ${isHome?'pill-blue':'pill-gray'}">${isHome?'HOME':'AWAY'}</span>`;
     if (f.played && f.result) {
       const myG = isHome ? f.result.home : f.result.away;
       const theirG = isHome ? f.result.away : f.result.home;
@@ -5304,11 +5403,19 @@ function renderDashboard() {
   const players = myClub.players.map(pid=>G.players[pid]).filter(Boolean);
   const topScorer = [...players].sort((a,b)=>b.stats.goals-a.stats.goals)[0];
   const topAssist = [...players].sort((a,b)=>b.stats.assists-a.stats.assists)[0];
-  const topRated = [...players].sort((a,b)=>b.rating-a.rating)[0];
+  // Best avg match rating — only consider players with at least 1 appearance
+  const ratedPlayers = players.filter(p=>p.stats.ratingCount>0);
+  const topRated = ratedPlayers.length
+    ? [...ratedPlayers].sort((a,b)=>b.stats.avgRating-a.stats.avgRating)[0]
+    : [...players].sort((a,b)=>b.rating-a.rating)[0];
+  const topRatedVal = ratedPlayers.length && topRated?.stats.avgRating
+    ? topRated.stats.avgRating.toFixed(1)
+    : topRated?.rating || '—';
+  const topRatedLabel = ratedPlayers.length ? 'AVG' : 'OVR';
   document.getElementById('dash-team-leaders').innerHTML = [
     topScorer && `<div class="dash-leader-row" onclick="openPlayerDetail('${topScorer.id}')" style="cursor:pointer;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><span>⚽ <b>${topScorer.name}</b></span><span class="mono green">${topScorer.stats.goals} G</span></div>`,
     topAssist && `<div class="dash-leader-row" onclick="openPlayerDetail('${topAssist.id}')" style="cursor:pointer;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><span>🎯 <b>${topAssist.name}</b></span><span class="mono accent">${topAssist.stats.assists} A</span></div>`,
-    topRated && `<div class="dash-leader-row" onclick="openPlayerDetail('${topRated.id}')" style="cursor:pointer;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><span>⭐ <b>${topRated.name}</b></span><span class="mono">${topRated.rating} RAT</span></div>`,
+    topRated && `<div class="dash-leader-row" onclick="openPlayerDetail('${topRated.id}')" style="cursor:pointer;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><span>⭐ <b>${topRated.name}</b></span><span class="mono">${topRatedVal} ${topRatedLabel}</span></div>`,
   ].filter(Boolean).join('') || '<div class="muted">No data yet</div>';
   if (topScorer) document.getElementById('dash-team-leaders').innerHTML += `<div style="margin-top:6px;"><span class="dash-link" onclick="showPanel('squad')">» Full Roster</span></div>`;
 
