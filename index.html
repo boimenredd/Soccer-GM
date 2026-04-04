@@ -484,67 +484,121 @@ body.on-home { overflow-y: auto; height: auto; min-height: 100vh; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.9);
+  background: linear-gradient(135deg, #2d1057 0%, #1a0533 40%, #0a0015 100%);
   z-index: 900;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
+  padding: 24px;
 }
 #var-overlay.open { display: flex; }
-#var-box {
-  width: min(600px, 95vw);
-  background: var(--bg2);
-  border: 2px solid #fff;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 0 60px rgba(255,255,255,0.1);
+#var-broadcast {
+  display: flex;
+  gap: 16px;
+  width: min(900px, 96vw);
+  align-items: stretch;
+}
+/* Main footage panel - left, large */
+#var-main-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+#var-main-label {
+  background: rgba(255,255,255,0.9);
+  color: #111;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--mono);
+  padding: 4px 10px;
+  border-radius: 4px;
+  align-self: flex-start;
+  letter-spacing: .04em;
 }
 #var-screen {
-  width: 100%;
+  flex: 1;
   aspect-ratio: 16/9;
-  background: #111;
+  background: #1a3a20;
   position: relative;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.15);
+  box-shadow: 0 0 40px rgba(0,0,0,0.8);
 }
-#var-pitch-view { width: 100%; height: 100%; position: absolute; inset: 0; }
-#var-overlay-text {
-  position: absolute;
-  top: 12px; left: 50%; transform: translateX(-50%);
-  background: rgba(0,0,0,0.75);
+/* Right column */
+#var-right-col {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* Small ref-at-monitor panel */
+#var-ref-panel {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.15);
+  aspect-ratio: 4/3;
+  background: #2a3a28;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+/* VAR branding */
+#var-brand-block {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 12px 10px;
+  text-align: center;
+}
+#var-brand-text {
+  font-size: 48px;
+  font-weight: 900;
   color: #fff;
-  padding: 4px 14px;
-  border-radius: 4px;
-  font-size: 11px;
+  font-family: 'Arial Black', Arial, sans-serif;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 30px rgba(255,255,255,0.3);
+}
+#var-brand-sub {
+  font-size: 9px;
+  color: rgba(255,255,255,0.5);
   font-family: var(--mono);
-  letter-spacing: .1em;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  white-space: nowrap;
+  margin-top: 2px;
+}
+/* Footer / decision */
+#var-footer {
+  flex: 1;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 #var-red-box {
   position: absolute;
   pointer-events: none;
   border: 3px solid #ef4444;
   border-radius: 2px;
-  animation: varPulse 1s ease-in-out infinite;
-  box-shadow: 0 0 12px rgba(239,68,68,0.6);
+  animation: varPulse 0.8s ease-in-out infinite;
+  box-shadow: 0 0 16px rgba(239,68,68,0.8), inset 0 0 8px rgba(239,68,68,0.2);
 }
-@keyframes varPulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
-#var-footer { padding: 16px 20px; background: var(--bg3); }
+@keyframes varPulse { 0%,100%{opacity:1;box-shadow:0 0 16px rgba(239,68,68,0.8);} 50%{opacity:0.5;box-shadow:0 0 6px rgba(239,68,68,0.4);} }
 #var-decision-badge {
   display: inline-block;
-  padding: 6px 16px;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   font-family: var(--mono);
-  margin-bottom: 8px;
+  text-align: center;
 }
-#var-desc { font-size: 12px; color: var(--text2); margin-bottom: 12px; }
-#var-scanning-text { font-family: var(--mono); font-size: 11px; color: var(--text3); text-align: center; animation: varScan 1.5s steps(4) infinite; }
-@keyframes varScan { 0%{content:'Scanning.';} 25%{content:'Scanning..';} 50%{content:'Scanning...';} 75%{content:'Scanning....';} }
+#var-desc { font-size: 10px; color: rgba(255,255,255,0.6); line-height: 1.4; }
+#var-scanning-text { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,0.4); text-align: center; }
 
 .notif-item.success { border-left-color: var(--green); }
 @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -1882,18 +1936,34 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
 
 <!-- VAR REVIEW OVERLAY -->
 <div id="var-overlay">
-  <div id="var-box">
-    <div id="var-screen">
-      <canvas id="var-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
-      <div id="var-overlay-text">VAR REVIEW</div>
-      <div id="var-red-box" style="display:none;"></div>
+  <div id="var-broadcast">
+    <!-- Left: main footage panel -->
+    <div id="var-main-panel">
+      <div id="var-main-label">Checking Goal – Possible Foul</div>
+      <div id="var-screen">
+        <canvas id="var-canvas" style="position:absolute;inset:0;width:100%;height:100%;display:block;"></canvas>
+        <div id="var-red-box" style="display:none;"></div>
+      </div>
     </div>
-    <div id="var-footer">
-      <div id="var-scanning-text">Checking incident...</div>
-      <div id="var-decision-badge" style="display:none;"></div>
-      <div id="var-desc" style="display:none;"></div>
-      <div id="var-close-btn" style="display:none;text-align:center;">
-        <button class="btn btn-sm btn-primary" onclick="closeVAR()">Continue</button>
+    <!-- Right: info column -->
+    <div id="var-right-col">
+      <!-- Small ref-at-monitor panel -->
+      <div id="var-ref-panel">
+        <canvas id="var-ref-canvas" style="width:100%;height:100%;display:block;border-radius:6px;"></canvas>
+      </div>
+      <!-- VAR branding -->
+      <div id="var-brand-block">
+        <div id="var-brand-text">VAR</div>
+        <div id="var-brand-sub">Video Assistant Referee</div>
+      </div>
+      <!-- Decision area -->
+      <div id="var-footer">
+        <div id="var-scanning-text">Checking incident...</div>
+        <div id="var-decision-badge" style="display:none;"></div>
+        <div id="var-desc" style="display:none;"></div>
+        <div id="var-close-btn" style="display:none;text-align:center;margin-top:10px;">
+          <button class="btn btn-sm btn-primary" onclick="closeVAR()">▶ Continue</button>
+        </div>
       </div>
     </div>
   </div>
@@ -3359,19 +3429,24 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
           // Trigger real VAR overlay occasionally (25% of var events)
           if (rngBool(0.40) && !window._inVARReview) {
             window._inVARReview = true;
-            // Truly pause the sim — await a promise that resolves on VAR decision
+            // Pause sim until user closes the VAR window
             _simPaused = true;
             addEvent(minute, `📺 <b>VAR CHECK</b> — Reviewing the incident...`, 'color:var(--yellow);font-weight:600;');
             const varIncident = { type: rngBool(0.5) ? 'goal' : 'penalty', minute };
             await new Promise(resolve => {
+              // onDecision fires when verdict is reached (auto, after delay)
               showVARReview(varIncident, (decision) => {
                 window._inVARReview = false;
-                _simPaused = false;
                 const resultText = varIncident.type === 'goal'
                   ? (decision ? '✅ Goal stands after VAR check' : '❌ Goal disallowed — offside!')
                   : (decision ? '🚨 Penalty confirmed by VAR!' : '✅ No penalty — VAR overturns decision');
                 addEvent(minute, resultText, `color:${decision?'var(--green)':'var(--red)'};font-weight:700;font-size:12px;`);
-                resolve();
+                // Store resume callback so closeVAR can call it
+                window._varResumeCallback = () => {
+                  _simPaused = false;
+                  window._varResumeCallback = null;
+                  resolve();
+                };
               });
             });
           } else {
@@ -4012,147 +4087,125 @@ function renderCalendar() {
   const label = document.getElementById('cal-month-label');
   if (label) label.textContent = monthName + ' ' + year;
 
-  // Days in this real calendar month
   const numDays = daysInMonth(jsMonth, year);
-  // What day-of-week does the 1st fall on? (0=Sun → we want 0=Mon grid)
-  const firstDow = new Date(year, jsMonth, 1).getDay(); // 0=Sun,1=Mon...6=Sat
-  const gridStartDow = firstDow === 0 ? 6 : firstDow - 1; // convert to Mon-based (0=Mon,6=Sun)
+  const firstDow = new Date(year, jsMonth, 1).getDay();
+  const gridStartDow = firstDow === 0 ? 6 : firstDow - 1;
 
-  // Map each calendar date to a game-week number
-  // Week 1 starts Aug 1 of season year
-  const seasonStart = new Date(G.player.season, 7, 1);
-  function dateToWeek(d) {
-    const diff = d - seasonStart;
-    return Math.max(1, Math.floor(diff / (7 * 86400000)) + 1);
+  const seasonStart = new Date(G.player.season, 7, 1); // Aug 1
+  const MS_DAY = 86400000;
+
+  // For each game-week, compute its exact Saturday and Wednesday dates
+  // Week N's Monday = seasonStart + (N-1)*7 days
+  // Saturday = Monday + 5, Wednesday = Monday + 2
+  function weekMatchDates(weekNum) {
+    const monMs = seasonStart.getTime() + (weekNum - 1) * 7 * MS_DAY;
+    const satDate = new Date(monMs + 5 * MS_DAY);
+    const wedDate = new Date(monMs + 2 * MS_DAY);
+    return { satDate, wedDate };
   }
 
-  // Build fixture lookups for my club
-  const domFixMap = {}; // weekNum -> fixture
+  // Build fixture lookup: dateKey "YYYY-M-D" -> [{fix, compName, isEuro}]
+  const dateFixMap = {};
+  function addToDateMap(date, entry) {
+    const key = date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+    if (!dateFixMap[key]) dateFixMap[key] = [];
+    dateFixMap[key].push(entry);
+  }
+
+  // Domestic
   myLeague.fixtures.forEach(f => {
-    if (f.home === myClub.id || f.away === myClub.id) domFixMap[f.round] = f;
+    if (f.home !== myClub.id && f.away !== myClub.id) return;
+    const { satDate } = weekMatchDates(f.round);
+    addToDateMap(satDate, { fix: f, compName: myLeague.name, isEuro: false, weekNum: f.round });
   });
 
-  const euroFixMap = {}; // weekNum -> [{...fix, compName}]
+  // European — goes on Wednesday
   if (G.ucCompetitions) {
     ['cl','el','ecl'].forEach(comp => {
       const uc = G.ucCompetitions[comp];
       if (!uc || !uc.fixtures) return;
+      const shortName = comp === 'cl' ? 'UCL' : comp === 'el' ? 'UEL' : 'ECL';
       uc.fixtures.forEach(f => {
-        if (f.home === myClub.id || f.away === myClub.id) {
-          if (!euroFixMap[f.round]) euroFixMap[f.round] = [];
-          euroFixMap[f.round].push({ ...f, compName: uc.name.replace(/ League$/,'').replace(/Conference$/,'ECL').slice(0,3).toUpperCase() });
-        }
+        if (f.home !== myClub.id && f.away !== myClub.id) return;
+        const { wedDate } = weekMatchDates(f.round);
+        addToDateMap(wedDate, { fix: f, compName: shortName, isEuro: true, weekNum: f.round });
       });
     });
   }
+
+  // Clash detection: if a date has BOTH euro and domestic, keep euro on Wed
+  // and move domestic to the Thursday of that week instead
+  const clashKeys = Object.keys(dateFixMap).filter(k => dateFixMap[k].length > 1);
+  clashKeys.forEach(key => {
+    const entries = dateFixMap[key];
+    const euroEntries = entries.filter(e => e.isEuro);
+    const domEntries = entries.filter(e => !e.isEuro);
+    if (euroEntries.length && domEntries.length) {
+      // Move domestic to Thursday (Wed + 1)
+      const [y, m, d] = key.split('-').map(Number);
+      const wedMs = new Date(y, m, d).getTime();
+      const thuDate = new Date(wedMs + MS_DAY);
+      const thuKey = thuDate.getFullYear() + '-' + thuDate.getMonth() + '-' + thuDate.getDate();
+      domEntries.forEach(e => { e.rescheduled = true; });
+      if (!dateFixMap[thuKey]) dateFixMap[thuKey] = [];
+      dateFixMap[thuKey].push(...domEntries);
+      dateFixMap[key] = euroEntries; // only euro stays on Wed
+    }
+  });
 
   const grid = document.getElementById('cal-grid');
   if (!grid) return;
 
   let html = DAY_NAMES.map(d => `<div class="cal-header-cell">${d}</div>`).join('');
-
-  // Leading blank cells
-  for (let i = 0; i < gridStartDow; i++) {
-    html += `<div class="cal-day cal-day-empty"></div>`;
-  }
+  for (let i = 0; i < gridStartDow; i++) html += `<div class="cal-day cal-day-empty"></div>`;
 
   for (let day = 1; day <= numDays; day++) {
-    const date = new Date(year, jsMonth, day);
-    const dowJs = date.getDay(); // 0=Sun..6=Sat
-    const dowMon = dowJs === 0 ? 6 : dowJs - 1; // 0=Mon..6=Sun
-    const weekNum = dateToWeek(date);
+    const dateKey = year + '-' + jsMonth + '-' + day;
+    const entries = dateFixMap[dateKey] || [];
+    const weekNum = entries.length > 0 ? entries[0].weekNum : null;
+    const dowJs = new Date(year, jsMonth, day).getDay();
+    const dowMon = dowJs === 0 ? 6 : dowJs - 1;
 
     let cls = 'cal-day';
     let content = `<div class="cal-day-num">${day}</div>`;
 
-    // Mark current week
-    if (weekNum === G.player.week) cls += ' today';
+    // Highlight current week's dates
+    if (weekNum !== null && weekNum === G.player.week) cls += ' today';
+    else if (weekNum === null) {
+      // Check if this day is in the current game-week range
+      const d2 = new Date(year, jsMonth, day);
+      const monMs = seasonStart.getTime() + (G.player.week - 1) * 7 * MS_DAY;
+      if (d2.getTime() >= monMs && d2.getTime() < monMs + 7*MS_DAY) cls += ' today';
+    }
 
-    // ── Domestic league: normally Saturday (dowMon=5) ──
-    const domFix = domFixMap[weekNum];
-    const euroFixes = euroFixMap[weekNum] || [];
-
-    // Detect clash: euro is on Wed(2), domestic on Sat(5) — no overlap by default.
-    // But if euro week === domestic week AND same dowMon, reschedule domestic to Sun(6).
-    // Actually: domestic goes on Sat(5), euro on Wed(2) or Thu(3). Only clash if
-    // domestic was somehow assigned Wed — which can't happen with this logic.
-    // So just: domestic = Sat, euro = Wed. If euro and domestic both fall on same day
-    // (only possible if someone rescheduled), bump domestic to Sun.
-    const euroOnThisDay = euroFixes.length > 0 && dowMon === 2;
-    const domOnSat = domFix && dowMon === 5;
-    // If there's somehow a euro fixture that was assigned to Sat (round collision check):
-    const euroOnSat = euroFixes.length > 0 && dowMon === 5;
-    const domOnWed = domFix && dowMon === 2;
-
-    if (domOnSat && !euroOnSat) {
-      // Normal domestic Saturday
-      const f = domFix;
+    entries.forEach(entry => {
+      const { fix: f, compName, isEuro, rescheduled } = entry;
       const isHome = f.home === myClub.id;
       const opp = G.clubs[isHome ? f.away : f.home];
+      const oppShort = (opp?.name || '?').split(' ').map(w=>w[0]).join('').slice(0,4);
       const oppName = opp?.name || '?';
-      if (f.played) {
-        const myG = isHome ? f.result?.home : f.result?.away;
-        const theirG = isHome ? f.result?.away : f.result?.home;
+      const color = isEuro ? 'var(--purple)' : rescheduled ? 'var(--text3)' : 'var(--text)';
+      const prefix = isEuro ? compName + ' ' : '';
+
+      if (f.played && f.result) {
+        const myG = isHome ? f.result.home : f.result.away;
+        const theirG = isHome ? f.result.away : f.result.home;
         const outcome = myG > theirG ? 'result-win' : myG < theirG ? 'result-loss' : 'result-draw';
-        cls += ' ' + outcome;
-        content += `<div class="cal-match-tag">${isHome?'H':'A'} ${oppName} ${myG}-${theirG}</div>`;
+        if (!cls.includes('result-')) cls += ' ' + outcome;
+        content += `<div class="cal-match-tag" style="color:${color}">${prefix}${isHome?'H':'A'} ${oppShort} ${myG}-${theirG}${rescheduled?' ↗':''}</div>`;
       } else {
         cls += ' has-match';
-        content += `<div class="cal-match-tag">${isHome?'H':'A'} ${oppName}</div>`;
+        content += `<div class="cal-match-tag" style="color:${color}">${prefix}${isHome?'H':'A'} ${oppName}${rescheduled?' ↗':''}</div>`;
       }
-    }
+    });
 
-    if (euroOnThisDay && !domOnWed) {
-      // UEFA on Wednesday
-      const f = euroFixes[0];
-      const isHome = f.home === myClub.id;
-      const opp = G.clubs[isHome ? f.away : f.home];
-      const oppName = opp?.name || '?';
-      if (f.played) {
-        const myG = isHome ? f.result?.home : f.result?.away;
-        const theirG = isHome ? f.result?.away : f.result?.home;
-        const outcome = myG > theirG ? 'result-win' : myG < theirG ? 'result-loss' : 'result-draw';
-        cls += ' ' + outcome;
-        content += `<div class="cal-match-tag" style="color:var(--purple)">${f.compName} ${isHome?'H':'A'} ${oppName} ${myG}-${theirG}</div>`;
-      } else {
-        cls += ' has-match';
-        content += `<div class="cal-match-tag" style="color:var(--purple)">${f.compName} ${isHome?'H':'A'} ${oppName}</div>`;
-      }
-    }
-
-    // Clash: euro was on Saturday (same week, euro round lands on sat)
-    // In this case, show euro on Sat and move domestic label to Sun of same week
-    if (euroOnSat) {
-      const f = euroFixes[0];
-      const isHome = f.home === myClub.id;
-      const opp = G.clubs[isHome ? f.away : f.home];
-      const oppName = opp?.name || '?';
-      cls += ' has-match';
-      content += `<div class="cal-match-tag" style="color:var(--purple)">${f.compName} ${isHome?'H':'A'} ${oppName}</div>`;
-    }
-    if (domFix && dowMon === 6 /* Sun fallback when clash */) {
-      // Check if this week's euro was on Sat
-      const prevSat = new Date(year, jsMonth, day - 1);
-      const prevWeekNum = dateToWeek(prevSat);
-      if (prevWeekNum === weekNum && (euroFixMap[weekNum]||[]).length > 0) {
-        const f = domFix;
-        const isHome = f.home === myClub.id;
-        const opp = G.clubs[isHome ? f.away : f.home];
-        const oppName = opp?.name || '?';
-        cls += ' has-match';
-        content += `<div class="cal-match-tag" style="color:var(--text2);font-style:italic;">${isHome?'H':'A'} ${oppName} <span style="font-size:9px;">(rescheduled)</span></div>`;
-      }
-    }
-
-    html += `<div class="${cls}" onclick="calDayClick(${weekNum},${dowMon},${day},${jsMonth},${year})">${content}</div>`;
+    const wkForClick = weekNum ?? Math.max(1, Math.floor((new Date(year,jsMonth,day) - seasonStart) / (7*MS_DAY)) + 1);
+    html += `<div class="${cls}" onclick="calDayClick(${wkForClick},${dowMon},${day},${jsMonth},${year})">${content}</div>`;
   }
 
-  // Trailing blank cells to complete the last row
   const totalCells = gridStartDow + numDays;
-  const trailingBlanks = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-  for (let i = 0; i < trailingBlanks; i++) {
-    html += `<div class="cal-day cal-day-empty"></div>`;
-  }
+  const trailing = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let i = 0; i < trailing; i++) html += `<div class="cal-day cal-day-empty"></div>`;
 
   grid.innerHTML = html;
   document.getElementById('cal-day-detail').innerHTML = `<div class="muted" style="font-size:12px;padding:8px">Click a match day to see details</div>`;
@@ -6362,6 +6415,79 @@ if (_origDailyEventFn) {
 // ═══════════════════════════════════════════════════════════════
 let _varTimeout = null;
 
+// Draws the small "referee at monitor" panel
+function drawRefMonitorScene(canvas) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  canvas._refFrame = (canvas._refFrame || 0) + 1;
+  const t = canvas._refFrame / 60;
+
+  // Pitch grass background
+  for (let i = 0; i < 7; i++) {
+    ctx.fillStyle = i%2===0 ? '#2d5e38' : '#335f3d';
+    ctx.fillRect(i*W/7, 0, W/7, H);
+  }
+  // Faint pitch line
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(W*0.05, H*0.3); ctx.lineTo(W*0.95, H*0.3); ctx.stroke();
+
+  // VAR monitor unit
+  const mx = W*0.48, my = H*0.12, mw = W*0.42, mh = H*0.38;
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(mx, my, mw, mh, 5); else ctx.rect(mx,my,mw,mh);
+  ctx.fill();
+  // Screen flicker with green pitch on it
+  const flicker = 0.7 + 0.15*Math.sin(t*4.5);
+  ctx.fillStyle = `rgba(40,110,50,${flicker})`;
+  ctx.fillRect(mx+3, my+3, mw-6, mh-6);
+  // Lines on screen suggesting footage
+  ctx.strokeStyle = `rgba(255,255,255,${0.15*flicker})`;
+  ctx.lineWidth = 1;
+  for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(mx+3,my+3+i*(mh-6)/4);ctx.lineTo(mx+mw-3,my+3+i*(mh-6)/4);ctx.stroke();}
+  // Monitor stand
+  ctx.fillStyle = '#222';
+  ctx.fillRect(mx+mw/2-3, my+mh, 6, H*0.12);
+  ctx.fillRect(mx+mw/2-16, my+mh+H*0.12, 32, 5);
+
+  // Referee figure (standing at monitor)
+  const rx = W*0.26, ry = H*0.2, rsize = H*0.12;
+  // Head
+  ctx.fillStyle = '#e8b87a';
+  ctx.beginPath(); ctx.arc(rx, ry, rsize*0.38, 0, Math.PI*2); ctx.fill();
+  // Body — dark shirt (VAR operator typically in dark gear)
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(rx-rsize*0.28, ry+rsize*0.38, rsize*0.56, rsize*0.9);
+  // Arm extended toward monitor, slight sway
+  const aSwing = 0.08*Math.sin(t*1.2);
+  ctx.save();
+  ctx.translate(rx+rsize*0.26, ry+rsize*0.55);
+  ctx.rotate(-0.35+aSwing);
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0,-rsize*0.1, rsize*0.7, rsize*0.2);
+  ctx.restore();
+  // Legs
+  ctx.fillStyle = '#111';
+  ctx.fillRect(rx-rsize*0.22, ry+rsize*1.28, rsize*0.18, rsize*0.55);
+  ctx.fillRect(rx+rsize*0.04, ry+rsize*1.28, rsize*0.18, rsize*0.55);
+  // Headset
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(rx, ry-rsize*0.28, rsize*0.38, Math.PI, 0); ctx.stroke();
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(rx-rsize*0.38, ry-rsize*0.2, rsize*0.1, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(rx+rsize*0.38, ry-rsize*0.2, rsize*0.1, 0, Math.PI*2); ctx.fill();
+
+  // Bottom label
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(0, H*0.84, W, H*0.16);
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.font = `bold ${W*0.068}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('MONITOR REVIEW', W/2, H*0.955);
+  ctx.textAlign = 'left';
+}
+
 function showVARReview(incident, onDecision) {
   const overlay = document.getElementById('var-overlay');
   overlay.classList.add('open');
@@ -6370,66 +6496,73 @@ function showVARReview(incident, onDecision) {
   document.getElementById('var-close-btn').style.display = 'none';
   document.getElementById('var-red-box').style.display = 'none';
   document.getElementById('var-scanning-text').textContent = 'Checking incident...';
-  document.getElementById('var-overlay-text').textContent = 'VAR REVIEW';
+  const lbl = document.getElementById('var-main-label');
+  if (lbl) lbl.textContent = incident.type === 'goal' ? 'Checking Goal – Possible Offside' : 'Checking Goal – Possible Foul';
 
-  // Draw VAR pitch view on canvas
   const canvas = document.getElementById('var-canvas');
   const screen = document.getElementById('var-screen');
-  // Use setTimeout to guarantee browser has fully painted the overlay before measuring
+  const refCanvas = document.getElementById('var-ref-canvas');
+  let _mainAnimId = null, _refAnimId = null;
+
   setTimeout(() => {
-    const vW2 = screen.clientWidth > 10 ? screen.clientWidth : 560;
-    const vH2 = screen.clientHeight > 10 ? screen.clientHeight : 315;
-    canvas.width = vW2 * 2;
-    canvas.height = vH2 * 2;
-    canvas.style.width = vW2 + 'px';
-    canvas.style.height = vH2 + 'px';
+    const vW = screen.clientWidth > 10 ? screen.clientWidth : 540;
+    const vH = screen.clientHeight > 10 ? screen.clientHeight : 304;
+    canvas.width = vW * 2; canvas.height = vH * 2;
+    canvas.style.width = vW + 'px'; canvas.style.height = vH + 'px';
     canvas._varFrame = 0;
-    let _varAnimId = null;
-    function _animateVAR() { drawVARScene(canvas, incident); _varAnimId = requestAnimationFrame(_animateVAR); }
-    _animateVAR();
-    // Store cancel function on canvas so closeVAR can stop it
-    canvas._stopAnim = () => { if (_varAnimId) { cancelAnimationFrame(_varAnimId); _varAnimId = null; } };
-    // Show pulsing red box immediately during review
+    function _animateMain() { drawVARScene(canvas, incident); _mainAnimId = requestAnimationFrame(_animateMain); }
+    _animateMain();
+
+    if (refCanvas) {
+      const rp = document.getElementById('var-ref-panel');
+      const rW = rp ? rp.clientWidth : 200;
+      const rH = rp ? rp.clientHeight : 150;
+      refCanvas.width = rW * 2; refCanvas.height = rH * 2;
+      refCanvas.style.width = rW + 'px'; refCanvas.style.height = rH + 'px';
+      refCanvas._refFrame = 0;
+      function _animateRef() { drawRefMonitorScene(refCanvas); _refAnimId = requestAnimationFrame(_animateRef); }
+      _animateRef();
+    }
+
+    canvas._stopAnim = () => {
+      if (_mainAnimId) { cancelAnimationFrame(_mainAnimId); _mainAnimId = null; }
+      if (_refAnimId) { cancelAnimationFrame(_refAnimId); _refAnimId = null; }
+    };
     document.getElementById('var-red-box').style.display = 'block';
   }, 80);
 
   const scanTexts = [
-    'Checking incident...', 'Reviewing angle 1...', 'Reviewing angle 2...',
-    'Frame-by-frame analysis...', 'Checking player positions...', 'Consulting protocol...'
+    'Checking incident...', 'Reviewing camera angle 1...', 'Checking camera angle 2...',
+    'Frame-by-frame analysis...', 'Checking player positions...', 'Consulting VAR protocol...',
+    'Final check underway...'
   ];
   let si = 0;
   const scanInterval = setInterval(() => {
-    si = (si+1)%scanTexts.length;
+    si = (si+1) % scanTexts.length;
     document.getElementById('var-scanning-text').textContent = scanTexts[si];
-  }, 700);
+  }, 650);
 
-  // After delay, show verdict
   _varTimeout = setTimeout(() => {
     clearInterval(scanInterval);
-    const decision = Math.random() > 0.45; // 55% chance VAR upholds original
+    const decision = Math.random() > 0.45;
     const badge = document.getElementById('var-decision-badge');
     const desc = document.getElementById('var-desc');
     if (decision) {
-      badge.style.background = 'rgba(239,68,68,0.2)';
-      badge.style.color = '#ef4444';
-      badge.style.border = '1px solid #ef4444';
+      badge.style.cssText = 'display:block;background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid #ef4444;padding:8px 10px;border-radius:6px;font-weight:700;font-family:var(--mono);font-size:12px;text-align:center;';
       badge.textContent = incident.type === 'goal' ? '✅ GOAL STANDS' : '🚨 PENALTY AWARDED';
     } else {
-      badge.style.background = 'rgba(34,197,94,0.2)';
-      badge.style.color = '#22c55e';
-      badge.style.border = '1px solid #22c55e';
+      badge.style.cssText = 'display:block;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid #22c55e;padding:8px 10px;border-radius:6px;font-weight:700;font-family:var(--mono);font-size:12px;text-align:center;';
       badge.textContent = incident.type === 'goal' ? '❌ GOAL DISALLOWED' : '✅ NO PENALTY';
     }
-    desc.textContent = decision
-      ? (incident.type==='goal' ? 'VAR has reviewed the incident. The goal is confirmed.' : 'VAR confirms the referee\'s decision. Penalty stands.')
-      : (incident.type==='goal' ? `Marginal offside detected. Goal ruled out.` : 'Upon review, no clear penalty offence. Play continues.');
-    badge.style.display = 'inline-block';
     desc.style.display = 'block';
-    document.getElementById('var-red-box').style.display = 'block';
-    document.getElementById('var-scanning-text').textContent = '— Decision reached —';
-    document.getElementById('var-overlay-text').textContent = '📺 VAR DECISION';
+    desc.textContent = decision
+      ? (incident.type==='goal' ? 'VAR has reviewed the incident. The goal is confirmed.' : 'VAR confirms the penalty. Decision stands.')
+      : (incident.type==='goal' ? 'Marginal offside detected. Goal ruled out.' : 'No clear penalty offence. Play continues.');
+    document.getElementById('var-scanning-text').textContent = '✓ Decision reached';
+    if (lbl) lbl.textContent = decision
+      ? '✅ ' + (incident.type==='goal'?'GOAL CONFIRMED':'PENALTY AWARDED')
+      : '❌ ' + (incident.type==='goal'?'GOAL DISALLOWED':'NO PENALTY');
     document.getElementById('var-close-btn').style.display = 'block';
-
     if (onDecision) onDecision(decision);
   }, 3800);
 }
@@ -6438,8 +6571,10 @@ function closeVAR() {
   document.getElementById('var-overlay').classList.remove('open');
   if (_varTimeout) { clearTimeout(_varTimeout); _varTimeout = null; }
   // Stop the canvas animation loop
-  const canvas = document.getElementById('var-pitch-view');
+  const canvas = document.getElementById('var-canvas');
   if (canvas && canvas._stopAnim) canvas._stopAnim();
+  // Resume the match simulation
+  if (window._varResumeCallback) window._varResumeCallback();
 }
 
 function drawVARScene(canvas, incident) {
