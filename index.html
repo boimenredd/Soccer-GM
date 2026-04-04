@@ -479,7 +479,125 @@ body.on-home { overflow-y: auto; height: auto; min-height: 100vh; }
 
 .notif-item.error { border-left-color: var(--red); }
 
-/* ─── VAR Review Overlay ─── */
+/* ─── Goal Replay Overlay ─── */
+#goal-replay-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0a1a0a 0%, #071407 50%, #0a0a0a 100%);
+  z-index: 950;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  flex-direction: column;
+}
+#goal-replay-overlay.open { display: flex; }
+#goal-replay-inner {
+  width: min(860px, 97vw);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#goal-replay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#goal-replay-title {
+  font-size: 22px;
+  font-weight: 900;
+  font-family: 'Arial Black', Arial, sans-serif;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 30px rgba(34,197,94,0.6);
+}
+#goal-replay-scorer {
+  font-size: 13px;
+  font-family: var(--mono);
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+}
+#goal-replay-body {
+  display: flex;
+  gap: 14px;
+}
+#goal-replay-pitch-wrap {
+  flex: 1;
+  background: #0d0d0d;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.12);
+  overflow: hidden;
+  position: relative;
+}
+#goal-replay-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+#goal-replay-side {
+  width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.goal-replay-stat-box {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 12px;
+}
+.goal-replay-stat-label {
+  font-size: 9px;
+  font-family: var(--mono);
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 4px;
+}
+.goal-replay-stat-val {
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: #fff;
+}
+#goal-replay-net-canvas {
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.12);
+  overflow: hidden;
+  background: #0d1a0d;
+}
+#goal-replay-close {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-family: var(--sans);
+  font-weight: 600;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.15s;
+  align-self: center;
+  margin-top: 4px;
+}
+#goal-replay-close:hover { background: rgba(255,255,255,0.2); }
+#goal-replay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(34,197,94,0.15);
+  border: 1px solid rgba(34,197,94,0.4);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: #22c55e;
+  letter-spacing: 0.06em;
+  animation: replayPulse 1.2s ease-in-out infinite;
+}
+@keyframes replayPulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
 #var-overlay {
   display: none;
   position: fixed;
@@ -1976,6 +2094,44 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
   </div>
 </div>
 
+<!-- GOAL REPLAY OVERLAY -->
+<div id="goal-replay-overlay">
+  <div id="goal-replay-inner">
+    <div id="goal-replay-header">
+      <div>
+        <div id="goal-replay-title">⚽ GOAL!</div>
+        <div id="goal-replay-scorer"></div>
+      </div>
+      <div id="goal-replay-badge">📺 REPLAY</div>
+    </div>
+    <div id="goal-replay-body">
+      <div id="goal-replay-pitch-wrap">
+        <canvas id="goal-replay-canvas"></canvas>
+      </div>
+      <div id="goal-replay-side">
+        <div class="goal-replay-stat-box">
+          <div class="goal-replay-stat-label">Shot Type</div>
+          <div class="goal-replay-stat-val" id="gr-shot-type">—</div>
+        </div>
+        <div class="goal-replay-stat-box">
+          <div class="goal-replay-stat-label">Distance</div>
+          <div class="goal-replay-stat-val" id="gr-distance">—</div>
+        </div>
+        <div class="goal-replay-stat-box">
+          <div class="goal-replay-stat-label">Zone</div>
+          <div class="goal-replay-stat-val" id="gr-zone">—</div>
+        </div>
+        <div class="goal-replay-stat-box">
+          <div class="goal-replay-stat-label">Hit</div>
+          <div class="goal-replay-stat-val" id="gr-hit">—</div>
+        </div>
+        <canvas id="goal-replay-net-canvas" width="180" height="110" style="width:100%;"></canvas>
+      </div>
+    </div>
+    <button id="goal-replay-close" onclick="closeGoalReplay()">▶ Continue</button>
+  </div>
+</div>
+
 <!-- NOTIFICATIONS -->
 <div id="notif"></div>
 
@@ -3433,8 +3589,8 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
         const p2Name = p2?.name || 'Defender';
         const gkPid = homeClub.players[0]; const gk = G.players[gkPid];
         const gkName = gk?.name || 'Keeper';
-        // VAR is rare: roughly 1 in 14 extra events (~7%) — use weighted selection
-        const extraTypes = ['miss','miss','miss','save','save','argument','foul','foul','chance','chance','chance','chance','var_rarely'];
+        // VAR is rare: roughly 1 in 18 extra events (~5.5%) — use weighted selection
+        const extraTypes = ['miss','miss','miss','save','save','argument','foul','foul','chance','chance','chance','chance','chance','chance','chance','chance','chance','var_rarely'];
         const type = rngFrom(extraTypes);
         if (type === 'miss') {
           const tmpl = rngFrom(extEvents.miss);
@@ -3516,7 +3672,15 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
           document.getElementById('sim-score').textContent = `${hg} – ${ag}`;
           document.getElementById('sim-score').style.animation = 'goalPulse .5s ease';
           setTimeout(()=>document.getElementById('sim-score').style.animation='', 500);
-          await sleep(Math.min(simSpeed*1.4, 900));
+          // Show goal replay cutscene (brief pause)
+          if (!_simSkipped) {
+            _simPaused = true;
+            await sleep(0); await sleep(0);
+            await showGoalReplay(pName, assistName, ev.minute);
+            _simPaused = false;
+          } else {
+            await sleep(Math.min(simSpeed*1.4, 900));
+          }
         } else if (ev.type === 'yellow') {
           updateLiveRatings(ev);
           ev.side==='home' ? liveStats._homeYellow=(liveStats._homeYellow||0)+1 : liveStats._awayYellow=(liveStats._awayYellow||0)+1;
@@ -3644,59 +3808,137 @@ async function simOneDay() {
   // Fire random event every 2 days
   if (p.dayOfWeek % 2 === 0) fireDailyEvent();
 
-  // Check if today (Sat=6 or Wed=3) has a match for my club this week
-  const isMatchDay = p.dayOfWeek === 6 || p.dayOfWeek === 3;
-  if (isMatchDay) {
-    const myClub = G.clubs[p.clubId];
-    const myLeague = G.leagues[myClub.leagueId];
-    const thisRound = p.week;
-    const myMatch = myLeague.fixtures.find(f => f.round === thisRound && !f.played && (f.home === p.clubId || f.away === p.clubId));
+  const myClub = G.clubs[p.clubId];
+  const myLeague = G.leagues[myClub.leagueId];
+  const thisRound = p.week;
 
-    if (myMatch) {
-      // Sim my match with full visual
-      processRandomEvents();
-      Object.values(G.players).forEach(pl => {
-        if (pl.currentInjury) { pl.currentInjury.weeks--; if (pl.currentInjury.weeks<=0) { pl.currentInjury=null; if(pl.contract.clubId===p.clubId) notify(`${pl.name} back from injury!`,'success'); } }
-        if (pl.suspended>0) pl.suspended--;
-      });
+  // Check if today has a league match
+  const isLeagueMatchDay = p.dayOfWeek === 6 || p.dayOfWeek === 3;
+  const myLeagueMatch = isLeagueMatchDay ? myLeague.fixtures.find(f => f.round === thisRound && !f.played && (f.home === p.clubId || f.away === p.clubId)) : null;
 
-      await showMatchSim(myMatch.home, myMatch.away, myClub.leagueId, true);
-      // Use the result from the visual sim to avoid score mismatch
-      const _simOvl = document.getElementById('match-sim-overlay');
-      const result = (_simOvl && _simOvl._fullResult) ? _simOvl._fullResult : simulateMatchFull(myMatch.home, myMatch.away, myClub.leagueId, true);
-      myMatch.played = true; myMatch.result = { home: result.homeGoals, away: result.awayGoals }; myMatch.events = result.events; myMatch.stats = result.stats;
-      updateLeagueTable(myClub.leagueId, myMatch.home, myMatch.away, result.homeGoals, result.awayGoals);
-      addNews(`Result: ${G.clubs[myMatch.home].name} ${result.homeGoals}–${result.awayGoals} ${G.clubs[myMatch.away].name}`, `Week ${p.week}`, result.homeGoals>result.awayGoals?'Home win':result.awayGoals>result.homeGoals?'Away win':'Draw');
-
-      // Sim rest of league fixtures
-      myLeague.fixtures.filter(f=>f.round===thisRound&&!f.played).forEach(f=>{
-        const r2 = simulateMatchFull(f.home,f.away,myClub.leagueId,false);
-        f.played=true; f.result={home:r2.homeGoals,away:r2.awayGoals}; f.events=r2.events;
-        updateLeagueTable(myClub.leagueId,f.home,f.away,r2.homeGoals,r2.awayGoals);
-      });
-
-      // Sim other leagues
-      Object.keys(G.leagues).forEach(lid=>{
-        if(lid===myClub.leagueId) return;
-        G.leagues[lid].fixtures.filter(f=>f.round===thisRound&&!f.played).forEach(f=>{
-          const r3=simulateMatchFull(f.home,f.away,lid,false);
-          f.played=true; f.result={home:r3.homeGoals,away:r3.awayGoals}; f.events=r3.events;
-          updateLeagueTable(lid,f.home,f.away,r3.homeGoals,r3.awayGoals);
-        });
-      });
-
-      doFinancialTick();
-      if(p.transferWindowOpen) processAITransfers();
-      processIncomingOffers();
-
-      // Advance week after match day
-      p.week++;
-      p.dayOfWeek = 1;
-      const totalRounds = myLeague.totalRounds;
-      if(p.week > totalRounds){ endSeason(); return; }
-      if(p.week===13||p.week===31){ p.transferWindowOpen=false; notify('Transfer window closed','warn'); }
-      if(p.week===28){ p.transferWindowOpen=true; notify('Winter transfer window open!','success'); }
+  // Check if today has a UEFA/cup match for my club
+  const myUEFAMatch = (() => {
+    if (!G.ucCompetitions) return null;
+    for (const comp of Object.values(G.ucCompetitions)) {
+      if (!comp || !comp.fixtures) continue;
+      const m = comp.fixtures.find(f => f.round === thisRound && !f.played && (f.home === p.clubId || f.away === p.clubId));
+      if (m) return { match: m, comp };
     }
+    return null;
+  })();
+
+  // CONFLICT RESOLUTION: if league and UEFA match fall on same day, postpone UEFA to next free mid-week
+  if (myLeagueMatch && myUEFAMatch) {
+    // Reschedule the UEFA match by shifting it to the next available mid-week round
+    const uefaMatch = myUEFAMatch.match;
+    const nextMidWeekRound = thisRound + 1;
+    uefaMatch.round = nextMidWeekRound;
+    notify(`📅 Schedule conflict — UEFA match rescheduled to Week ${nextMidWeekRound}.`, 'warn');
+  }
+
+  // --- PLAY LEAGUE MATCH ---
+  if (myLeagueMatch) {
+    processRandomEvents();
+    Object.values(G.players).forEach(pl => {
+      if (pl.currentInjury) { pl.currentInjury.weeks--; if (pl.currentInjury.weeks<=0) { pl.currentInjury=null; if(pl.contract.clubId===p.clubId) notify(`${pl.name} back from injury!`,'success'); } }
+      if (pl.suspended>0) pl.suspended--;
+    });
+
+    await showMatchSim(myLeagueMatch.home, myLeagueMatch.away, myClub.leagueId, true);
+    const _simOvl = document.getElementById('match-sim-overlay');
+    const result = (_simOvl && _simOvl._fullResult) ? _simOvl._fullResult : simulateMatchFull(myLeagueMatch.home, myLeagueMatch.away, myClub.leagueId, true);
+    myLeagueMatch.played = true; myLeagueMatch.result = { home: result.homeGoals, away: result.awayGoals }; myLeagueMatch.events = result.events; myLeagueMatch.stats = result.stats;
+    updateLeagueTable(myClub.leagueId, myLeagueMatch.home, myLeagueMatch.away, result.homeGoals, result.awayGoals);
+    addNews(`Result: ${G.clubs[myLeagueMatch.home].name} ${result.homeGoals}–${result.awayGoals} ${G.clubs[myLeagueMatch.away].name}`, `Week ${p.week}`, result.homeGoals>result.awayGoals?'Home win':result.awayGoals>result.homeGoals?'Away win':'Draw');
+
+    // Sim rest of league fixtures
+    myLeague.fixtures.filter(f=>f.round===thisRound&&!f.played).forEach(f=>{
+      const r2 = simulateMatchFull(f.home,f.away,myClub.leagueId,false);
+      f.played=true; f.result={home:r2.homeGoals,away:r2.awayGoals}; f.events=r2.events;
+      updateLeagueTable(myClub.leagueId,f.home,f.away,r2.homeGoals,r2.awayGoals);
+    });
+
+    // Sim other leagues
+    Object.keys(G.leagues).forEach(lid=>{
+      if(lid===myClub.leagueId) return;
+      G.leagues[lid].fixtures.filter(f=>f.round===thisRound&&!f.played).forEach(f=>{
+        const r3=simulateMatchFull(f.home,f.away,lid,false);
+        f.played=true; f.result={home:r3.homeGoals,away:r3.awayGoals}; f.events=r3.events;
+        updateLeagueTable(lid,f.home,f.away,r3.homeGoals,r3.awayGoals);
+      });
+    });
+
+    doFinancialTick();
+    if(p.transferWindowOpen) processAITransfers();
+    processIncomingOffers();
+
+    // Advance week after match day
+    p.week++;
+    p.dayOfWeek = 1;
+    const totalRounds = myLeague.totalRounds;
+    if(p.week > totalRounds){ endSeason(); return; }
+    if(p.week===13||p.week===31){ p.transferWindowOpen=false; notify('Transfer window closed','warn'); }
+    if(p.week===28){ p.transferWindowOpen=true; notify('Winter transfer window open!','success'); }
+
+  // --- PLAY UEFA/CUP MATCH (watchable!) ---
+  } else if (myUEFAMatch && !myLeagueMatch) {
+    const { match: uefaFix, comp } = myUEFAMatch;
+    processRandomEvents();
+
+    // Show a prompt to watch or skip
+    const compLabel = comp.name || 'European Competition';
+    const homeClub = G.clubs[uefaFix.home]?.name || '?';
+    const awayClub = G.clubs[uefaFix.away]?.name || '?';
+
+    const watchChoice = await new Promise(resolve => {
+      const overlay = document.getElementById('modal-overlay');
+      openModal(`${compLabel} Match Day`, `
+        <div style="text-align:center;padding:16px 0;">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">${compLabel}</div>
+          <div style="font-size:20px;font-weight:700;margin-bottom:20px;">${homeClub} vs ${awayClub}</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:24px;">Your club is in this ${compLabel} match. Do you want to play it out?</div>
+        </div>
+      `, [
+        { label: '▶ Watch Match', cls: 'btn-primary', fn: () => { closeModal(); resolve(true); } },
+        { label: '⏩ Simulate', cls: 'btn', fn: () => { closeModal(); resolve(false); } },
+      ]);
+    });
+
+    if (watchChoice) {
+      await showMatchSim(uefaFix.home, uefaFix.away, 'uefa', true);
+      const _simOvl = document.getElementById('match-sim-overlay');
+      const result = (_simOvl && _simOvl._fullResult) ? _simOvl._fullResult : simulateMatchFull(uefaFix.home, uefaFix.away, 'uefa', true);
+      uefaFix.played = true; uefaFix.result = { home: result.homeGoals, away: result.awayGoals };
+      // Update UEFA table
+      const tableRow = comp.leagueTable?.find(r => r.clubId === p.clubId);
+      if (tableRow) {
+        const isHome = uefaFix.home === p.clubId;
+        const gf = isHome ? result.homeGoals : result.awayGoals;
+        const ga = isHome ? result.awayGoals : result.homeGoals;
+        tableRow.played++; tableRow.gf += gf; tableRow.ga += ga; tableRow.gd = tableRow.gf - tableRow.ga;
+        if (gf > ga) { tableRow.won++; tableRow.points += 3; }
+        else if (gf === ga) { tableRow.drawn++; tableRow.points += 1; }
+        else { tableRow.lost++; }
+      }
+      addNews(`${compLabel}: ${homeClub} ${result.homeGoals}–${result.awayGoals} ${awayClub}`, `Week ${p.week}`, 'European fixture played');
+    } else {
+      const result = simulateMatchFull(uefaFix.home, uefaFix.away, 'uefa', false);
+      uefaFix.played = true; uefaFix.result = { home: result.homeGoals, away: result.awayGoals };
+      const isHome = uefaFix.home === p.clubId;
+      const gf = isHome ? result.homeGoals : result.awayGoals;
+      const ga = isHome ? result.awayGoals : result.homeGoals;
+      const res = gf > ga ? 'Win' : gf < ga ? 'Loss' : 'Draw';
+      notify(`${compLabel}: ${homeClub} ${result.homeGoals}–${result.awayGoals} ${awayClub} (${res})`, gf > ga ? 'success' : 'warn');
+      addNews(`${compLabel}: ${homeClub} ${result.homeGoals}–${result.awayGoals} ${awayClub}`, `Week ${p.week}`, `${res} for ${myClub.name}`);
+    }
+    // Sim other UEFA matches this round
+    Object.values(G.ucCompetitions || {}).forEach(c => {
+      if (!c || !c.fixtures) return;
+      c.fixtures.filter(f => f.round === thisRound && !f.played).forEach(f => {
+        const r = simulateMatchFull(f.home, f.away, 'uefa', false);
+        f.played = true; f.result = { home: r.homeGoals, away: r.awayGoals };
+      });
+    });
   }
 
   updateTopBar();
@@ -5628,26 +5870,64 @@ function renderDashboard() {
 let _socialTab = 'all';
 
 const PUNDITS = [
+  // Classic Pundits
   { name:'Gary Neville', handle:'@GNeville2', avatar:'⚽', country:'England', style:'pundit' },
   { name:'Roy Keane', handle:'@RoyKeaneFC', avatar:'🔥', country:'Ireland', style:'pundit' },
-  { name:'Guillem Balagué', handle:'@GuillemBalague', avatar:'📰', country:'Spain', style:'journalist' },
-  { name:'Fabrizio Romano', handle:'@FabrizioRomano', avatar:'🤝', country:'Italy', style:'transfer' },
   { name:'Darren Bent', handle:'@DBent_Official', avatar:'🎙️', country:'England', style:'pundit' },
-  { name:'Jan Aage Fjortoft', handle:'@JanAageFjortoft', avatar:'🇳🇴', country:'Norway', style:'journalist' },
-  { name:'Nico Williams Scout', handle:'@EU_Scout', avatar:'🔭', country:'Europe', style:'scout' },
-  { name:'Transfer Window HQ', handle:'@TransferHQ', avatar:'💸', country:'Global', style:'transfer' },
   { name:'Tactical Notes', handle:'@TacticalNotes', avatar:'📋', country:'Global', style:'pundit' },
+  { name:'Manager Quotes', handle:'@PresserWatch', avatar:'🎤', country:'Global', style:'pundit' },
+  { name:'Micah Richards', handle:'@MicahRichards', avatar:'😂', country:'England', style:'pundit' },
+  { name:'Jamie Carragher', handle:'@Carra23', avatar:'🗣️', country:'England', style:'pundit' },
+  { name:'Alan Shearer', handle:'@alanshearer', avatar:'9️⃣', country:'England', style:'pundit' },
+  { name:'Patrick Vieira', handle:'@OfficialVieira', avatar:'🏆', country:'France', style:'pundit' },
+  { name:'Thierry Henry', handle:'@ThierryHenry', avatar:'👑', country:'France', style:'pundit' },
+  { name:'Ruud van Nistelrooy', handle:'@RvNistelrooy', avatar:'🎯', country:'Netherlands', style:'pundit' },
+  { name:'Clarence Seedorf', handle:'@C_Seedorf', avatar:'🌟', country:'Netherlands', style:'pundit' },
+  { name:'Graeme Souness', handle:'@GraemeSouness', avatar:'💪', country:'Scotland', style:'pundit' },
+  { name:'Chris Sutton', handle:'@chris_sutton73', avatar:'📢', country:'England', style:'pundit' },
+  { name:'Ian Wright', handle:'@IanWright0', avatar:'⚡', country:'England', style:'pundit' },
+  { name:'Rio Ferdinand', handle:'@rioferdy5', avatar:'🛡️', country:'England', style:'pundit' },
+  // Journalists & Transfer Insiders
+  { name:'Fabrizio Romano', handle:'@FabrizioRomano', avatar:'🤝', country:'Italy', style:'transfer' },
+  { name:'Guillem Balagué', handle:'@GuillemBalague', avatar:'📰', country:'Spain', style:'journalist' },
+  { name:'Jan Aage Fjortoft', handle:'@JanAageFjortoft', avatar:'🇳🇴', country:'Norway', style:'journalist' },
   { name:'BundesligaWatcher', handle:'@BundesWatch', avatar:'🦅', country:'Germany', style:'journalist' },
   { name:'La Liga Insider', handle:'@LaLigaInside', avatar:'☀️', country:'Spain', style:'journalist' },
   { name:'SerieA Expert', handle:'@SerieAExpert', avatar:'🍕', country:'Italy', style:'journalist' },
   { name:'FootballLeaks', handle:'@FootballLeaksX', avatar:'🕵️', country:'Global', style:'journalist' },
-  { name:'Injury Room', handle:'@InjuryRoomFC', avatar:'🏥', country:'Global', style:'injury' },
-  { name:'The Ultras Den', handle:'@UltrasDen', avatar:'🎺', country:'Global', style:'fan' },
-  { name:'Manager Quotes', handle:'@PresserWatch', avatar:'🎤', country:'Global', style:'pundit' },
-  { name:'Club Official', handle:'@OfficialAnnounce', avatar:'📢', country:'Global', style:'official' },
   { name:'Football Finance', handle:'@FFIntelligence', avatar:'📊', country:'Global', style:'journalist' },
-  { name:'Stadium Noise', handle:'@StadiumNoise', avatar:'📣', country:'Global', style:'fan' },
+  { name:'Ligue 1 Watch', handle:'@Ligue1Watch', avatar:'🇫🇷', country:'France', style:'journalist' },
+  { name:'Eredivisie HQ', handle:'@EredivisieHQ', avatar:'🌷', country:'Netherlands', style:'journalist' },
+  { name:'Primeira Liga Scout', handle:'@PrimeiraScout', avatar:'🌊', country:'Portugal', style:'journalist' },
+  { name:'MLS Insider', handle:'@MLSInsiderPro', avatar:'🦅', country:'USA', style:'journalist' },
+  { name:'David Ornstein', handle:'@David_Ornstein', avatar:'📰', country:'England', style:'journalist' },
+  { name:'Transfer Window HQ', handle:'@TransferHQ', avatar:'💸', country:'Global', style:'transfer' },
+  { name:'Contract Guru', handle:'@ContractGuruFC', avatar:'✍️', country:'Global', style:'transfer' },
+  { name:'Agent Watch', handle:'@AgentWatchFC', avatar:'🕴️', country:'Global', style:'transfer' },
+  { name:'Euro Transfer Blog', handle:'@EuroXfer', avatar:'🌍', country:'Europe', style:'transfer' },
+  // Scouts & Analysts
+  { name:'Nico Williams Scout', handle:'@EU_Scout', avatar:'🔭', country:'Europe', style:'scout' },
   { name:'The Scout Network', handle:'@ScoutNetwork_EU', avatar:'🌍', country:'Europe', style:'scout' },
+  { name:'Next Big Thing FC', handle:'@NextBigThingFC', avatar:'⭐', country:'Global', style:'scout' },
+  { name:'Data Analytics FC', handle:'@DataFootball', avatar:'📈', country:'Global', style:'scout' },
+  { name:'xG Nerd', handle:'@xGNerdFC', avatar:'🧮', country:'Global', style:'scout' },
+  { name:'Wonderkid Watch', handle:'@WonderkidWatch', avatar:'🔮', country:'Global', style:'scout' },
+  // Fans & Ultras
+  { name:'The Ultras Den', handle:'@UltrasDen', avatar:'🎺', country:'Global', style:'fan' },
+  { name:'Stadium Noise', handle:'@StadiumNoise', avatar:'📣', country:'Global', style:'fan' },
+  { name:'Away End FC', handle:'@AwayEndFC', avatar:'✈️', country:'Global', style:'fan' },
+  { name:'Kop Opinions', handle:'@KopOpinions', avatar:'🔴', country:'England', style:'fan' },
+  { name:'Tifo Artistry', handle:'@TifoArtistry', avatar:'🎨', country:'Global', style:'fan' },
+  { name:'Match Day Vibes', handle:'@MatchDayVibes', avatar:'🏟️', country:'Global', style:'fan' },
+  { name:'Football Twitter', handle:'@FootballTwitterX', avatar:'🐦', country:'Global', style:'fan' },
+  { name:'Banter Era FC', handle:'@BanterEraFC', avatar:'😂', country:'England', style:'fan' },
+  // Officials & Medical
+  { name:'Club Official', handle:'@OfficialAnnounce', avatar:'📢', country:'Global', style:'official' },
+  { name:'Injury Room', handle:'@InjuryRoomFC', avatar:'🏥', country:'Global', style:'injury' },
+  { name:'Physio Watch', handle:'@PhysioWatchFC', avatar:'🩺', country:'Global', style:'injury' },
+  { name:'Referee Watch', handle:'@RefWatch_FC', avatar:'🟨', country:'Global', style:'official' },
+  { name:'UEFA Updates', handle:'@UEFAUpdates_X', avatar:'🏆', country:'Europe', style:'official' },
+  { name:'Football Governance', handle:'@FIFAGovernance', avatar:'🌐', country:'Global', style:'official' },
 ];
 
 function setSocialTab(tab, btn) {
@@ -6683,22 +6963,74 @@ function showVARReview(incident, onDecision) {
     document.getElementById('var-red-box').style.display = 'block';
   }, 80);
 
-  const scanTexts = [
-    'Checking incident...', 'Reviewing camera angle 1...', 'Checking camera angle 2...',
-    'Frame-by-frame analysis...', 'Checking player positions...', 'Consulting VAR protocol...',
-    'Final check underway...'
-  ];
+  const VAR_CUTSCENE_SETS = {
+    goal: [
+      ['Checking incident...', 'Pulling up the primary angle...', 'Checking attacker position at moment of pass...', 'Frame-by-frame analysis — shoulder line...', 'Drawing offside lines...', 'Final confirmation underway...', '...'],
+      ['VAR initiated...', 'Reviewing the build-up phase...', 'Camera 3 — wide angle check...', 'Checking for offside in the build-up...', 'Consulting lead VAR official...', 'Decision imminent...', '...'],
+      ['Potential offside flagged...', 'Semi-automated system drawing lines...', 'Comparing pixel positions...', 'Joint position calculated...', 'Cross-referencing with broadcast feed...', 'Finalising decision...', '...'],
+    ],
+    penalty: [
+      ['Checking incident...', 'Reviewing handball — was arm in natural position?', 'Camera 2 — close-up angle...', 'Frame-by-frame: point of contact identified...', 'Consulting handball protocol...', 'Decision being confirmed...', '...'],
+      ['Potential foul in box...', 'Reviewing contact between players...', 'Was there sufficient force?', 'Replay from camera 4 — behind goal...', 'Minimum force threshold — checking...', 'VAR official communicating to referee...', '...'],
+      ['Penalty area incident...', 'Checking player position at moment of challenge...', 'Was ball played first?', 'Looking at contact from multiple angles...', 'Deliberate handball criteria — reviewing...', 'Referee being guided to on-field monitor...', '...'],
+    ],
+    offside: [
+      ['Offside check initiated...', 'Locating the exact frame of pass...', 'Drawing body part lines...', 'Last defender position locked...', 'Attacker limb checked — shoulder? elbow?', 'Semi-automated decision confirmed...', '...'],
+      ['Reviewing potential offside...', 'Finding the frame of release...', 'Checking last two lines...', 'Pixel-perfect measurement underway...', 'Less than a body part in it...', 'Result incoming...', '...'],
+    ],
+    foul: [
+      ['Checking foul...', 'Reviewing challenge from camera 5...', 'Was it a clear and obvious error?', 'Contact intensity being assessed...', 'Checking if red card threshold met...', 'Communicating with referee...', '...'],
+      ['Potential red card incident...', 'Camera angle 2 — from behind...', 'Speed and intent of challenge...', 'Checking recklessness threshold...', 'VAR decision: communicate to referee?', 'Final verdict coming...', '...'],
+    ],
+    handball: [
+      ['Handball check...', 'Reviewing position of arm...', 'Was arm in natural position?', 'Looking at trajectory of ball...', 'Did it make the body unnaturally bigger?', 'Deliberate handball criteria — checking...', '...'],
+      ['Ball to arm — reviewing...', 'Camera 3: close-up of contact point...', 'Arm movement detected: deliberate?', 'Consulting handball guidance document...', 'Impact of arm position on play...', 'Decision being passed to referee...', '...'],
+    ],
+  };
+
+  const scanTexts = VAR_CUTSCENE_SETS[incident.subType] || VAR_CUTSCENE_SETS[incident.type] || VAR_CUTSCENE_SETS.penalty;
+  const chosenSet = scanTexts[Math.floor(Math.random() * scanTexts.length)];
+  const scanTextsFlat = chosenSet;
   let si = 0;
   const scanInterval = setInterval(() => {
-    si = (si+1) % scanTexts.length;
-    document.getElementById('var-scanning-text').textContent = scanTexts[si];
-  }, 650);
+    si = (si+1) % scanTextsFlat.length;
+    document.getElementById('var-scanning-text').textContent = scanTextsFlat[si];
+  }, 600);
 
   _varTimeout = setTimeout(() => {
     clearInterval(scanInterval);
     const decision = Math.random() > 0.45;
     const badge = document.getElementById('var-decision-badge');
     const desc = document.getElementById('var-desc');
+    const VAR_CONFIRMED_DESCS = {
+      goal: [
+        'VAR has reviewed all available camera angles. The goal is confirmed — attacker was onside.',
+        'Semi-automated offside system shows the attacker is level with the last defender. Goal stands.',
+        'After reviewing five camera angles, VAR confirms no offside. Goal is good.',
+        'The joint was in an onside position at the moment the ball was played. Goal confirmed by VAR.',
+      ],
+      penalty: [
+        'VAR confirms the referee\'s penalty decision. Clear contact was made inside the area.',
+        'The challenge was deemed reckless. Penalty awarded — decision stands after review.',
+        'Deliberate handball confirmed by VAR. Ball made the player\'s arm larger. Penalty stands.',
+        'After checking from the reverse angle, VAR confirms a foul was committed. Penalty upheld.',
+      ],
+    };
+    const VAR_OVERTURNED_DESCS = {
+      goal: [
+        'Marginal offside detected — attacker\'s shoulder was fractionally ahead of the last defender. Goal ruled out.',
+        'Semi-automated system confirms the attacker was offside by less than a body part. Goal disallowed.',
+        'The VAR check reveals the ball was played to a player in an offside position. Goal overturned.',
+        'Tight call — attacker\'s arm tip was in an offside position at the moment of the pass. No goal.',
+      ],
+      penalty: [
+        'No clear and obvious error. The referee\'s decision to not award a penalty is upheld.',
+        'Ball struck the arm while it was in a natural position by the side of the body. No penalty.',
+        'Contact was minimal and ball was played first. VAR overturns — no penalty given.',
+        'After multiple angles, VAR concludes no deliberate handball. Defender exonerated.',
+      ],
+    };
+    const descType = incident.type === 'goal' ? 'goal' : 'penalty';
     if (decision) {
       badge.style.cssText = 'display:block;background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid #ef4444;padding:8px 10px;border-radius:6px;font-weight:700;font-family:var(--mono);font-size:12px;text-align:center;';
       badge.textContent = incident.type === 'goal' ? '✅ GOAL STANDS' : '🚨 PENALTY AWARDED';
@@ -6707,9 +7039,8 @@ function showVARReview(incident, onDecision) {
       badge.textContent = incident.type === 'goal' ? '❌ GOAL DISALLOWED' : '✅ NO PENALTY';
     }
     desc.style.display = 'block';
-    desc.textContent = decision
-      ? (incident.type==='goal' ? 'VAR has reviewed the incident. The goal is confirmed.' : 'VAR confirms the penalty. Decision stands.')
-      : (incident.type==='goal' ? 'Marginal offside detected. Goal ruled out.' : 'No clear penalty offence. Play continues.');
+    const descPool = decision ? (VAR_CONFIRMED_DESCS[descType] || VAR_CONFIRMED_DESCS.penalty) : (VAR_OVERTURNED_DESCS[descType] || VAR_OVERTURNED_DESCS.penalty);
+    desc.textContent = descPool[Math.floor(Math.random() * descPool.length)];
     document.getElementById('var-scanning-text').textContent = '✓ Decision reached';
     if (lbl) lbl.textContent = decision
       ? '✅ ' + (incident.type==='goal'?'GOAL CONFIRMED':'PENALTY AWARDED')
@@ -6719,7 +7050,219 @@ function showVARReview(incident, onDecision) {
   }, 3800);
 }
 
-function closeVAR() {
+// ═══════════════════════════════════════════════════════════════
+// GOAL REPLAY CUTSCENE
+// ═══════════════════════════════════════════════════════════════
+let _goalReplayAnimId = null;
+
+function showGoalReplay(scorerName, assistName, minute) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('goal-replay-overlay');
+    overlay.classList.add('open');
+
+    // Pick random shot details
+    const shotTypes = ['Volley', 'Placed Finish', 'Header', 'Long Range', 'Tap-in', 'Curler', 'Power Shot', 'Chip', 'Lob', 'Counter'];
+    const zones = ['Six-yard Box', 'Penalty Spot', 'Edge of Box', 'Left Channel', 'Right Channel', 'Central Area', 'Outside Box'];
+    const hits = ['Bottom Left', 'Bottom Right', 'Top Left', 'Top Right', 'Centre Net', 'Off Post In', 'Under Bar'];
+    const distances = ['4m', '6m', '8m', '11m', '14m', '18m', '22m', '26m'];
+    const shotType = shotTypes[Math.floor(Math.random() * shotTypes.length)];
+    const zone = zones[Math.floor(Math.random() * zones.length)];
+    const hit = hits[Math.floor(Math.random() * hits.length)];
+    const distance = distances[Math.floor(Math.random() * distances.length)];
+
+    // Randomise ball path start and end positions
+    const ballStartX = 0.35 + Math.random() * 0.3;
+    const ballStartY = 0.55 + Math.random() * 0.2;
+    const ballEndX = 0.15 + Math.random() * 0.7;
+    const ballEndY = 0.05 + Math.random() * 0.35;
+    // Net impact point (0-1 in goal width/height)
+    const netX = 0.1 + Math.random() * 0.8;
+    const netY = 0.1 + Math.random() * 0.8;
+
+    document.getElementById('goal-replay-scorer').textContent =
+      `${scorerName}${assistName ? ` (assist: ${assistName})` : ''} · ${minute}'`;
+    document.getElementById('gr-shot-type').textContent = shotType;
+    document.getElementById('gr-distance').textContent = distance;
+    document.getElementById('gr-zone').textContent = zone;
+    document.getElementById('gr-hit').textContent = hit;
+
+    // Draw the net canvas
+    const netCanvas = document.getElementById('goal-replay-net-canvas');
+    drawGoalNet(netCanvas, netX, netY);
+
+    // Animate the pitch canvas
+    const canvas = document.getElementById('goal-replay-canvas');
+    const wrap = document.getElementById('goal-replay-pitch-wrap');
+    let frame = 0;
+    let phase = 0; // 0=approach 1=shot 2=freeze
+    const totalFrames = 140;
+
+    function animateReplay() {
+      const W = wrap.clientWidth || 480;
+      const H = Math.round(W * 9 / 16);
+      if (canvas.width !== W * 2) { canvas.width = W * 2; canvas.height = H * 2; canvas.style.width = W + 'px'; canvas.style.height = H + 'px'; }
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cW = canvas.width, cH = canvas.height;
+
+      // Grass
+      const grassGrad = ctx.createLinearGradient(0, 0, 0, cH);
+      grassGrad.addColorStop(0, '#166534'); grassGrad.addColorStop(1, '#14532d');
+      ctx.fillStyle = grassGrad; ctx.fillRect(0, 0, cW, cH);
+
+      // Pitch stripes
+      for (let i = 0; i < 8; i++) {
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.025)' : 'transparent';
+        ctx.fillRect(i * cW / 8, 0, cW / 8, cH);
+      }
+
+      // Penalty box
+      ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 2;
+      ctx.strokeRect(cW * 0.2, cH * 0.05, cW * 0.6, cH * 0.55);
+      // Six yard box
+      ctx.strokeRect(cW * 0.35, cH * 0.05, cW * 0.3, cH * 0.2);
+      // Penalty spot
+      ctx.beginPath(); ctx.arc(cW * 0.5, cH * 0.38, cW * 0.007, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fill();
+      // Goal line
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(cW * 0.2, cH * 0.05); ctx.lineTo(cW * 0.8, cH * 0.05); ctx.stroke();
+
+      // Goal posts
+      ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 4;
+      ctx.strokeRect(cW * 0.36, cH * 0.01, cW * 0.28, cH * 0.08);
+      // Net lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 0.8;
+      for (let nx = 0; nx < 7; nx++) { ctx.beginPath(); ctx.moveTo(cW * 0.36 + nx * cW * 0.04, cH * 0.01); ctx.lineTo(cW * 0.36 + nx * cW * 0.04, cH * 0.09); ctx.stroke(); }
+      for (let ny = 0; ny < 3; ny++) { ctx.beginPath(); ctx.moveTo(cW * 0.36, cH * 0.01 + ny * cH * 0.04); ctx.lineTo(cW * 0.64, cH * 0.01 + ny * cH * 0.04); ctx.stroke(); }
+
+      // Ball animation
+      const prog = Math.min(1, frame / 80);
+      const eased = prog < 0.5 ? 2 * prog * prog : -1 + (4 - 2 * prog) * prog;
+      const bX = cW * (ballStartX + (ballEndX - ballStartX) * eased);
+      const bY = cH * (ballStartY + (ballEndY - ballStartY) * eased);
+      // Ball trail
+      if (prog > 0.1) {
+        for (let t = 5; t >= 1; t--) {
+          const tp = Math.max(0, (frame - t * 3) / 80);
+          const te = tp < 0.5 ? 2 * tp * tp : -1 + (4 - 2 * tp) * tp;
+          const tx = cW * (ballStartX + (ballEndX - ballStartX) * te);
+          const ty = cH * (ballStartY + (ballEndY - ballStartY) * te);
+          ctx.beginPath(); ctx.arc(tx, ty, cW * 0.008 * (1 - t * 0.15), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${0.08 * (6 - t)})`; ctx.fill();
+        }
+      }
+      // Ball
+      const bR = cW * 0.018;
+      const bGrad = ctx.createRadialGradient(bX - bR * 0.3, bY - bR * 0.3, bR * 0.05, bX, bY, bR);
+      bGrad.addColorStop(0, '#ffffff'); bGrad.addColorStop(0.6, '#e5e7eb'); bGrad.addColorStop(1, '#9ca3af');
+      ctx.beginPath(); ctx.arc(bX, bY, bR, 0, Math.PI * 2); ctx.fillStyle = bGrad; ctx.fill();
+      // Ball seam spin
+      ctx.strokeStyle = 'rgba(50,50,50,0.4)'; ctx.lineWidth = 0.8;
+      const sp = frame * 0.2;
+      ctx.beginPath(); ctx.arc(bX, bY, bR * 0.65, sp, sp + Math.PI); ctx.stroke();
+
+      // Goal flash when ball reaches goal (prog > 0.85)
+      if (prog > 0.85) {
+        const flashAlpha = Math.max(0, 0.4 * Math.sin((prog - 0.85) / 0.15 * Math.PI));
+        ctx.fillStyle = `rgba(34,197,94,${flashAlpha})`;
+        ctx.fillRect(cW * 0.36, 0, cW * 0.28, cH * 0.1);
+        // "GOAL!" text
+        const textAlpha = Math.min(1, (prog - 0.85) * 7);
+        ctx.save();
+        ctx.font = `bold ${cW * 0.055}px 'Arial Black', Arial, sans-serif`;
+        ctx.fillStyle = `rgba(255,255,255,${textAlpha})`;
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(34,197,94,0.8)'; ctx.shadowBlur = 20;
+        ctx.fillText('GOAL!', cW * 0.5, cH * 0.55);
+        ctx.restore();
+      }
+
+      // REPLAY watermark
+      ctx.save();
+      ctx.font = `bold ${cW * 0.018}px Arial, sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.textAlign = 'left';
+      ctx.fillText('REPLAY', cW * 0.02, cH * 0.06);
+      // Minute indicator
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(cW * 0.02, cH * 0.07, cW * 0.09, cH * 0.04);
+      ctx.fillStyle = '#22c55e'; ctx.textAlign = 'center';
+      ctx.fillText(`${minute}'`, cW * 0.065, cH * 0.1);
+      ctx.restore();
+
+      frame++;
+      if (frame < totalFrames) {
+        _goalReplayAnimId = requestAnimationFrame(animateReplay);
+      }
+    }
+    animateReplay();
+
+    // Store resolve so close button can call it
+    window._goalReplayResolve = resolve;
+  });
+}
+
+function drawGoalNet(canvas, nx, ny) {
+  // nx, ny = 0-1 normalized position in goal where ball hits
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // Background — goal face view
+  ctx.fillStyle = '#0a1a0a'; ctx.fillRect(0, 0, W, H);
+
+  // Goal frame
+  ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 4;
+  ctx.strokeRect(W * 0.05, H * 0.05, W * 0.9, H * 0.9);
+
+  // Net grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 0.8;
+  const cols = 8, rows = 5;
+  for (let c = 1; c < cols; c++) { ctx.beginPath(); ctx.moveTo(W * 0.05 + c * W * 0.9 / cols, H * 0.05); ctx.lineTo(W * 0.05 + c * W * 0.9 / cols, H * 0.95); ctx.stroke(); }
+  for (let r = 1; r < rows; r++) { ctx.beginPath(); ctx.moveTo(W * 0.05, H * 0.05 + r * H * 0.9 / rows); ctx.lineTo(W * 0.95, H * 0.05 + r * H * 0.9 / rows); ctx.stroke(); }
+
+  // Zone labels
+  const zoneX = ['Left', 'Centre', 'Right'];
+  const zoneY = ['Top', 'Mid', 'Low'];
+  ctx.font = '7px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.textAlign = 'center';
+  for (let c = 0; c < 3; c++) for (let r = 0; r < 3; r++) {
+    ctx.fillText(`${zoneY[r]} ${zoneX[c]}`, W * (0.05 + (c + 0.5) * 0.9 / 3), H * (0.05 + (r + 0.5) * 0.9 / 3) + 3);
+  }
+
+  // Impact point
+  const px = W * (0.05 + nx * 0.9);
+  const py = H * (0.05 + ny * 0.9);
+
+  // Ripple rings
+  for (let i = 3; i >= 1; i--) {
+    ctx.beginPath(); ctx.arc(px, py, i * 12, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(34,197,94,${0.12 * i})`; ctx.lineWidth = 2; ctx.stroke();
+  }
+  // Impact dot
+  const dotGrad = ctx.createRadialGradient(px, py, 0, px, py, 10);
+  dotGrad.addColorStop(0, '#4ade80'); dotGrad.addColorStop(1, '#16a34a');
+  ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI * 2); ctx.fillStyle = dotGrad; ctx.fill();
+  ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+
+  // Net bulge lines radiating from impact
+  ctx.strokeStyle = 'rgba(34,197,94,0.35)'; ctx.lineWidth = 1;
+  for (let a = 0; a < 8; a++) {
+    const angle = a * Math.PI / 4;
+    ctx.beginPath(); ctx.moveTo(px, py);
+    ctx.lineTo(px + Math.cos(angle) * 18, py + Math.sin(angle) * 18); ctx.stroke();
+  }
+
+  // Title
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = 'bold 8px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('SHOT PLACEMENT', W * 0.5, H * 0.99);
+}
+
+function closeGoalReplay() {
+  const overlay = document.getElementById('goal-replay-overlay');
+  overlay.classList.remove('open');
+  if (_goalReplayAnimId) { cancelAnimationFrame(_goalReplayAnimId); _goalReplayAnimId = null; }
+  if (window._goalReplayResolve) { window._goalReplayResolve(); window._goalReplayResolve = null; }
+}
+
+
   document.getElementById('var-overlay').classList.remove('open');
   if (_varTimeout) { clearTimeout(_varTimeout); _varTimeout = null; }
   // Stop the canvas animation loop
