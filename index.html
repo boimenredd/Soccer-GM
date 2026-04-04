@@ -1350,7 +1350,8 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
     <button class="tb-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle light/dark mode">🌙</button>
     <button class="tb-btn" onclick="showPanel('news')">Inbox <span id="inbox-count" style="color:var(--yellow)"></span></button>
     <button class="tb-btn" onclick="simOneDay()" title="Advance one day — may trigger events">Sim Day ⊕</button>
-    <button class="tb-btn primary" onclick="advanceWeek()">Advance Week ▶</button>
+    <button class="tb-btn primary" onclick="playMyMatch()" title="Watch your queued match">▶ Play Match</button>
+    <button class="tb-btn" onclick="advanceWeek()" title="Advance week — sim other teams, queue your match">⏩ Week</button>
   </div>
 </div>
 
@@ -1422,8 +1423,9 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
           <div id="dash-record-pos" style="font-size:12px;color:var(--text2);text-align:center;"></div>
         </div>
         <div id="dash-banner-actions">
-          <button class="btn btn-primary" onclick="advanceWeek()" style="padding:10px 20px;">▶ Advance Week</button>
-          <button class="btn" onclick="simOneDay()" style="padding:8px 16px;margin-top:6px;">⊕ Sim One Day</button>
+          <button class="btn btn-primary" onclick="advanceWeek()" style="padding:10px 20px;" title="Simulate this week — other teams play, your match becomes available to watch">⏩ Advance Week</button>
+          <button class="btn btn-green" onclick="playMyMatch()" style="padding:8px 16px;margin-top:6px;" title="Watch your match (available after advancing week)">▶ Play My Match</button>
+          <button class="btn" onclick="simOneDay()" style="padding:6px 12px;margin-top:6px;font-size:11px;">⊕ Sim Day</button>
         </div>
       </div>
 
@@ -1954,7 +1956,12 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
       <!-- VAR branding -->
       <div id="var-brand-block">
         <div id="var-brand-text">VAR</div>
-        <div id="var-brand-sub">Video Assistant Referee</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.6);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-top:2px;border-top:1px solid rgba(255,255,255,0.12);padding-top:4px;">Video Assistant</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.6);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;">Referee</div>
+        <div style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:#e74c3c;animation:varPulse 0.8s ease-in-out infinite;flex-shrink:0;"></div>
+          <div style="font-size:8px;color:rgba(255,255,255,0.45);font-family:var(--mono);letter-spacing:.06em;">REVIEWING</div>
+        </div>
       </div>
       <!-- Decision area -->
       <div id="var-footer">
@@ -2431,6 +2438,21 @@ function buildLeagueTable(leagueId) {
   }));
 }
 
+function getMatchDayLabel(weekNum, compType) {
+  // compType: 'league' | 'euro' | 'cup'
+  // League games on Saturday (or occasionally Sunday)
+  // European/cup games on Tuesday, Wednesday, or Thursday
+  if (compType === 'euro') {
+    const euroDays = ['Tuesday', 'Wednesday', 'Wednesday', 'Thursday'];
+    return euroDays[(weekNum + 1) % euroDays.length];
+  }
+  if (compType === 'cup') {
+    return (weekNum % 2 === 0) ? 'Tuesday' : 'Wednesday';
+  }
+  // League: Saturday by default, occasionally Sunday
+  return (weekNum % 7 === 0) ? 'Sunday' : 'Saturday';
+}
+
 function generateFixtures(leagueId) {
   const lg = G.leagues[leagueId];
   const clubs = [...lg.clubs];
@@ -2449,8 +2471,8 @@ function generateFixtures(leagueId) {
       pairings.push([rota[i], rota[half - i]]);
     }
     pairings.forEach(([a, b]) => {
-      fixtures.push({ id: 'm_'+Math.random().toString(36).slice(2,9), home: a, away: b, round: round1, played: false, result: null, events: [], stats: null });
-      fixtures.push({ id: 'm_'+Math.random().toString(36).slice(2,9), home: b, away: a, round: round2, played: false, result: null, events: [], stats: null });
+      fixtures.push({ id: 'm_'+Math.random().toString(36).slice(2,9), home: a, away: b, round: round1, played: false, result: null, events: [], stats: null, matchDay: getMatchDayLabel(round1, 'league') });
+      fixtures.push({ id: 'm_'+Math.random().toString(36).slice(2,9), home: b, away: a, round: round2, played: false, result: null, events: [], stats: null, matchDay: getMatchDayLabel(round2, 'league') });
     });
   }
   lg.fixtures = fixtures;
@@ -2542,7 +2564,8 @@ function generateLeaguePhase(name, teams, size) {
         away: padded[awayIdx],
         round: week,
         played: false,
-        result: null
+        result: null,
+        matchDay: getMatchDayLabel(week, 'euro')
       });
     }
   }
@@ -2764,23 +2787,16 @@ async function advanceWeek() {
   const p = G.player;
   const myClub = G.clubs[p.clubId];
   const myLeague = G.leagues[myClub.leagueId];
-
-  // Find this week's fixtures in my league
   const thisRound = p.week;
   const myFixtures = myLeague.fixtures.filter(f => f.round === thisRound && !f.played);
   const myMatch = myFixtures.find(f => f.home === p.clubId || f.away === p.clubId);
 
-  // Process random events
+  // Process random events / fitness / injuries
   processRandomEvents();
-
-  // Fitness recovery for non-playing players
   Object.values(G.players).forEach(pl => {
-    if (pl.contract.clubId === p.clubId) {
-      if (!myMatch || (!myMatch.home && !myMatch.away)) {
-        pl.fitness = Math.min(100, pl.fitness + rngInt(5, 12));
-      }
+    if (pl.contract.clubId === p.clubId && !myMatch) {
+      pl.fitness = Math.min(100, pl.fitness + rngInt(5, 12));
     }
-    // Injury recovery
     if (pl.currentInjury) {
       pl.currentInjury.weeks--;
       if (pl.currentInjury.weeks <= 0) {
@@ -2788,16 +2804,99 @@ async function advanceWeek() {
         if (pl.contract.clubId === p.clubId) notify(`${pl.name} is back from injury!`, 'success');
       }
     }
-    // Suspension reduction
     if (pl.suspended > 0) pl.suspended--;
   });
 
-  // Simulate all league matches this round
+  // ── Silently sim all OTHER teams' matches this round (NOT the player's match) ──
+  myFixtures.forEach(f => {
+    if (f === myMatch || f.played) return;
+    const r = simulateMatchFull(f.home, f.away, myClub.leagueId, false);
+    f.played = true; f.result = { home: r.homeGoals, away: r.awayGoals }; f.events = r.events;
+    updateLeagueTable(myClub.leagueId, f.home, f.away, r.homeGoals, r.awayGoals);
+  });
+
+  Object.keys(G.leagues).forEach(lid => {
+    if (lid === myClub.leagueId) return;
+    G.leagues[lid].fixtures.filter(f => f.round === thisRound && !f.played).forEach(f => {
+      const r = simulateMatchFull(f.home, f.away, lid, false);
+      f.played = true; f.result = { home: r.homeGoals, away: r.awayGoals }; f.events = r.events;
+      updateLeagueTable(lid, f.home, f.away, r.homeGoals, r.awayGoals);
+    });
+  });
+
+  // Sim all other euro matches silently (not player's)
+  if (G.ucCompetitions) {
+    for (const compKey of ['cl','el','ecl']) {
+      const uc = G.ucCompetitions[compKey];
+      if (!uc || !uc.fixtures) continue;
+      const euroRound = uc.fixtures.filter(f => f.round === thisRound && !f.played);
+      const myEuroMatch = euroRound.find(f => f.home === p.clubId || f.away === p.clubId);
+      euroRound.forEach(f => {
+        if (f === myEuroMatch || f.played) return;
+        const r = simulateMatchFull(f.home, f.away, compKey, false);
+        f.played = true; f.result = { home: r.homeGoals, away: r.awayGoals }; f.events = r.events;
+        [{ tid: f.home, gf: r.homeGoals, ga: r.awayGoals },{ tid: f.away, gf: r.awayGoals, ga: r.homeGoals }].forEach(({tid,gf,ga}) => {
+          const row = uc.leagueTable.find(x => x.clubId === tid);
+          if (!row) return;
+          row.played++; row.gf+=gf; row.ga+=ga; row.gd=row.gf-row.ga;
+          if(gf>ga){row.won++;row.points+=3;} else if(gf===ga){row.drawn++;row.points++;} else row.lost++;
+        });
+      });
+    }
+  }
+
+  doFinancialTick();
+  if (p.transferWindowOpen) processAITransfers();
+  processIncomingOffers();
+
+  // ── If there's a match for MY club this round, mark it as READY to play — do NOT auto-launch ──
   if (myMatch) {
+    myMatch._readyToPlay = true;
+    notify(`Match ready: ${G.clubs[myMatch.home].name} vs ${G.clubs[myMatch.away].name} — click Play Match to kick off!`, 'warn');
+  }
+
+  // Advance week counter
+  p.week++;
+  const totalRounds = myLeague.totalRounds;
+  if (p.week > totalRounds) { endSeason(); return; }
+  if (p.week === 13 || p.week === 31) { p.transferWindowOpen = false; notify('Transfer window closed', 'warn'); }
+  if (p.week === 28) { p.transferWindowOpen = true; notify('Winter transfer window open!', 'success'); }
+
+  updateTopBar();
+  renderCurrentPanel();
+}
+
+// ── Play the player's match — called by explicit "Play Match" button clicks ──
+async function playMyMatch() {
+  const p = G.player;
+  const myClub = G.clubs[p.clubId];
+  const myLeague = G.leagues[myClub.leagueId];
+
+  // Find the most recent unplayed match for my club (could be current or previous week if pending)
+  const myMatch = myLeague.fixtures.find(f => !f.played && (f.home === p.clubId || f.away === p.clubId) && f._readyToPlay);
+
+  // Also check euro competitions
+  let myEuroMatch = null;
+  let euroCompKey = null;
+  if (G.ucCompetitions) {
+    for (const compKey of ['cl','el','ecl']) {
+      const uc = G.ucCompetitions[compKey];
+      if (!uc || !uc.fixtures) continue;
+      const em = uc.fixtures.find(f => !f.played && (f.home === p.clubId || f.away === p.clubId) && f._readyToPlay);
+      if (em) { myEuroMatch = em; euroCompKey = compKey; break; }
+    }
+  }
+
+  if (!myMatch && !myEuroMatch) {
+    notify('No match queued — press Advance Week first.', 'warn');
+    return;
+  }
+
+  // Play domestic match
+  if (myMatch) {
+    myMatch._readyToPlay = false;
     const isHome = myMatch.home === p.clubId;
-    const opponent = isHome ? myMatch.away : myMatch.home;
     await showMatchSim(myMatch.home, myMatch.away, myClub.leagueId, true);
-    // Use the result from the visual sim (stored on overlay) to avoid score mismatch
     const _simOverlay = document.getElementById('match-sim-overlay');
     const result = (_simOverlay && _simOverlay._fullResult) ? _simOverlay._fullResult : simulateMatchFull(myMatch.home, myMatch.away, myClub.leagueId, true);
     myMatch.played = true;
@@ -2805,118 +2904,27 @@ async function advanceWeek() {
     myMatch.events = result.events;
     myMatch.stats = result.stats;
     updateLeagueTable(myClub.leagueId, myMatch.home, myMatch.away, result.homeGoals, result.awayGoals);
-    // Add to news
-    const hName = G.clubs[myMatch.home].name;
-    const aName = G.clubs[myMatch.away].name;
-    addNews(`Match result: ${hName} ${result.homeGoals}–${result.awayGoals} ${aName}`, `Week ${p.week}`, result.homeGoals > result.awayGoals ? 'home win' : result.awayGoals > result.homeGoals ? 'away win' : 'draw');
+    addNews(`Result: ${G.clubs[myMatch.home].name} ${result.homeGoals}–${result.awayGoals} ${G.clubs[myMatch.away].name}`, `Week ${p.week-1}`, result.homeGoals > result.awayGoals ? 'home win' : result.awayGoals > result.homeGoals ? 'away win' : 'draw');
   }
 
-  // Simulate other league fixtures
-  myFixtures.forEach(f => {
-    if (f === myMatch || f.played) return;
-    const result = simulateMatchFull(f.home, f.away, myClub.leagueId, false);
-    f.played = true; f.result = { home: result.homeGoals, away: result.awayGoals }; f.events = result.events;
-    updateLeagueTable(myClub.leagueId, f.home, f.away, result.homeGoals, result.awayGoals);
-  });
-
-  // Simulate other leagues (quick pass, no display)
-  Object.keys(G.leagues).forEach(lid => {
-    if (lid === myClub.leagueId) return;
-    const lg = G.leagues[lid];
-    const rnd = lg.fixtures.filter(f => f.round === thisRound && !f.played);
-    rnd.forEach(f => {
-      const result = simulateMatchFull(f.home, f.away, lid, false);
-      f.played = true; f.result = { home: result.homeGoals, away: result.awayGoals }; f.events = result.events;
-      updateLeagueTable(lid, f.home, f.away, result.homeGoals, result.awayGoals);
+  // Play euro match if also pending
+  if (myEuroMatch) {
+    const uc = G.ucCompetitions[euroCompKey];
+    myEuroMatch._readyToPlay = false;
+    const isHome = myEuroMatch.home === p.clubId;
+    await showMatchSim(myEuroMatch.home, myEuroMatch.away, euroCompKey, true);
+    const _simOverlay = document.getElementById('match-sim-overlay');
+    const result = (_simOverlay && _simOverlay._fullResult) ? _simOverlay._fullResult : simulateMatchFull(myEuroMatch.home, myEuroMatch.away, euroCompKey, true);
+    myEuroMatch.played = true;
+    myEuroMatch.result = { home: result.homeGoals, away: result.awayGoals };
+    myEuroMatch.events = result.events;
+    [{ tid: myEuroMatch.home, gf: result.homeGoals, ga: result.awayGoals },{ tid: myEuroMatch.away, gf: result.awayGoals, ga: result.homeGoals }].forEach(({tid,gf,ga}) => {
+      const row = uc.leagueTable.find(x => x.clubId === tid);
+      if (!row) return;
+      row.played++; row.gf+=gf; row.ga+=ga; row.gd=row.gf-row.ga;
+      if(gf>ga){row.won++;row.points+=3;} else if(gf===ga){row.drawn++;row.points++;} else row.lost++;
     });
-  });
-
-  // ── Simulate UEFA / European competition fixtures this week ──
-  if (G.ucCompetitions) {
-    for (const compKey of ['cl','el','ecl']) {
-      const uc = G.ucCompetitions[compKey];
-      if (!uc || !uc.fixtures) continue;
-      const euroRound = uc.fixtures.filter(f => f.round === thisRound && !f.played);
-      if (!euroRound.length) continue;
-
-      // Check if my club has a euro match this week
-      const myEuroMatch = euroRound.find(f => f.home === p.clubId || f.away === p.clubId);
-
-      if (myEuroMatch) {
-        // Show visual match sim for player's european fixture
-        const isHome = myEuroMatch.home === p.clubId;
-        await showMatchSim(myEuroMatch.home, myEuroMatch.away, compKey, true);
-        const _simOverlay = document.getElementById('match-sim-overlay');
-        const result = (_simOverlay && _simOverlay._fullResult)
-          ? _simOverlay._fullResult
-          : simulateMatchFull(myEuroMatch.home, myEuroMatch.away, compKey, true);
-        myEuroMatch.played = true;
-        myEuroMatch.result = { home: result.homeGoals, away: result.awayGoals };
-        myEuroMatch.events = result.events;
-        // Update euro table
-        const myG = isHome ? result.homeGoals : result.awayGoals;
-        const theirG = isHome ? result.awayGoals : result.homeGoals;
-        [
-          { tid: myEuroMatch.home, gf: result.homeGoals, ga: result.awayGoals },
-          { tid: myEuroMatch.away, gf: result.awayGoals, ga: result.homeGoals }
-        ].forEach(({tid, gf, ga}) => {
-          const row = uc.leagueTable.find(r => r.clubId === tid);
-          if (!row) return;
-          row.played++; row.gf += gf; row.ga += ga; row.gd = row.gf - row.ga;
-          if (gf > ga) { row.won++; row.points += 3; }
-          else if (gf === ga) { row.drawn++; row.points++; }
-          else row.lost++;
-        });
-        const hName = G.clubs[myEuroMatch.home]?.name || '?';
-        const aName = G.clubs[myEuroMatch.away]?.name || '?';
-        addNews(`${uc.name}: ${hName} ${result.homeGoals}–${result.awayGoals} ${aName}`, `Week ${p.week}`, `${uc.name} matchday result`);
-      }
-
-      // Simulate all other euro matches silently
-      euroRound.forEach(f => {
-        if (f === myEuroMatch || f.played) return;
-        const result = simulateMatchFull(f.home, f.away, compKey, false);
-        f.played = true; f.result = { home: result.homeGoals, away: result.awayGoals }; f.events = result.events;
-        [
-          { tid: f.home, gf: result.homeGoals, ga: result.awayGoals },
-          { tid: f.away, gf: result.awayGoals, ga: result.homeGoals }
-        ].forEach(({tid, gf, ga}) => {
-          const row = uc.leagueTable.find(r => r.clubId === tid);
-          if (!row) return;
-          row.played++; row.gf += gf; row.ga += ga; row.gd = row.gf - row.ga;
-          if (gf > ga) { row.won++; row.points += 3; }
-          else if (gf === ga) { row.drawn++; row.points++; }
-          else row.lost++;
-        });
-      });
-    }
-  }
-
-  // Financial tick
-  doFinancialTick();
-
-  // Transfer AI
-  if (p.transferWindowOpen) processAITransfers();
-
-  // Process incoming offers
-  processIncomingOffers();
-
-  // Advance week
-  p.week++;
-  const totalRounds = myLeague.totalRounds;
-  if (p.week > totalRounds) {
-    endSeason();
-    return;
-  }
-
-  // Check if transfer window closes (week 12 summer, week 30 winter)
-  if (p.week === 13 || p.week === 31) {
-    p.transferWindowOpen = false;
-    notify('Transfer window closed', 'warn');
-  }
-  if (p.week === 28) {
-    p.transferWindowOpen = true;
-    notify('Winter transfer window open!', 'success');
+    addNews(`${uc.name}: ${G.clubs[myEuroMatch.home]?.name} ${result.homeGoals}–${result.awayGoals} ${G.clubs[myEuroMatch.away]?.name}`, `Week ${p.week-1}`, `${uc.name} result`);
   }
 
   updateTopBar();
@@ -3425,7 +3433,9 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
         const p2Name = p2?.name || 'Defender';
         const gkPid = homeClub.players[0]; const gk = G.players[gkPid];
         const gkName = gk?.name || 'Keeper';
-        const type = rngFrom(['miss','miss','save','argument','foul','chance','var_rarely']);
+        // VAR is rare: roughly 1 in 14 extra events (~7%) — use weighted selection
+        const extraTypes = ['miss','miss','miss','save','save','argument','foul','foul','chance','chance','chance','chance','var_rarely'];
+        const type = rngFrom(extraTypes);
         if (type === 'miss') {
           const tmpl = rngFrom(extEvents.miss);
           addEvent(minute, tmpl(p1Name), 'color:var(--text2);font-size:11px;');
@@ -3442,13 +3452,18 @@ function showMatchSim(homeId, awayId, leagueId, isPlayerMatch) {
           const tmpl = rngFrom(extEvents.foul);
           addEvent(minute, tmpl(p1Name), 'color:var(--text2);font-size:11px;');
         } else if (type === 'var_rarely') {
-          // Trigger real VAR overlay — always show for all var_rarely events
+          // Trigger real VAR overlay — must ALWAYS show even at turbo speed
           if (!window._inVARReview) {
             window._inVARReview = true;
-            // IMMEDIATELY pause — set flag and yield so browser renders before continuing
+            // Step 1: force-pause BEFORE anything else
             _simPaused = true;
+            // Step 2: add commentary event
             addEvent(minute, `📺 <b>VAR CHECK</b> — Reviewing the incident...`, 'color:var(--yellow);font-weight:600;');
-            await sleep(50); // yield to browser so overlay can open before any further awaits
+            // Step 3: yield multiple frames so browser can flush paint and show overlay
+            // This guarantees the VAR overlay appears even at turbo (60ms) speed
+            await sleep(0);  // yield frame 1
+            await sleep(0);  // yield frame 2
+            await sleep(16); // yield frame 3 — one full rAF cycle
             const varType = rngFrom(['goal','goal','penalty','handball','offside','foul']);
             const varIncident = { type: varType === 'goal' || varType === 'offside' ? 'goal' : 'penalty', subType: varType, minute };
             await new Promise(resolve => {
@@ -3947,7 +3962,10 @@ function rejectIncomingOffer(offerId) {
 function listPlayerForTransfer(playerId) {
   const p = G.players[playerId];
   if (!p) return;
+  // Toggle listed status — does NOT change rating or any attributes
+  const savedRating = p.rating;
   p._listedForTransfer = !p._listedForTransfer;
+  p.rating = savedRating; // ensure no side-effects touched rating
   notify(p._listedForTransfer ? `${p.name} listed for transfer` : `${p.name} removed from transfer list`, 'success');
 }
 
@@ -4112,13 +4130,23 @@ function renderCalendar() {
   const seasonStart = new Date(seasonYear, 7, 1); // Aug 1
   const MS_DAY = 86400000;
 
-  // For each game-week, compute its exact Saturday and Wednesday dates
-  // Week N's Monday = seasonStart + (N-1)*7 days
-  // Saturday = Monday + 5, Wednesday = Monday + 2
+  // For each game-week, compute its exact Saturday and Wednesday dates.
+  // Week N spans 7 days starting from seasonStart + (N-1)*7 days.
+  // We find the Saturday and Wednesday that fall within (or just after) that week window.
   function weekMatchDates(weekNum) {
-    const monMs = seasonStart.getTime() + (weekNum - 1) * 7 * MS_DAY;
-    const satDate = new Date(monMs + 5 * MS_DAY);
-    const wedDate = new Date(monMs + 2 * MS_DAY);
+    const weekStartMs = seasonStart.getTime() + (weekNum - 1) * 7 * MS_DAY;
+    const weekStartDate = new Date(weekStartMs);
+    const startDow = weekStartDate.getDay(); // 0=Sun,1=Mon,...,6=Sat
+
+    // Days until Saturday (dow 6) from weekStart — wrap within the week
+    const daysToSat = (6 - startDow + 7) % 7;
+    const satDate = new Date(weekStartMs + daysToSat * MS_DAY);
+
+    // Days until Wednesday (dow 3) from weekStart — if Wednesday already passed this week, go to next week's Wed
+    let daysToWed = (3 - startDow + 7) % 7;
+    if (daysToWed === 0) daysToWed = 0; // same day is fine
+    const wedDate = new Date(weekStartMs + daysToWed * MS_DAY);
+
     return { satDate, wedDate };
   }
 
@@ -4192,8 +4220,8 @@ function renderCalendar() {
     else if (weekNum === null) {
       // Check if this day is in the current game-week range
       const d2 = new Date(year, jsMonth, day);
-      const monMs = seasonStart.getTime() + (G.player.week - 1) * 7 * MS_DAY;
-      if (d2.getTime() >= monMs && d2.getTime() < monMs + 7*MS_DAY) cls += ' today';
+      const weekStartMs = seasonStart.getTime() + (G.player.week - 1) * 7 * MS_DAY;
+      if (d2.getTime() >= weekStartMs && d2.getTime() < weekStartMs + 7*MS_DAY) cls += ' today';
     }
 
     entries.forEach(entry => {
@@ -4281,7 +4309,7 @@ function calDayClick(week, dow, day, month, year) {
       const theirG = isHome ? f.result.away : f.result.home;
       html += `<span class="mono" style="font-size:16px;font-weight:700;color:${myG>theirG?'var(--green)':myG<theirG?'var(--red)':'var(--yellow)'}">${myG}–${theirG}</span>`;
     } else {
-      html += `<button class="btn btn-sm btn-primary" onclick="advanceWeek()">▶ Play</button>`;
+      html += `<button class="btn btn-sm btn-primary" onclick="playMyMatch()">▶ Play</button>`;
     }
     html += '</div></div>';
   });
@@ -4853,7 +4881,7 @@ function renderFixtures() {
   if (!G.player) return;
   const myLeague = G.leagues[G.clubs[G.player.clubId].leagueId];
   const myFixtures = myLeague.fixtures.filter(f=>f.home===G.player.clubId||f.away===G.player.clubId);
-  const allHtml = (fixtures) => `<div class="table-wrap"><table class="data-table"><thead><tr><th>Wk</th><th>H/A</th><th>Opponent</th><th class="c">Score</th><th>Result</th><th>Events</th></tr></thead><tbody>${fixtures.map(f=>{
+  const allHtml = (fixtures) => `<div class="table-wrap"><table class="data-table"><thead><tr><th>Wk</th><th>Day</th><th>H/A</th><th>Opponent</th><th class="c">Score</th><th>Result</th><th>Events</th></tr></thead><tbody>${fixtures.map(f=>{
     const isHome = f.home===G.player.clubId;
     const opp = G.clubs[isHome?f.away:f.home];
     const myGoals = f.result ? (isHome?f.result.home:f.result.away) : null;
@@ -4864,8 +4892,9 @@ function renderFixtures() {
       const pn = G.players[e.playerId]?.name?.split(' ').pop()||'?';
       return `${e.minute}'${pn}`;
     }).join(', ') : '';
+    const dayLabel = f.matchDay || (f.round % 7 === 0 ? 'Sun' : 'Sat');
     return `<tr class="${!f.played&&f.round===G.player.week?'highlight':''}">
-      <td class="mono">${f.round}</td><td>${isHome?'<span class="pill pill-blue">H</span>':'<span class="pill pill-gray">A</span>'}</td>
+      <td class="mono">${f.round}</td><td class="mono muted" style="font-size:10px">${dayLabel}</td><td>${isHome?'<span class="pill pill-blue">H</span>':'<span class="pill pill-gray">A</span>'}</td>
       <td>${opp ? `<span onclick="openTeamPage('${opp.id}')" style="cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color=''">` + opp.name + '</span>' : '—'}</td><td class="c mono ${f.played?myGoals>oppGoals?'green':myGoals<oppGoals?'red':'':''}"><b>${score}</b></td>
       <td>${result}</td><td class="muted" style="font-size:11px">${goals}</td></tr>`;
   }).join('')}</tbody></table></div>`;
@@ -5561,7 +5590,7 @@ function renderDashboard() {
       <div style="font-size:15px;font-weight:600;margin-bottom:6px;"><span onclick="openTeamPage('${opp?.id}')" style="cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color=''">${opp?.name||'—'}</span></div>
       <div style="font-size:11px;color:var(--text2);font-family:var(--mono);">${oppPos?oppPos+ord(oppPos)+' place':''} · ${oppRow.won||0}W ${oppRow.drawn||0}D ${oppRow.lost||0}L</div>
       <div style="margin-top:10px;display:flex;gap:8px;">
-        <button class="btn btn-sm btn-primary" onclick="advanceWeek()">▶ Play Match</button>
+        <button class="btn btn-sm btn-primary" onclick="playMyMatch()">▶ Play Match</button>
       </div>
     `;
   } else {
@@ -6472,82 +6501,155 @@ function drawRefMonitorScene(canvas) {
   canvas._refFrame = (canvas._refFrame || 0) + 1;
   const t = canvas._refFrame / 60;
 
-  // Pitch grass background
-  for (let i = 0; i < 7; i++) {
-    ctx.fillStyle = i%2===0 ? '#2d5e38' : '#335f3d';
-    ctx.fillRect(i*W/7, 0, W/7, H);
+  // Grass background — diagonal stripes for authenticity
+  for (let i = 0; i < 8; i++) {
+    ctx.fillStyle = i%2===0 ? '#1e7030' : '#22803a';
+    ctx.fillRect(i*W/8, 0, W/8, H);
   }
-  // Faint pitch line
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(W*0.05, H*0.3); ctx.lineTo(W*0.95, H*0.3); ctx.stroke();
+  // Subtle pitch line
+  ctx.strokeStyle='rgba(255,255,255,0.28)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(W*0.04, H*0.28); ctx.lineTo(W*0.96, H*0.28); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W*0.5, H*0.28, H*0.11, 0, Math.PI*2); ctx.stroke();
 
-  // VAR monitor unit
-  const mx = W*0.48, my = H*0.12, mw = W*0.42, mh = H*0.38;
-  ctx.fillStyle = '#111';
-  ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(mx, my, mw, mh, 5); else ctx.rect(mx,my,mw,mh);
+  // — VAR monitor unit on desk —
+  const mx=W*0.45, my=H*0.1, mw=W*0.44, mh=H*0.38;
+  // Monitor housing
+  const monGrad = ctx.createLinearGradient(mx, my, mx+mw, my+mh);
+  monGrad.addColorStop(0,'#1e1e1e'); monGrad.addColorStop(1,'#0a0a0a');
+  ctx.fillStyle=monGrad;
+  if(ctx.roundRect) ctx.roundRect(mx,my,mw,mh,5); else ctx.rect(mx,my,mw,mh);
   ctx.fill();
-  // Screen flicker with green pitch on it
-  const flicker = 0.7 + 0.15*Math.sin(t*4.5);
-  ctx.fillStyle = `rgba(40,110,50,${flicker})`;
-  ctx.fillRect(mx+3, my+3, mw-6, mh-6);
-  // Lines on screen suggesting footage
-  ctx.strokeStyle = `rgba(255,255,255,${0.15*flicker})`;
-  ctx.lineWidth = 1;
-  for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(mx+3,my+3+i*(mh-6)/4);ctx.lineTo(mx+mw-3,my+3+i*(mh-6)/4);ctx.stroke();}
-  // Monitor stand
-  ctx.fillStyle = '#222';
-  ctx.fillRect(mx+mw/2-3, my+mh, 6, H*0.12);
-  ctx.fillRect(mx+mw/2-16, my+mh+H*0.12, 32, 5);
+  // Screen (showing match footage — green pitch with white lines flickering)
+  const flicker = 0.72+0.15*Math.sin(t*4.8+0.3);
+  const screenGrad = ctx.createLinearGradient(mx+3,my+3,mx+mw-3,my+mh-6);
+  screenGrad.addColorStop(0,`rgba(50,150,70,${flicker})`);
+  screenGrad.addColorStop(1,`rgba(28,100,45,${flicker})`);
+  ctx.fillStyle=screenGrad;
+  if(ctx.roundRect) ctx.roundRect(mx+3,my+3,mw-6,mh-6,3); else ctx.rect(mx+3,my+3,mw-6,mh-6);
+  ctx.fill();
+  // Screen scan lines
+  for(let sl=0;sl<(mh-6);sl+=4){
+    ctx.fillStyle=`rgba(0,0,0,${0.08+0.04*Math.sin(sl*0.3+t*2)})`;
+    ctx.fillRect(mx+3,my+3+sl,mw-6,2);
+  }
+  // Pitch lines on screen
+  ctx.strokeStyle=`rgba(255,255,255,${0.4*flicker})`;ctx.lineWidth=1;
+  ctx.strokeRect(mx+6,my+6,mw-12,mh-12);
+  ctx.beginPath();ctx.moveTo(mx+3+mw/2,my+3);ctx.lineTo(mx+3+mw/2,my+mh-3);ctx.stroke();
+  ctx.beginPath();ctx.arc(mx+3+mw/2,my+3+mh/2,mh*0.15,0,Math.PI*2);ctx.stroke();
+  // Tiny players on screen
+  ctx.fillStyle=`rgba(30,80,200,${flicker*0.9})`;
+  ctx.beginPath();ctx.arc(mx+mw*0.6,my+mh*0.4,W*0.025,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=`rgba(200,30,30,${flicker*0.9})`;
+  ctx.beginPath();ctx.arc(mx+mw*0.46,my+mh*0.44,W*0.025,0,Math.PI*2);ctx.fill();
+  // Red analysis line on screen
+  ctx.strokeStyle=`rgba(255,20,20,${0.7+0.3*Math.sin(t*3.5)})`;ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(mx+mw*0.52,my+3);ctx.lineTo(mx+mw*0.52,my+mh-3);ctx.stroke();ctx.setLineDash([]);
+  // Screen glare
+  ctx.fillStyle='rgba(255,255,255,0.04)';
+  ctx.beginPath();ctx.ellipse(mx+mw*0.3,my+mh*0.25,mw*0.22,mh*0.18,-0.3,0,Math.PI*2);ctx.fill();
+  // Monitor base/stand
+  ctx.fillStyle='#1a1a1a';
+  ctx.fillRect(mx+mw*0.38,my+mh,mw*0.24,H*0.08);
+  ctx.fillRect(mx+mw*0.22,my+mh+H*0.08,mw*0.56,H*0.04);
+  // Power light on monitor
+  const pwOn=Math.sin(t*1.5)>0;
+  ctx.fillStyle=pwOn?'#22c55e':'#15803d';
+  ctx.beginPath();ctx.arc(mx+mw-8,my+mh-8,3,0,Math.PI*2);ctx.fill();
 
-  // Referee figure (standing at monitor)
-  const rx = W*0.26, ry = H*0.2, rsize = H*0.12;
+  // — Referee figure standing at monitor —
+  const rx=W*0.22, rBaseY=H*0.82;
+  const rH=H*0.5; // total height of figure
+  const headR=rH*0.1;
+  const armSway=0.06*Math.sin(t*1.1);
+
+  // Boots
+  ctx.fillStyle='#111';
+  ctx.beginPath();ctx.ellipse(rx-rH*0.06,rBaseY,rH*0.06,rH*0.03,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(rx+rH*0.06,rBaseY,rH*0.06,rH*0.03,0,0,Math.PI*2);ctx.fill();
+  // Socks/shins
+  ctx.strokeStyle='#111';ctx.lineWidth=rH*0.075;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(rx-rH*0.06,rBaseY-rH*0.01);ctx.lineTo(rx-rH*0.06,rBaseY-rH*0.23);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(rx+rH*0.06,rBaseY-rH*0.01);ctx.lineTo(rx+rH*0.06,rBaseY-rH*0.23);ctx.stroke();
+  // Shorts
+  ctx.fillStyle='#111';
+  ctx.beginPath();
+  ctx.moveTo(rx-rH*0.14,rBaseY-rH*0.23);ctx.lineTo(rx-rH*0.14,rBaseY-rH*0.38);
+  ctx.lineTo(rx,rBaseY-rH*0.35);ctx.lineTo(rx+rH*0.14,rBaseY-rH*0.38);
+  ctx.lineTo(rx+rH*0.14,rBaseY-rH*0.23);ctx.closePath();ctx.fill();
+  // VAR operator kit — dark top with yellow hi-vis stripe
+  const kitY=rBaseY-rH*0.63;
+  ctx.fillStyle='#1a1a1a';
+  ctx.beginPath();
+  ctx.moveTo(rx-rH*0.18,rBaseY-rH*0.38);
+  ctx.bezierCurveTo(rx-rH*0.22,rBaseY-rH*0.5,rx-rH*0.2,kitY+rH*0.08,rx-rH*0.16,kitY);
+  ctx.lineTo(rx+rH*0.16,kitY);
+  ctx.bezierCurveTo(rx+rH*0.2,kitY+rH*0.08,rx+rH*0.22,rBaseY-rH*0.5,rx+rH*0.18,rBaseY-rH*0.38);
+  ctx.closePath();ctx.fill();
+  // Hi-vis stripe
+  ctx.strokeStyle='rgba(250,220,0,0.8)';ctx.lineWidth=rH*0.025;
+  ctx.beginPath();ctx.moveTo(rx-rH*0.19,rBaseY-rH*0.46);ctx.lineTo(rx+rH*0.19,rBaseY-rH*0.46);ctx.stroke();
+  // Left arm (pointing at monitor)
+  ctx.strokeStyle='#1a1a1a';ctx.lineWidth=rH*0.09;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(rx+rH*0.17,rBaseY-rH*0.53+armSway);ctx.lineTo(mx,my+mh*0.55);ctx.stroke();
+  // Right arm (down)
+  ctx.beginPath();ctx.moveTo(rx-rH*0.17,rBaseY-rH*0.53-armSway);ctx.lineTo(rx-rH*0.22,rBaseY-rH*0.28);ctx.stroke();
+  // Forearm skin tone
+  ctx.strokeStyle='#d4956a';ctx.lineWidth=rH*0.07;
+  ctx.beginPath();ctx.moveTo(mx,my+mh*0.55);ctx.lineTo(mx+rH*0.04,my+mh*0.52);ctx.stroke();
   // Head
-  ctx.fillStyle = '#e8b87a';
-  ctx.beginPath(); ctx.arc(rx, ry, rsize*0.38, 0, Math.PI*2); ctx.fill();
-  // Body — dark shirt (VAR operator typically in dark gear)
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(rx-rsize*0.28, ry+rsize*0.38, rsize*0.56, rsize*0.9);
-  // Arm extended toward monitor, slight sway
-  const aSwing = 0.08*Math.sin(t*1.2);
-  ctx.save();
-  ctx.translate(rx+rsize*0.26, ry+rsize*0.55);
-  ctx.rotate(-0.35+aSwing);
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(0,-rsize*0.1, rsize*0.7, rsize*0.2);
-  ctx.restore();
-  // Legs
-  ctx.fillStyle = '#111';
-  ctx.fillRect(rx-rsize*0.22, ry+rsize*1.28, rsize*0.18, rsize*0.55);
-  ctx.fillRect(rx+rsize*0.04, ry+rsize*1.28, rsize*0.18, rsize*0.55);
-  // Headset
-  ctx.strokeStyle = '#555';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(rx, ry-rsize*0.28, rsize*0.38, Math.PI, 0); ctx.stroke();
-  ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(rx-rsize*0.38, ry-rsize*0.2, rsize*0.1, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(rx+rsize*0.38, ry-rsize*0.2, rsize*0.1, 0, Math.PI*2); ctx.fill();
+  const hy=kitY-headR*0.9;
+  ctx.fillStyle='#d4956a';
+  ctx.beginPath();ctx.ellipse(rx,hy,headR,headR*1.05,0,0,Math.PI*2);ctx.fill();
+  // Hair
+  ctx.fillStyle='#2a1810';
+  ctx.beginPath();ctx.ellipse(rx,hy-headR*0.3,headR*0.85,headR*0.6,0,Math.PI,Math.PI*2);ctx.fill();
+  // Headset (earpiece with boom mic — iconic for VAR operators)
+  ctx.strokeStyle='#333';ctx.lineWidth=rH*0.018;
+  ctx.beginPath();ctx.arc(rx,hy-headR*0.3,headR*0.9,Math.PI*0.05,Math.PI*0.95);ctx.stroke();
+  // Earpieces
+  ctx.fillStyle='#222';
+  ctx.beginPath();ctx.arc(rx-headR*0.88,hy+headR*0.1,headR*0.2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(rx+headR*0.88,hy+headR*0.1,headR*0.2,0,Math.PI*2);ctx.fill();
+  // Boom mic extending from left ear
+  ctx.strokeStyle='#333';ctx.lineWidth=rH*0.012;
+  ctx.beginPath();ctx.moveTo(rx-headR*0.88,hy+headR*0.3);ctx.lineTo(rx-headR*1.2,hy+headR*0.8);ctx.stroke();
+  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(rx-headR*1.2,hy+headR*0.8,headR*0.08,0,Math.PI*2);ctx.fill();
+  // Face — looking at monitor
+  ctx.fillStyle='#111';
+  ctx.beginPath();ctx.arc(rx+headR*0.3,hy,headR*0.1,0,Math.PI*2);ctx.fill(); // eye (facing right)
 
-  // Bottom label
-  ctx.fillStyle = 'rgba(0,0,0,0.65)';
-  ctx.fillRect(0, H*0.84, W, H*0.16);
-  ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  ctx.font = `bold ${W*0.068}px monospace`;
-  ctx.textAlign = 'center';
-  ctx.fillText('MONITOR REVIEW', W/2, H*0.955);
-  ctx.textAlign = 'left';
+  // — Bottom label bar —
+  ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(0,H*0.88,W,H*0.12);
+  ctx.fillStyle='#003087';ctx.fillRect(0,H*0.88,W*0.28,H*0.12);
+  ctx.fillStyle='#fff';ctx.font=`bold ${W*0.058}px Arial,sans-serif`;
+  ctx.textBaseline='middle';ctx.textAlign='center';
+  ctx.fillText('MONITOR', W*0.14, H*0.942);
+  ctx.fillStyle='#c0d8f0';ctx.font=`${W*0.048}px Arial,sans-serif`;
+  ctx.fillText('REVIEW', W*0.65, H*0.942);
+  ctx.textBaseline='alphabetic';ctx.textAlign='left';
 }
 
 function showVARReview(incident, onDecision) {
   const overlay = document.getElementById('var-overlay');
+  // Open overlay SYNCHRONOUSLY first so it's visible on next paint
   overlay.classList.add('open');
+  // Force a style flush so the browser knows to paint this frame
+  overlay.getBoundingClientRect();
   document.getElementById('var-decision-badge').style.display = 'none';
   document.getElementById('var-desc').style.display = 'none';
   document.getElementById('var-close-btn').style.display = 'none';
   document.getElementById('var-red-box').style.display = 'none';
   document.getElementById('var-scanning-text').textContent = 'Checking incident...';
   const lbl = document.getElementById('var-main-label');
-  if (lbl) lbl.textContent = incident.type === 'goal' ? 'Checking Goal – Possible Offside' : 'Checking Goal – Possible Foul';
+  const varTypeLabels = {
+    goal: 'Checking Goal — Possible Offside',
+    offside: 'Offside Check — Goal Under Review',
+    penalty: 'Penalty Area Incident Review',
+    handball: 'Handball Check — Ball to Arm',
+    foul: 'Foul Review — Challenge in Box'
+  };
+  if (lbl) lbl.textContent = varTypeLabels[incident.subType] || varTypeLabels[incident.type] || 'VAR Review';
 
   const canvas = document.getElementById('var-canvas');
   const screen = document.getElementById('var-screen');
@@ -6627,32 +6729,259 @@ function closeVAR() {
   if (window._varResumeCallback) window._varResumeCallback();
 }
 
-function _varPlayer(ctx, px, py, r, shirt, hasBall, label) {
-  ctx.beginPath(); ctx.ellipse(px, py+r+2, r*0.7, r*0.3, 0, 0, Math.PI*2);
-  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fill();
-  const g = ctx.createRadialGradient(px-r*0.3, py-r*0.35, r*0.1, px, py, r);
-  const lighter = (hex,a) => { const n=parseInt(hex.replace('#',''),16); const rr=Math.min(255,(n>>16)+a), gg=Math.min(255,((n>>8)&0xff)+a), bb=Math.min(255,(n&0xff)+a); return '#'+((rr<<16)|(gg<<8)|bb).toString(16).padStart(6,'0'); };
-  g.addColorStop(0, lighter(shirt,60)); g.addColorStop(1, shirt);
-  ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI*2); ctx.fillStyle=g; ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.5; ctx.stroke();
-  ctx.beginPath(); ctx.arc(px, py-r-4, r*0.52, 0, Math.PI*2); ctx.fillStyle='#f5c28a'; ctx.fill();
-  ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.lineWidth=1; ctx.stroke();
-  if (hasBall) {
-    ctx.beginPath(); ctx.arc(px+r+4, py+2, r*0.45, 0, Math.PI*2);
-    const bg=ctx.createRadialGradient(px+r+2,py,1,px+r+4,py+2,r*0.45);
-    bg.addColorStop(0,'#fff'); bg.addColorStop(1,'#ccc');
-    ctx.fillStyle=bg; ctx.fill(); ctx.strokeStyle='#555'; ctx.lineWidth=0.8; ctx.stroke();
-  }
-  if (label) {
-    ctx.save();
-    ctx.font=`bold ${Math.max(8,r*0.85)}px monospace`;
-    const lw=ctx.measureText(label).width+8;
-    ctx.fillStyle='rgba(200,0,0,0.85)';
-    if(ctx.roundRect) ctx.roundRect(px-lw/2, py-r-22, lw, 14, 3); else ctx.rect(px-lw/2,py-r-22,lw,14);
+// ═══════════════════════════════════════════════════════════════
+// ULTRA-REALISTIC VAR BROADCAST ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+// Draw a full detailed footballer — body, kit, shorts, socks, boots, head with hair
+function _varPlayer(ctx, px, py, r, shirtColor, hasBall, label, opts={}) {
+  const {facing='right', pose='stand', skinTone='#e8b87a', hairColor='#2c1810', shortColor, sockColor} = opts;
+  const sc = shortColor || (shirtColor==='#1d4ed8'?'#1e3a8a':'#7f1d1d');
+  const sk = sockColor || (shirtColor==='#1d4ed8'?'#1e40af':'#991b1b');
+  const bodyH = r*2.2;
+  const headR = r*0.52;
+  const legH = r*1.4;
+  const torsoW = r*0.82;
+
+  ctx.save();
+
+  // Shadow on ground
+  ctx.beginPath(); ctx.ellipse(px, py+bodyH*0.5+headR+2, r*0.75, r*0.22, 0, 0, Math.PI*2);
+  ctx.fillStyle='rgba(0,0,0,0.28)'; ctx.fill();
+
+  const torsoTop = py - headR - 2;
+  const torsoBot = torsoTop + bodyH*0.46;
+  const waist = torsoTop + bodyH*0.44;
+
+  // — LEGS —
+  const lLegX = px - torsoW*0.28;
+  const rLegX = px + torsoW*0.28;
+  const legTop = waist;
+  const legBot = waist + legH;
+  const kneeY = legTop + legH*0.48;
+
+  // Shorts (thighs)
+  ctx.fillStyle = sc;
+  ctx.beginPath();
+  ctx.moveTo(lLegX - r*0.28, legTop);
+  ctx.lineTo(lLegX - r*0.22, kneeY - r*0.15);
+  ctx.lineTo(px, kneeY - r*0.1);
+  ctx.lineTo(rLegX + r*0.22, kneeY - r*0.15);
+  ctx.lineTo(rLegX + r*0.28, legTop);
+  ctx.closePath(); ctx.fill();
+
+  // Shins (skin tone showing through — worn socks)
+  [lLegX, rLegX].forEach((lx, i) => {
+    const sway = (pose==='falling') ? (i===0?0.3:-0.1) : (i===0?-0.04*Math.sin(1):0.04*Math.sin(1));
+    // Sock
+    ctx.fillStyle = sk;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(lx-r*0.21, kneeY, r*0.42, legH*0.5, r*0.1) : ctx.rect(lx-r*0.21, kneeY, r*0.42, legH*0.5);
     ctx.fill();
-    ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.fillText(label, px, py-r-11); ctx.textAlign='left';
-    ctx.restore();
+    // Boot
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    const bx = lx + (facing==='left'&&i===0 ? -r*0.08 : r*0.08);
+    ctx.ellipse(bx, legBot, r*0.28, r*0.16, 0, 0, Math.PI*2); ctx.fill();
+    // Boot shine
+    ctx.fillStyle='rgba(255,255,255,0.15)';
+    ctx.beginPath(); ctx.ellipse(bx-r*0.06, legBot-r*0.04, r*0.1, r*0.06, -0.3, 0, Math.PI*2); ctx.fill();
+  });
+
+  // — TORSO / KIT —
+  const kitGrad = ctx.createLinearGradient(px-torsoW, torsoTop, px+torsoW, torsoBot);
+  const lighten = (hex, amt) => { const n=parseInt(hex.slice(1),16); const r2=Math.min(255,(n>>16)+amt), g2=Math.min(255,((n>>8)&0xff)+amt), b2=Math.min(255,(n&0xff)+amt); return `#${((r2<<16)|(g2<<8)|b2).toString(16).padStart(6,'0')}`; };
+  kitGrad.addColorStop(0, lighten(shirtColor,30));
+  kitGrad.addColorStop(1, shirtColor);
+  ctx.fillStyle = kitGrad;
+  ctx.beginPath();
+  ctx.moveTo(px - torsoW*0.56, torsoTop + bodyH*0.12);
+  ctx.bezierCurveTo(px - torsoW*0.62, torsoTop + bodyH*0.28, px - torsoW*0.52, waist - r*0.1, px - torsoW*0.38, waist);
+  ctx.lineTo(px + torsoW*0.38, waist);
+  ctx.bezierCurveTo(px + torsoW*0.52, waist - r*0.1, px + torsoW*0.62, torsoTop + bodyH*0.28, px + torsoW*0.56, torsoTop + bodyH*0.12);
+  ctx.closePath(); ctx.fill();
+  // Kit collar
+  ctx.fillStyle = lighten(shirtColor, 60);
+  ctx.beginPath(); ctx.ellipse(px, torsoTop + bodyH*0.08, torsoW*0.18, r*0.12, 0, 0, Math.PI*2); ctx.fill();
+
+  // — ARMS —
+  const armSway = pose==='standing' ? Math.sin(1)*r*0.2 : r*0.15;
+  [[px - torsoW*0.55, torsoTop+bodyH*0.12, px - torsoW*0.72, waist + r*0.3],
+   [px + torsoW*0.55, torsoTop+bodyH*0.12, px + torsoW*0.72, waist + r*0.3]].forEach(([sx,sy,ex,ey], ai) => {
+    // Shirt sleeve
+    ctx.strokeStyle = shirtColor; ctx.lineWidth = r*0.34;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+    // Forearm (skin)
+    ctx.strokeStyle = skinTone; ctx.lineWidth = r*0.24;
+    ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(ex+(ai===0?-r*0.12:r*0.12), ey+r*0.5); ctx.stroke();
+  });
+
+  // — BALL (if carrying) —
+  if (hasBall) {
+    const bx = px + (facing==='left'?-1:1)*(r+r*0.55), by2 = waist + r*0.3;
+    const br = r*0.38;
+    const ballG = ctx.createRadialGradient(bx-br*0.3, by2-br*0.3, br*0.05, bx, by2, br);
+    ballG.addColorStop(0,'#fff'); ballG.addColorStop(0.6,'#e8e8e8'); ballG.addColorStop(1,'#aaa');
+    ctx.beginPath(); ctx.arc(bx, by2, br, 0, Math.PI*2);
+    ctx.fillStyle=ballG; ctx.fill();
+    ctx.strokeStyle='#444'; ctx.lineWidth=0.8; ctx.stroke();
+    // Pentagon pattern on ball
+    ctx.strokeStyle='#555'; ctx.lineWidth=0.6;
+    for(let a=0;a<5;a++){const ang=a/5*Math.PI*2-Math.PI/2; ctx.beginPath(); ctx.moveTo(bx+Math.cos(ang)*br*0.4, by2+Math.sin(ang)*br*0.4); ctx.lineTo(bx+Math.cos(ang+Math.PI*2/5)*br*0.4, by2+Math.sin(ang+Math.PI*2/5)*br*0.4); ctx.stroke();}
   }
+
+  // — HEAD —
+  // Neck
+  ctx.fillStyle = skinTone;
+  ctx.beginPath(); ctx.rect(px-r*0.15, torsoTop - r*0.1, r*0.3, r*0.25); ctx.fill();
+  // Head shape
+  const headGrad = ctx.createRadialGradient(px-headR*0.2, py-headR*0.3+torsoTop-headR, headR*0.2, px, py-headR*0.1+torsoTop-headR*1.15, headR);
+  headGrad.addColorStop(0, lighten(skinTone, 20)); headGrad.addColorStop(1, skinTone);
+  ctx.fillStyle = headGrad;
+  const hy = torsoTop - headR*1.15;
+  ctx.beginPath(); ctx.ellipse(px, hy, headR, headR*1.08, 0, 0, Math.PI*2); ctx.fill();
+  // Ear
+  ctx.fillStyle = skinTone;
+  const earSide = facing==='left' ? 1 : -1;
+  ctx.beginPath(); ctx.ellipse(px+earSide*headR*0.88, hy, headR*0.12, headR*0.2, 0, 0, Math.PI*2); ctx.fill();
+  // Hair
+  ctx.fillStyle = hairColor;
+  ctx.beginPath(); ctx.ellipse(px, hy - headR*0.3, headR*0.85, headR*0.6, 0, Math.PI, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(px - headR*0.6, hy - headR*0.05, headR*0.32, headR*0.48, -0.3, Math.PI, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(px + headR*0.6, hy - headR*0.05, headR*0.32, headR*0.48, 0.3, Math.PI, Math.PI*2); ctx.fill();
+  // Eyes
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.ellipse(px - headR*0.32, hy, headR*0.14, headR*0.1, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(px + headR*0.32, hy, headR*0.14, headR*0.1, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.arc(px - headR*0.3, hy, headR*0.07, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(px + headR*0.3, hy, headR*0.07, 0, Math.PI*2); ctx.fill();
+
+  // — LABEL above head —
+  if (label) {
+    const lFont = Math.max(9, r*0.75);
+    ctx.font = `bold ${lFont}px 'Arial Black',monospace`;
+    const lw2 = ctx.measureText(label).width + r*0.5;
+    const lh2 = lFont * 1.4;
+    const lx = px - lw2/2;
+    const ly = hy - headR*1.5 - lh2;
+    ctx.fillStyle='rgba(220,0,0,0.92)';
+    if(ctx.roundRect) ctx.roundRect(lx, ly, lw2, lh2, 3); else ctx.rect(lx, ly, lw2, lh2);
+    ctx.fill();
+    // Arrow pointing down to player
+    ctx.beginPath(); ctx.moveTo(px-4, ly+lh2); ctx.lineTo(px+4, ly+lh2); ctx.lineTo(px, ly+lh2+6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(label, px, ly+lh2*0.52); ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+  }
+
+  ctx.restore();
+}
+
+// Draw a realistic football pitch with full markings (top-down view)
+function _varDrawPitch(ctx, W, H, py0, pH2) {
+  // Striped grass
+  const stripes = 14;
+  for(let i=0;i<stripes;i++){
+    ctx.fillStyle = i%2===0 ? '#1a7530' : '#1e8038';
+    ctx.fillRect(i*(W/stripes), py0, W/stripes, pH2);
+  }
+  // Pitch border
+  ctx.strokeStyle='rgba(255,255,255,0.82)'; ctx.lineWidth=Math.max(1.5, W*0.0025);
+  const px0=W*0.04, pw=W*0.92;
+  ctx.strokeRect(px0, py0+pH2*0.04, pw, pH2*0.92);
+  // Halfway line
+  ctx.beginPath(); ctx.moveTo(px0+pw/2, py0+pH2*0.04); ctx.lineTo(px0+pw/2, py0+pH2*0.96); ctx.stroke();
+  // Centre circle
+  ctx.beginPath(); ctx.arc(px0+pw/2, py0+pH2*0.5, pH2*0.14, 0, Math.PI*2); ctx.stroke();
+  // Centre spot
+  ctx.fillStyle='rgba(255,255,255,0.8)';
+  ctx.beginPath(); ctx.arc(px0+pw/2, py0+pH2*0.5, W*0.006, 0, Math.PI*2); ctx.fill();
+  // Left penalty area
+  ctx.strokeRect(px0, py0+pH2*0.26, pw*0.18, pH2*0.48);
+  ctx.strokeRect(px0, py0+pH2*0.375, pw*0.08, pH2*0.25);
+  // Right penalty area
+  ctx.strokeRect(px0+pw*0.82, py0+pH2*0.26, pw*0.18, pH2*0.48);
+  ctx.strokeRect(px0+pw*0.92, py0+pH2*0.375, pw*0.08, pH2*0.25);
+  // Penalty spots
+  ctx.fillStyle='rgba(255,255,255,0.8)';
+  ctx.beginPath(); ctx.arc(px0+pw*0.12, py0+pH2*0.5, W*0.005, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(px0+pw*0.88, py0+pH2*0.5, W*0.005, 0, Math.PI*2); ctx.fill();
+  // Penalty arcs
+  ctx.beginPath(); ctx.arc(px0+pw*0.12, py0+pH2*0.5, pH2*0.12, -Math.PI*0.6, Math.PI*0.6); ctx.stroke();
+  ctx.beginPath(); ctx.arc(px0+pw*0.88, py0+pH2*0.5, pH2*0.12, Math.PI*0.4, Math.PI*1.6); ctx.stroke();
+  // Corner arcs
+  const cr = pH2*0.025;
+  [[px0,py0+pH2*0.04],[px0+pw,py0+pH2*0.04],[px0,py0+pH2*0.96],[px0+pw,py0+pH2*0.96]].forEach(([cx,cy],i)=>{
+    const as=[[0,Math.PI/2],[Math.PI/2,Math.PI],[Math.PI*1.5,Math.PI*2],[Math.PI,Math.PI*1.5]][i];
+    ctx.beginPath(); ctx.arc(cx,cy,cr,as[0],as[1]); ctx.stroke();
+  });
+}
+
+// Draw the broadcast TV overlay chrome (top bar + bottom ticker)
+function _varBroadcastChrome(ctx, W, H, subType, t) {
+  const pH2 = H*0.13;
+  const tH = Math.max(18, H*0.1);
+  const tY = H - tH;
+
+  // — Top bar —
+  ctx.fillStyle='rgba(0,0,0,0.96)'; ctx.fillRect(0,0,W,pH2);
+  // UEFA blue block
+  ctx.fillStyle='#003087';
+  if(ctx.roundRect){ctx.beginPath();ctx.roundRect(W*0.01,pH2*0.1,W*0.11,pH2*0.8,5);ctx.fill();}
+  else ctx.fillRect(W*0.01,pH2*0.1,W*0.11,pH2*0.8);
+  // VAR text
+  ctx.fillStyle='#fff'; ctx.font=`bold ${pH2*0.56}px 'Arial Black',Arial,sans-serif`;
+  ctx.textBaseline='middle'; ctx.fillText('VAR', W*0.019, pH2*0.52); ctx.textBaseline='alphabetic';
+  // "Video Assistant Referee" small text under logo
+  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font=`${pH2*0.22}px monospace`;
+  ctx.fillText('Video Asst. Ref', W*0.125, pH2*0.72);
+  // Camera label — switches every 3.5s
+  const cams={offside:'CAM 7  ·  OFFSIDE PRECISION',goal:'CAM 9  ·  GOAL LINE',penalty:'CAM 4  ·  PENALTY AREA',handball:'CAM 3  ·  HANDBALL REVIEW',foul:'CAM 5  ·  FOUL CHALLENGE'};
+  const camAngle = ['  · WIDE','  · TIGHT','  · REPLAY'][Math.floor(t/3.5)%3];
+  ctx.fillStyle='#d0e4f5'; ctx.font=`${pH2*0.32}px monospace`;
+  ctx.fillText((cams[subType]||'CAM 1  ·  WIDE')+camAngle, W*0.125, pH2*0.38);
+  // Timecode HH:MM:SS:FF
+  const tcSec = Math.floor(t); const tcFr = Math.floor((t%1)*25);
+  const tc = `00:${String(Math.floor(tcSec/60)).padStart(2,'0')}:${String(tcSec%60).padStart(2,'0')}:${String(tcFr).padStart(2,'0')}`;
+  ctx.fillStyle='#7a9cb0'; ctx.font=`${pH2*0.28}px monospace`; ctx.textAlign='right';
+  ctx.fillText(tc, W*0.82, pH2*0.72); ctx.textAlign='left';
+  // REC dot flashing
+  const recOn = Math.sin(t*5.5)>0;
+  ctx.fillStyle=recOn?'#e74c3c':'#5a1010';
+  ctx.beginPath(); ctx.arc(W*0.844, pH2*0.5, pH2*0.17, 0, Math.PI*2); ctx.fill();
+  // LIVE badge
+  ctx.fillStyle = recOn ? '#c0392b' : '#96281b';
+  if(ctx.roundRect){ctx.beginPath();ctx.roundRect(W*0.86,pH2*0.15,W*0.128,pH2*0.7,3);ctx.fill();}
+  else ctx.fillRect(W*0.86,pH2*0.15,W*0.128,pH2*0.7);
+  ctx.fillStyle='#fff'; ctx.font=`bold ${pH2*0.38}px 'Arial Black',Arial,sans-serif`;
+  ctx.textBaseline='middle'; ctx.fillText(' LIVE', W*0.862, pH2*0.52); ctx.textBaseline='alphabetic';
+  // Blue accent line
+  ctx.fillStyle='#003087'; ctx.fillRect(0,pH2-3,W,3);
+
+  // — Bottom ticker —
+  ctx.fillStyle='rgba(0,0,15,0.97)'; ctx.fillRect(0,tY,W,tH);
+  // Coloured type block
+  const typeCol={offside:'#c0392b',goal:'#c0392b',penalty:'#d35400',handball:'#7d3c98',foul:'#d35400'};
+  ctx.fillStyle=typeCol[subType]||'#2980b9';
+  ctx.fillRect(0,tY,W*0.22,tH);
+  // Type text
+  const tickText={offside:'OFFSIDE CHECK',goal:'GOAL REVIEW',penalty:'PENALTY REVIEW',handball:'HANDBALL CHECK',foul:'FOUL CHECK'};
+  ctx.fillStyle='#fff'; ctx.font=`bold ${tH*0.46}px 'Arial Black',Arial,sans-serif`;
+  ctx.textBaseline='middle'; ctx.fillText(tickText[subType]||'VAR REVIEW', W*0.008, tY+tH*0.5); ctx.textBaseline='alphabetic';
+  // Divider
+  ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fillRect(W*0.22,tY+tH*0.15,1,tH*0.7);
+  // Status message cycling
+  const msgs=['Video Assistant Referee reviewing incident','Frame-by-frame analysis underway','All camera angles being examined','VAR official consulting with referee','On-field decision under review'];
+  const mi = Math.floor(t/3.2)%msgs.length;
+  ctx.fillStyle='#b8cfe0'; ctx.font=`${tH*0.36}px Arial,sans-serif`;
+  ctx.textBaseline='middle'; ctx.fillText(msgs[mi], W*0.235, tY+tH*0.5); ctx.textBaseline='alphabetic';
+  // Right side: elapsed time
+  const el = Math.floor(t); const elDots='.'.repeat((Math.floor(t*2.5)%4));
+  ctx.fillStyle='#f0c040'; ctx.font=`bold ${tH*0.35}px monospace`;
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.fillText(`Reviewing ${el}s${elDots}`, W*0.992, tY+tH*0.5);
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
 
 function drawVARScene(canvas, incident) {
@@ -6663,166 +6992,285 @@ function drawVARScene(canvas, incident) {
   const frame = canvas._varFrame++;
   const t = frame / 60;
 
-  // Pitch background
-  ctx.fillStyle='#0a1a0f'; ctx.fillRect(0,0,W,H);
-  for (let i=0;i<9;i++) {
-    ctx.fillStyle = i%2===0 ? '#1a6830' : '#1e7836';
-    ctx.fillRect(i*W/9, 0, W/9, H);
-  }
+  // Pitch area (between top chrome and bottom ticker)
+  const chromH = H*0.13;
+  const tickH = Math.max(18, H*0.1);
+  const pitchY = chromH;
+  const pitchH = H - chromH - tickH;
 
-  const pH = H*0.14; // pitchTop offset (TV chrome at top)
+  // Camera angle switch — every 3.5s, zoom in/out slightly
+  const camPhase = Math.floor(t/3.5)%3;
+  const zoom = camPhase===1 ? 1.15 : camPhase===2 ? 0.92 : 1.0;
+  ctx.save();
+  ctx.translate(W/2, pitchY + pitchH/2);
+  ctx.scale(zoom, zoom);
+  ctx.translate(-W/2, -(pitchY + pitchH/2));
 
-  if (subType==='offside' || subType==='goal') {
-    _drawVAR_Offside(ctx, W, H, pH, t);
+  // Draw realistic pitch
+  _varDrawPitch(ctx, W, H, pitchY, pitchH);
+
+  // Draw incident-specific scene
+  if (subType==='offside'||subType==='goal') {
+    _drawVAR_Offside(ctx, W, H, pitchY, pitchH, t);
   } else if (subType==='handball') {
-    _drawVAR_Handball(ctx, W, H, pH, t);
+    _drawVAR_Handball(ctx, W, H, pitchY, pitchH, t);
   } else {
-    _drawVAR_Foul(ctx, W, H, pH, t);
+    _drawVAR_Foul(ctx, W, H, pitchY, pitchH, t);
   }
 
-  // TV chrome top bar
-  ctx.fillStyle='rgba(0,0,0,0.9)'; ctx.fillRect(0,0,W,pH);
-  ctx.fillStyle='#fff'; ctx.font=`bold ${pH*0.55}px 'Arial Black',Arial,monospace`;
-  ctx.fillText('VAR', W*0.025, pH*0.82);
-  const cams={offside:'CAM 7 — OFFSIDE PRECISION',goal:'CAM 7 — OFFSIDE PRECISION',penalty:'CAM 4 — PENALTY AREA',handball:'CAM 3 — HANDBALL AREA',foul:'CAM 5 — CHALLENGE REVIEW'};
-  ctx.font=`${pH*0.36}px monospace`; ctx.fillStyle='#aaa'; ctx.fillText(cams[subType]||'CAM 1 — WIDE', W*0.17, pH*0.82);
-  ctx.fillStyle='#e74c3c';
-  if(ctx.roundRect){ctx.beginPath();ctx.roundRect(W*0.84,pH*0.12,W*0.14,pH*0.72,3);ctx.fill();}
-  else ctx.fillRect(W*0.84,pH*0.12,W*0.14,pH*0.72);
-  ctx.fillStyle='#fff'; ctx.font=`bold ${pH*0.44}px monospace`; ctx.fillText('LIVE',W*0.856,pH*0.78);
-  // Bottom ticker
-  const tH=H-H*0.88; ctx.fillStyle='rgba(0,0,20,0.92)'; ctx.fillRect(0,H*0.88,W,tH);
-  ctx.fillStyle='#3498db'; ctx.fillRect(0,H*0.88,W*0.12,tH);
-  const tl={offside:'OFFSIDE CHECK',goal:'GOAL UNDER REVIEW',penalty:'PENALTY REVIEW',handball:'HANDBALL CHECK',foul:'FOUL CHECK'};
-  ctx.fillStyle='#fff'; ctx.font=`bold ${tH*0.42}px monospace`; ctx.fillText(tl[subType]||'VAR REVIEW',W*0.14,H*0.88+tH*0.72);
-  ctx.fillStyle='#f39c12'; ctx.font=`${tH*0.36}px monospace`; ctx.fillText('Video Assistant Referee',W*0.58,H*0.88+tH*0.72);
+  ctx.restore();
 
-  // Red review box
+  // TV chrome drawn on top, unaffected by zoom
+  _varBroadcastChrome(ctx, W, H, subType, t);
+
+  // Update floating red highlight box
   const rb = document.getElementById('var-red-box');
   if (rb) {
     const scr=document.getElementById('var-screen');
-    const dW=scr.clientWidth||W/2, dH=scr.clientHeight||H/2;
+    const dW=scr.clientWidth||540, dH=scr.clientHeight||304;
     const sX=dW/W, sY=dH/H;
-    if (subType==='offside'||subType==='goal') {
-      rb.style.left=Math.round(W*0.42*sX)+'px'; rb.style.top=Math.round(H*0.2*sY)+'px';
-      rb.style.width=Math.round(W*0.18*sX)+'px'; rb.style.height=Math.round(H*0.4*sY)+'px';
-    } else if (subType==='handball') {
-      rb.style.left=Math.round(W*0.42*sX)+'px'; rb.style.top=Math.round(H*0.22*sY)+'px';
-      rb.style.width=Math.round(W*0.18*sX)+'px'; rb.style.height=Math.round(H*0.3*sY)+'px';
-    } else {
-      rb.style.left=Math.round(W*0.36*sX)+'px'; rb.style.top=Math.round(H*0.28*sY)+'px';
-      rb.style.width=Math.round(W*0.24*sX)+'px'; rb.style.height=Math.round(H*0.34*sY)+'px';
-    }
+    const boxes={offside:[0.38,0.22,0.24,0.45],goal:[0.38,0.18,0.24,0.5],penalty:[0.35,0.25,0.28,0.42],handball:[0.38,0.2,0.22,0.38],foul:[0.34,0.24,0.3,0.4]};
+    const [bx,by2,bw2,bh2]=boxes[subType]||[0.36,0.24,0.26,0.4];
+    rb.style.left=Math.round(W*bx*sX)+'px'; rb.style.top=Math.round(H*by2*sY)+'px';
+    rb.style.width=Math.round(W*bw2*sX)+'px'; rb.style.height=Math.round(H*bh2*sY)+'px';
   }
 }
 
-function _drawVAR_Offside(ctx, W, H, pH, t) {
-  const by=pH, bh=H*0.74;
-  ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=Math.max(2,W*0.003);
-  ctx.strokeRect(W*0.12,by,W*0.76,bh*0.5);
-  ctx.strokeStyle='#fff'; ctx.lineWidth=3;
-  ctx.strokeRect(W*0.34,by-H*0.1,W*0.32,H*0.1);
-  ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=0.8;
-  for(let x=W*0.34;x<W*0.66;x+=W*0.06){ctx.beginPath();ctx.moveTo(x,by-H*0.1);ctx.lineTo(x,by);ctx.stroke();}
-  for(let y=by-H*0.1;y<by;y+=H*0.025){ctx.beginPath();ctx.moveTo(W*0.34,y);ctx.lineTo(W*0.66,y);ctx.stroke();}
-  // Players
-  const attX=W*0.565, attY=by+bh*0.22;
-  _varPlayer(ctx,attX,attY,W*0.019,'#1d4ed8',true,'OFFSIDE');
-  const glow=0.3+0.35*Math.sin(t*5);
-  ctx.beginPath();ctx.arc(attX,attY,W*0.03,0,Math.PI*2);ctx.strokeStyle=`rgba(255,40,40,${glow})`;ctx.lineWidth=3;ctx.stroke();
-  _varPlayer(ctx,W*0.445,by+bh*0.26,W*0.019,'#dc2626');
-  _varPlayer(ctx,W*0.375,by+bh*0.31,W*0.019,'#dc2626');
-  _varPlayer(ctx,W*0.28,by+bh*0.19,W*0.017,'#1d4ed8');
-  // Offside line
-  const lX=W*0.455; const pulse=0.55+0.45*Math.sin(t*4);
-  ctx.save(); ctx.strokeStyle=`rgba(255,25,25,${pulse})`; ctx.lineWidth=Math.max(3.5,W*0.006);
-  ctx.setLineDash([W*0.025,W*0.013]); ctx.beginPath(); ctx.moveTo(lX,by); ctx.lineTo(lX,by+bh*0.62); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
-  // "OFFSIDE LINE" label on the line
-  ctx.save(); ctx.fillStyle=`rgba(255,25,25,${pulse})`; ctx.font=`bold ${W*0.016}px monospace`; ctx.textAlign='center';
-  ctx.fillText('OFFSIDE LINE', lX, by+bh*0.65); ctx.textAlign='left'; ctx.restore();
-  // Gap arrow
-  const gP=0.5+0.5*Math.abs(Math.sin(t*3));
-  ctx.save(); ctx.strokeStyle=`rgba(255,220,0,${gP})`; ctx.lineWidth=2; ctx.setLineDash([4,4]);
-  ctx.beginPath(); ctx.moveTo(lX+2,attY); ctx.lineTo(attX-W*0.02,attY); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
-  ctx.save(); ctx.fillStyle=`rgba(255,220,0,${gP})`; ctx.font=`bold ${W*0.018}px monospace`; ctx.textAlign='center';
-  ctx.fillText('+0.3m',(lX+attX)/2,attY-9); ctx.textAlign='left'; ctx.restore();
-  // Pass arc
-  ctx.save(); ctx.strokeStyle='rgba(255,255,100,0.45)'; ctx.lineWidth=1.8; ctx.setLineDash([5,9]);
-  ctx.beginPath(); ctx.moveTo(W*0.21,by+bh*0.52); ctx.quadraticCurveTo(W*0.31,by+bh*0.04,attX,attY); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
-}
+function _drawVAR_Offside(ctx, W, H, py0, pH2, t) {
+  // Show penalty area corner — attacker caught offside receiving a pass
+  const midX = W*0.5, midY = py0 + pH2*0.5;
 
-function _drawVAR_Foul(ctx, W, H, pH, t) {
-  const by=pH, bh=H*0.74;
-  ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=Math.max(2,W*0.003);
-  ctx.strokeRect(W*0.08,by+bh*0.05,W*0.84,bh*0.55);
-  ctx.strokeRect(W*0.3,by+bh*0.05,W*0.4,bh*0.2);
-  ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.strokeRect(W*0.35,by,W*0.3,bh*0.12);
-  ctx.beginPath(); ctx.arc(W*0.5,by+bh*0.38,W*0.01,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.fill();
-  ctx.beginPath(); ctx.arc(W*0.5,by+bh*0.38,bh*0.18,Math.PI*0.15,Math.PI*0.85); ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1.5; ctx.stroke();
-  // Attacker falling
-  const lean=Math.min(0.65,t*0.42);
-  ctx.save(); ctx.translate(W*0.525+lean*11,by+bh*0.33+lean*9); ctx.rotate(lean*0.5);
-  _varPlayer(ctx,0,0,W*0.018,'#1d4ed8'); ctx.restore();
-  // Defender sliding
-  ctx.save(); ctx.translate(W*0.435,by+bh*0.42); ctx.rotate(-0.42);
-  ctx.beginPath(); ctx.ellipse(0,0,W*0.034,W*0.014,0,0,Math.PI*2); ctx.fillStyle='#dc2626'; ctx.fill(); ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
-  ctx.beginPath(); ctx.arc(-W*0.03,-W*0.009,W*0.014,0,Math.PI*2); ctx.fillStyle='#f5c28a'; ctx.fill();
-  ctx.beginPath(); ctx.moveTo(W*0.018,0); ctx.lineTo(W*0.065,W*0.007); ctx.strokeStyle='#dc2626'; ctx.lineWidth=W*0.015; ctx.stroke();
+  // Penalty box region of pitch already drawn — add specific markings
+  // Ball path: from passer on left to attacker
+  const passerX = W*0.22, passerY = py0+pH2*0.62;
+  const attX = W*0.58, attY = py0+pH2*0.35;
+  const def1X = W*0.50, def1Y = py0+pH2*0.37; // last defender (defining offside line)
+  const def2X = W*0.47, def2Y = py0+pH2*0.56;
+
+  // Animated ball rolling along pass trajectory (parametric)
+  const passProgress = Math.min(1, (t % 2.8) / 1.4); // loops every 2.8s
+  const ballX = passerX + (attX-passerX)*passProgress;
+  const ballY = passerY + (attY-passerY)*passProgress + Math.sin(passProgress*Math.PI)*(-pH2*0.08);
+
+  // Dashed pass line
+  ctx.save(); ctx.setLineDash([W*0.018,W*0.012]);
+  ctx.strokeStyle='rgba(255,255,160,0.6)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(passerX, passerY); ctx.quadraticCurveTo(W*0.38, py0+pH2*0.28, attX, attY); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+
+  // OFFSIDE LINE — bright red dashed vertical
+  const offsideX = def1X + W*0.005; // fractionally ahead of last defender
+  const pulse = 0.6+0.4*Math.sin(t*4.2);
+  ctx.save(); ctx.strokeStyle=`rgba(255,20,20,${pulse})`; ctx.lineWidth=Math.max(3,W*0.0055);
+  ctx.setLineDash([pH2*0.05, pH2*0.025]);
+  ctx.beginPath(); ctx.moveTo(offsideX, py0+pH2*0.04); ctx.lineTo(offsideX, py0+pH2*0.96); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+  // Offside line label
+  ctx.save(); ctx.fillStyle=`rgba(255,20,20,${pulse})`;
+  const olFont=Math.max(9,W*0.013); ctx.font=`bold ${olFont}px Arial,sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('OFFSIDE LINE', offsideX, py0+pH2*0.92); ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   ctx.restore();
-  // Contact zone rings
-  const cX=(W*0.525+lean*11+W*0.435)/2+5, cY=(by+bh*0.33+lean*9+by+bh*0.42)/2+5;
-  const rP=0.4+0.6*Math.abs(Math.sin(t*5));
-  ctx.beginPath();ctx.arc(cX,cY,W*0.05,0,Math.PI*2);ctx.strokeStyle=`rgba(255,200,0,${rP})`;ctx.lineWidth=3;ctx.stroke();
-  ctx.beginPath();ctx.arc(cX,cY,W*0.066,0,Math.PI*2);ctx.strokeStyle=`rgba(255,80,80,${rP*0.55})`;ctx.lineWidth=2;ctx.stroke();
-  // Ball
-  const bX=cX+W*0.044, bY=cY-W*0.01;
-  ctx.beginPath();ctx.arc(bX,bY,W*0.016,0,Math.PI*2);
-  const bg=ctx.createRadialGradient(bX-4,bY-4,1,bX,bY,W*0.016); bg.addColorStop(0,'#fff'); bg.addColorStop(1,'#ccc');
-  ctx.fillStyle=bg;ctx.fill();ctx.strokeStyle='#444';ctx.lineWidth=0.8;ctx.stroke();
-  // Label
-  const bP=0.8+0.2*Math.sin(t*2);
-  ctx.fillStyle=`rgba(255,140,0,${bP})`;
-  const lx2=W*0.1, ly2=by+bh*0.08, lw2=W*0.25, lh2=bh*0.075;
-  if(ctx.roundRect) ctx.roundRect(lx2,ly2,lw2,lh2,4); else ctx.rect(lx2,ly2,lw2,lh2); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.font=`bold ${W*0.022}px monospace`; ctx.textAlign='center';
-  ctx.fillText('CONTACT ZONE',lx2+lw2/2,ly2+lh2*0.72); ctx.textAlign='left';
-  ctx.save(); ctx.strokeStyle='rgba(255,140,0,0.7)'; ctx.setLineDash([3,4]); ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.moveTo(lx2+lw2,ly2+lh2/2); ctx.lineTo(cX-W*0.058,cY); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
-  _varPlayer(ctx,W*0.31,by+bh*0.22,W*0.016,'#dc2626');
-  _varPlayer(ctx,W*0.69,by+bh*0.28,W*0.016,'#1d4ed8');
-  _varPlayer(ctx,W*0.76,by+bh*0.18,W*0.016,'#dc2626');
+
+  // GAP measurement arrow (how far offside)
+  const gapPulse = 0.5+0.5*Math.abs(Math.sin(t*2.8));
+  ctx.save(); ctx.strokeStyle=`rgba(255,220,0,${gapPulse})`; ctx.lineWidth=2;
+  const arrowY = attY - pH2*0.07;
+  ctx.beginPath(); ctx.moveTo(offsideX, arrowY); ctx.lineTo(attX-W*0.022, arrowY); ctx.stroke();
+  // Arrowheads
+  ctx.fillStyle=`rgba(255,220,0,${gapPulse})`;
+  ctx.beginPath(); ctx.moveTo(offsideX, arrowY); ctx.lineTo(offsideX+8, arrowY-4); ctx.lineTo(offsideX+8, arrowY+4); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(attX-W*0.022, arrowY); ctx.lineTo(attX-W*0.022-8, arrowY-4); ctx.lineTo(attX-W*0.022-8, arrowY+4); ctx.closePath(); ctx.fill();
+  // Measurement label
+  ctx.fillStyle=`rgba(255,220,0,${gapPulse})`; ctx.font=`bold ${Math.max(9,W*0.013)}px Arial,sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText('+0.28m', (offsideX+attX-W*0.022)/2, arrowY-3); ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+  ctx.restore();
+
+  // BLUE line from attacker's foot to offside line (body part reference)
+  ctx.save(); ctx.strokeStyle='rgba(0,150,255,0.9)'; ctx.lineWidth=2; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(attX, attY+pH2*0.15); ctx.lineTo(offsideX, attY+pH2*0.15); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+
+  // Draw players with detailed kits
+  // Passer (home team — blue kit)
+  _varPlayer(ctx, passerX, passerY, W*0.018, '#1d4ed8', false, null, {skinTone:'#d4956a',hairColor:'#1a1a1a',facing:'right'});
+  // Attacker offside (blue kit) — marked
+  _varPlayer(ctx, attX, attY, W*0.021, '#1d4ed8', true, 'OFFSIDE', {skinTone:'#f5c18a',hairColor:'#c8a030',facing:'right'});
+  // Pulsing glow around offside attacker
+  const glow2=0.25+0.2*Math.sin(t*5);
+  ctx.beginPath(); ctx.arc(attX, attY, W*0.035, 0, Math.PI*2);
+  ctx.strokeStyle=`rgba(255,30,30,${glow2})`; ctx.lineWidth=4; ctx.stroke();
+  // Last defender (red kit) — defines the line
+  _varPlayer(ctx, def1X, def1Y, W*0.021, '#dc2626', false, 'LAST DEF', {skinTone:'#e8b87a',hairColor:'#222',facing:'left'});
+  // Second defender
+  _varPlayer(ctx, def2X, def2Y, W*0.019, '#dc2626', false, null, {skinTone:'#c8844a',hairColor:'#111',facing:'left'});
+  // Extra attacker (onside — further back)
+  _varPlayer(ctx, W*0.38, py0+pH2*0.55, W*0.017, '#1d4ed8', false, null, {skinTone:'#e0a060',hairColor:'#3a1a0a',facing:'right'});
+
+  // Animated ball
+  if (passProgress < 1) {
+    const br2 = W*0.013;
+    const ballG2 = ctx.createRadialGradient(ballX-br2*0.3,ballY-br2*0.3,br2*0.05,ballX,ballY,br2);
+    ballG2.addColorStop(0,'#fff'); ballG2.addColorStop(1,'#bbb');
+    ctx.beginPath(); ctx.arc(ballX, ballY, br2, 0, Math.PI*2);
+    ctx.fillStyle=ballG2; ctx.fill(); ctx.strokeStyle='#444'; ctx.lineWidth=0.8; ctx.stroke();
+    // Spin lines on ball
+    ctx.strokeStyle='rgba(100,100,100,0.5)'; ctx.lineWidth=0.6;
+    const spinAng = t*8;
+    ctx.beginPath(); ctx.arc(ballX, ballY, br2*0.6, spinAng, spinAng+Math.PI); ctx.stroke();
+  }
 }
 
-function _drawVAR_Handball(ctx, W, H, pH, t) {
-  const by=pH, bh=H*0.74;
-  ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=Math.max(2,W*0.003);
-  ctx.strokeRect(W*0.1,by+bh*0.08,W*0.8,bh*0.5);
-  const px=W*0.50, py=by+bh*0.26;
-  _varPlayer(ctx,px,py,W*0.02,'#dc2626');
-  // Extended arm
-  const aAng=-0.32+0.1*Math.sin(t*2);
-  ctx.save(); ctx.translate(px+W*0.022,py-W*0.005); ctx.rotate(aAng);
-  ctx.fillStyle='#dc2626'; ctx.fillRect(0,-W*0.011,W*0.065,W*0.022); ctx.restore();
-  // Ball trajectory arc to arm contact point
-  const bX=px+W*0.07, bY=py-W*0.008;
-  ctx.save(); ctx.strokeStyle='rgba(255,220,0,0.65)'; ctx.lineWidth=2; ctx.setLineDash([6,8]);
-  ctx.beginPath(); ctx.moveTo(W*0.2,by+bh*0.55); ctx.quadraticCurveTo(W*0.33,by+bh*0.12,bX,bY); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
-  ctx.beginPath(); ctx.arc(bX,bY,W*0.019,0,Math.PI*2);
-  const bg=ctx.createRadialGradient(bX-5,bY-5,1,bX,bY,W*0.019); bg.addColorStop(0,'#fff'); bg.addColorStop(1,'#ccc');
-  ctx.fillStyle=bg; ctx.fill(); ctx.strokeStyle='#555'; ctx.lineWidth=1; ctx.stroke();
-  // Impact rings
-  const hP=0.4+0.6*Math.abs(Math.sin(t*4.5));
-  ctx.beginPath();ctx.arc(bX,bY,W*0.033,0,Math.PI*2);ctx.strokeStyle=`rgba(255,40,40,${hP})`;ctx.lineWidth=3;ctx.stroke();
-  ctx.beginPath();ctx.arc(bX,bY,W*0.048,0,Math.PI*2);ctx.strokeStyle=`rgba(255,40,40,${hP*0.45})`;ctx.lineWidth=2;ctx.stroke();
-  // Label
-  ctx.fillStyle=`rgba(200,30,30,${0.85+0.15*Math.sin(t*2)})`;
-  const lw3=W*0.22,lh3=bh*0.078,lx3=W*0.1,ly3=by+bh*0.1;
-  if(ctx.roundRect) ctx.roundRect(lx3,ly3,lw3,lh3,4); else ctx.rect(lx3,ly3,lw3,lh3); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.font=`bold ${W*0.022}px monospace`; ctx.textAlign='center';
-  ctx.fillText('HANDBALL?',lx3+lw3/2,ly3+lh3*0.72); ctx.textAlign='left';
-  _varPlayer(ctx,W*0.29,by+bh*0.45,W*0.017,'#1d4ed8');
-  _varPlayer(ctx,W*0.69,by+bh*0.25,W*0.017,'#1d4ed8');
-  _varPlayer(ctx,W*0.36,by+bh*0.22,W*0.017,'#dc2626');
+function _drawVAR_Foul(ctx, W, H, py0, pH2, t) {
+  // Penalty box — defender challenge on attacker
+  const lean = Math.min(0.9, t*0.38); // attacker progressively falling
+
+  const attX = W*0.52, attBaseY = py0+pH2*0.42;
+  const defX = W*0.44, defY = py0+pH2*0.50;
+
+  // Pass trajectory into box
+  ctx.save(); ctx.setLineDash([W*0.015,W*0.01]);
+  ctx.strokeStyle='rgba(255,255,120,0.4)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(W*0.18, py0+pH2*0.7); ctx.quadraticCurveTo(W*0.32, py0+pH2*0.22, attX-W*0.02, attBaseY-pH2*0.06); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+
+  // Animated ball near contact point
+  const bPhase = (t*0.7)%1;
+  const bX2 = attX + W*0.04 + bPhase*W*0.03;
+  const bY2 = attBaseY + pH2*0.1 + bPhase*pH2*0.04;
+  const br3=W*0.013;
+  const bg2=ctx.createRadialGradient(bX2-br3*0.3,bY2-br3*0.3,br3*0.05,bX2,bY2,br3);
+  bg2.addColorStop(0,'#fff'); bg2.addColorStop(1,'#bbb');
+  ctx.beginPath(); ctx.arc(bX2,bY2,br3,0,Math.PI*2); ctx.fillStyle=bg2; ctx.fill();
+  ctx.strokeStyle='#444'; ctx.lineWidth=0.8; ctx.stroke();
+
+  // Contact zone pulsing rings
+  const cX2 = (attX+defX)/2, cY2 = (attBaseY+defY)/2 + pH2*0.04;
+  const rP2=0.35+0.65*Math.abs(Math.sin(t*4.8));
+  ctx.beginPath();ctx.arc(cX2,cY2,W*0.04,0,Math.PI*2);ctx.strokeStyle=`rgba(255,200,0,${rP2})`;ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.arc(cX2,cY2,W*0.055,0,Math.PI*2);ctx.strokeStyle=`rgba(255,80,0,${rP2*0.5})`;ctx.lineWidth=2;ctx.stroke();
+
+  // Contact label
+  ctx.save();
+  const cFont=Math.max(9,W*0.012); ctx.font=`bold ${cFont}px Arial,sans-serif`;
+  const ctxt='CONTACT POINT'; const ctw=ctx.measureText(ctxt).width+8;
+  const ctx2lx=cX2-ctw/2, ctx2ly=cY2-pH2*0.14-cFont*1.4;
+  ctx.fillStyle='rgba(220,100,0,0.92)';
+  if(ctx.roundRect)ctx.roundRect(ctx2lx,ctx2ly,ctw,cFont*1.4,3);else ctx.rect(ctx2lx,ctx2ly,ctw,cFont*1.4);
+  ctx.fill();
+  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(ctxt,cX2,ctx2ly+cFont*0.72); ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  // Line from label to contact
+  ctx.strokeStyle='rgba(220,100,0,0.7)'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(cX2,ctx2ly+cFont*1.4); ctx.lineTo(cX2,cY2-W*0.04); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+
+  // Attacker — tilted/falling
+  ctx.save();
+  ctx.translate(attX + lean*W*0.015, attBaseY + lean*pH2*0.06);
+  ctx.rotate(lean*0.5);
+  _varPlayer(ctx, 0, 0, W*0.022, '#1d4ed8', false, null, {skinTone:'#f0c080',hairColor:'#1a1a1a',facing:'right'});
+  ctx.restore();
+
+  // Defender sliding
+  ctx.save();
+  ctx.translate(defX, defY);
+  ctx.rotate(-0.38);
+  // Sliding kit shape
+  const kitGS=ctx.createLinearGradient(-W*0.04,0,W*0.04,0);
+  kitGS.addColorStop(0,'#b91c1c'); kitGS.addColorStop(1,'#dc2626');
+  ctx.fillStyle=kitGS;
+  ctx.beginPath(); ctx.ellipse(0,0,W*0.038,W*0.016,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+  // Head
+  ctx.fillStyle='#e8b87a';
+  ctx.beginPath(); ctx.arc(-W*0.032,-W*0.008,W*0.014,0,Math.PI*2); ctx.fill();
+  // Extended leg
+  ctx.strokeStyle='#b91c1c'; ctx.lineWidth=W*0.016; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(W*0.02,0); ctx.lineTo(W*0.07,W*0.006); ctx.stroke();
+  // Boot
+  ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(W*0.074,W*0.007,W*0.013,W*0.008,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // Extra background players
+  _varPlayer(ctx, W*0.34, py0+pH2*0.31, W*0.017, '#dc2626', false, null, {skinTone:'#c87040',hairColor:'#111',facing:'right'});
+  _varPlayer(ctx, W*0.68, py0+pH2*0.38, W*0.017, '#1d4ed8', false, null, {skinTone:'#d4956a',hairColor:'#2a1810',facing:'left'});
+  _varPlayer(ctx, W*0.72, py0+pH2*0.22, W*0.016, '#dc2626', false, null, {skinTone:'#e8c090',hairColor:'#222',facing:'left'});
+}
+
+function _drawVAR_Handball(ctx, W, H, py0, pH2, t) {
+  const px2=W*0.50, py2=py0+pH2*0.38;
+
+  // Ball arc trajectory toward arm
+  const ballProgress = Math.min(1, (t % 2.2) / 1.1);
+  const ballStartX=W*0.22, ballStartY=py0+pH2*0.72;
+  const ballEndX=px2+W*0.06, ballEndY=py2-pH2*0.04;
+  const ctrlX=W*0.36, ctrlY=py0+pH2*0.18;
+  // Quadratic bezier position
+  const bpX=Math.pow(1-ballProgress,2)*ballStartX+2*(1-ballProgress)*ballProgress*ctrlX+Math.pow(ballProgress,2)*ballEndX;
+  const bpY=Math.pow(1-ballProgress,2)*ballStartY+2*(1-ballProgress)*ballProgress*ctrlY+Math.pow(ballProgress,2)*ballEndY;
+
+  // Trajectory line
+  ctx.save(); ctx.setLineDash([W*0.016,W*0.01]);
+  ctx.strokeStyle='rgba(255,240,80,0.55)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(ballStartX,ballStartY); ctx.quadraticCurveTo(ctrlX,ctrlY,ballEndX,ballEndY); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+
+  // Impact rings at contact point when ball arrives
+  if(ballProgress>0.85){
+    const imp=(ballProgress-0.85)/0.15;
+    const hP2=Math.abs(Math.sin(t*5.5));
+    ctx.beginPath();ctx.arc(ballEndX,ballEndY,W*0.028+imp*W*0.02,0,Math.PI*2);ctx.strokeStyle=`rgba(255,30,30,${hP2*0.8})`;ctx.lineWidth=3;ctx.stroke();
+    ctx.beginPath();ctx.arc(ballEndX,ballEndY,W*0.044+imp*W*0.03,0,Math.PI*2);ctx.strokeStyle=`rgba(255,30,30,${hP2*0.35})`;ctx.lineWidth=2;ctx.stroke();
+  }
+
+  // HANDBALL? label
+  ctx.save();
+  const hlFont=Math.max(10,W*0.014); ctx.font=`bold ${hlFont}px Arial,sans-serif`;
+  const hlTxt='HANDBALL?'; const hlW=ctx.measureText(hlTxt).width+10;
+  const hlX=W*0.12, hlY=py0+pH2*0.12;
+  const hPulse=0.85+0.15*Math.sin(t*2.5);
+  ctx.fillStyle=`rgba(200,20,20,${hPulse})`;
+  if(ctx.roundRect)ctx.roundRect(hlX,hlY,hlW,hlFont*1.5,3);else ctx.rect(hlX,hlY,hlW,hlFont*1.5);
+  ctx.fill();
+  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(hlTxt,hlX+hlW/2,hlY+hlFont*0.78); ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.restore();
+
+  // Main player with handball
+  _varPlayer(ctx, px2, py2, W*0.023, '#dc2626', false, null, {skinTone:'#e8b87a',hairColor:'#2c1810',facing:'right'});
+
+  // Extended arm overlay (arm raised at angle)
+  const armAng = -0.28 + 0.12*Math.sin(t*2.2);
+  ctx.save();
+  ctx.translate(px2+W*0.022, py2-pH2*0.035);
+  ctx.rotate(armAng);
+  // Sleeve
+  ctx.strokeStyle='#b91c1c'; ctx.lineWidth=W*0.016; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(W*0.068,0); ctx.stroke();
+  // Forearm skin
+  ctx.strokeStyle='#e8b87a'; ctx.lineWidth=W*0.012;
+  ctx.beginPath(); ctx.moveTo(W*0.068,0); ctx.lineTo(W*0.11,W*0.004); ctx.stroke();
+  // Hand
+  ctx.fillStyle='#e8b87a';
+  ctx.beginPath(); ctx.ellipse(W*0.115,W*0.006,W*0.014,W*0.01,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // Animated ball
+  const br4=W*0.014;
+  const bG4=ctx.createRadialGradient(bpX-br4*0.3,bpY-br4*0.3,br4*0.05,bpX,bpY,br4);
+  bG4.addColorStop(0,'#fff'); bG4.addColorStop(1,'#bbb');
+  ctx.beginPath();ctx.arc(bpX,bpY,br4,0,Math.PI*2);
+  ctx.fillStyle=bG4;ctx.fill();ctx.strokeStyle='#444';ctx.lineWidth=0.8;ctx.stroke();
+  // Spin pattern
+  ctx.strokeStyle='rgba(100,100,100,0.5)';ctx.lineWidth=0.6;
+  const sp2=t*9; ctx.beginPath();ctx.arc(bpX,bpY,br4*0.6,sp2,sp2+Math.PI);ctx.stroke();
+
+  // Background players
+  _varPlayer(ctx, W*0.29, py0+pH2*0.55, W*0.018, '#1d4ed8', false, null, {skinTone:'#d48060',hairColor:'#1a0a08',facing:'right'});
+  _varPlayer(ctx, W*0.68, py0+pH2*0.32, W*0.018, '#1d4ed8', false, null, {skinTone:'#f0c880',hairColor:'#555',facing:'left'});
+  _varPlayer(ctx, W*0.36, py0+pH2*0.25, W*0.017, '#dc2626', false, null, {skinTone:'#c87040',hairColor:'#111',facing:'right'});
 }
 
 
