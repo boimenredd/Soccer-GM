@@ -1468,7 +1468,6 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px
     <button class="tb-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle light/dark mode">🌙</button>
     <button class="tb-btn" onclick="showPanel('news')">Inbox <span id="inbox-count" style="color:var(--yellow)"></span></button>
     <button class="tb-btn" onclick="simOneDay()" title="Advance one day — may trigger events">Sim Day ⊕</button>
-    <button class="tb-btn primary" onclick="playMyMatch()" title="Watch your queued match">▶ Play Match</button>
     <button class="tb-btn" onclick="advanceWeek()" title="Advance week — sim other teams, queue your match">⏩ Week</button>
   </div>
 </div>
@@ -2856,6 +2855,13 @@ function simulateMatchFull(homeId, awayId, compId, isPlayerClub) {
   };
 
   // Update player stats for player's club
+  const compName = (() => {
+    if (G.leagues[compId]) return G.leagues[compId].name || compId;
+    if (compId === 'cl') return 'Champions League';
+    if (compId === 'el') return 'Europa League';
+    if (compId === 'ecl') return 'Conference League';
+    return compId;
+  })();
   const updateClub = (cid, gf, ga, oppId, isHome, weekNum) => {
     const isWin = gf > ga, isDraw = gf === ga;
     const myClubLocal = G.clubs[cid];
@@ -2879,15 +2885,28 @@ function simulateMatchFull(homeId, awayId, compId, isPlayerClub) {
       pl.stats.ratingTotal = (pl.stats.ratingTotal || 0) + matchRat;
       pl.stats.ratingCount = (pl.stats.ratingCount || 0) + 1;
       pl.stats.avgRating = parseFloat((pl.stats.ratingTotal / pl.stats.ratingCount).toFixed(2));
+      // Count this player's contributions in this match from events
+      const plGoals = events.filter(e => e.type==='goal' && e.playerId===pid).length;
+      const plAssists = events.filter(e => e.type==='goal' && e.assistId===pid).length;
+      const plYellow = events.filter(e => e.type==='yellow' && e.playerId===pid).length;
+      const plRed = events.filter(e => e.type==='red' && e.playerId===pid).length;
+      const redEvent = plRed > 0 ? events.find(e=>e.type==='red'&&e.playerId===pid) : null;
+      const minsPlayed = redEvent ? (redEvent.minute || 90) : 90;
       if (!pl.stats.matchHistory) pl.stats.matchHistory = [];
       pl.stats.matchHistory.push({
         date: dateStr,
+        comp: compName,
         opp: oppName,
         home: isHome,
         gf, ga,
         result: isWin ? 'W' : isDraw ? 'D' : 'L',
         rating: parseFloat(matchRat.toFixed(1)),
-        week: weekNum || G.player?.week || 1
+        week: weekNum || G.player?.week || 1,
+        goals: plGoals,
+        assists: plAssists,
+        yellow: plYellow,
+        red: plRed,
+        mins: minsPlayed
       });
     });
   };
@@ -2943,6 +2962,38 @@ async function advanceWeek() {
   const p = G.player;
   const myClub = G.clubs[p.clubId];
   const myLeague = G.leagues[myClub.leagueId];
+
+  // ── Auto-sim any previous round's match that was skipped (not watched) ──
+  const pendingLeagueMatch = myLeague.fixtures.find(f => !f.played && f._readyToPlay && (f.home === p.clubId || f.away === p.clubId));
+  if (pendingLeagueMatch) {
+    const r = simulateMatchFull(pendingLeagueMatch.home, pendingLeagueMatch.away, myClub.leagueId, true);
+    pendingLeagueMatch.played = true; pendingLeagueMatch._readyToPlay = false;
+    pendingLeagueMatch.result = { home: r.homeGoals, away: r.awayGoals }; pendingLeagueMatch.events = r.events; pendingLeagueMatch.stats = r.stats;
+    updateLeagueTable(myClub.leagueId, pendingLeagueMatch.home, pendingLeagueMatch.away, r.homeGoals, r.awayGoals);
+    addNews(`Result: ${G.clubs[pendingLeagueMatch.home].name} ${r.homeGoals}–${r.awayGoals} ${G.clubs[pendingLeagueMatch.away].name}`, `Week ${p.week-1}`, r.homeGoals > r.awayGoals ? 'home win' : r.awayGoals > r.homeGoals ? 'away win' : 'draw');
+    notify(`Auto-simmed skipped match: ${G.clubs[pendingLeagueMatch.home].name} ${r.homeGoals}–${r.awayGoals} ${G.clubs[pendingLeagueMatch.away].name}`, 'info');
+  }
+  // ── Also auto-sim any pending euro matches ──
+  if (G.ucCompetitions) {
+    for (const compKey of ['cl','el','ecl']) {
+      const uc = G.ucCompetitions[compKey];
+      if (!uc || !uc.fixtures) continue;
+      const pendingEuro = uc.fixtures.find(f => !f.played && f._readyToPlay && (f.home === p.clubId || f.away === p.clubId));
+      if (pendingEuro) {
+        const r = simulateMatchFull(pendingEuro.home, pendingEuro.away, compKey, true);
+        pendingEuro.played = true; pendingEuro._readyToPlay = false;
+        pendingEuro.result = { home: r.homeGoals, away: r.awayGoals }; pendingEuro.events = r.events;
+        [{ tid: pendingEuro.home, gf: r.homeGoals, ga: r.awayGoals },{ tid: pendingEuro.away, gf: r.awayGoals, ga: r.homeGoals }].forEach(({tid,gf,ga}) => {
+          const row = uc.leagueTable.find(x => x.clubId === tid);
+          if (!row) return;
+          row.played++; row.gf+=gf; row.ga+=ga; row.gd=row.gf-row.ga;
+          if(gf>ga){row.won++;row.points+=3;} else if(gf===ga){row.drawn++;row.points++;} else row.lost++;
+        });
+        notify(`Auto-simmed skipped match: ${G.clubs[pendingEuro.home].name} ${r.homeGoals}–${r.awayGoals} ${G.clubs[pendingEuro.away].name}`, 'info');
+      }
+    }
+  }
+
   const thisRound = p.week;
   const myFixtures = myLeague.fixtures.filter(f => f.round === thisRound && !f.played);
   const myMatch = myFixtures.find(f => f.home === p.clubId || f.away === p.clubId);
@@ -6449,12 +6500,9 @@ function renderPlayerPage(pid) {
   const attrs = p.attributes || {};
   const club = G.clubs[p.contract.clubId];
   const isMyPlayer = club?.id === G.player?.clubId;
-  const matchRatings = [];
-  const teamRatBase = p.stats.apps > 0 ? (5.0 + (p.rating - 50) * 0.05) : 6.0;
-  for (let i = 0; i < p.stats.apps; i++) {
-    const r = Math.min(10, Math.max(3.5, teamRatBase + (rng()-0.48)*3.2));
-    matchRatings.push(parseFloat(r.toFixed(1)));
-  }
+  // Use real stored match history
+  const matchHistory = (p.stats.matchHistory || []);
+  const matchRatings = matchHistory.map(m => m.rating);
   const avgRating = matchRatings.length ? (matchRatings.reduce((s,r)=>s+r,0)/matchRatings.length).toFixed(1) : null;
   const ratingColor = r => r>=8.5?'#22c55e':r>=7.5?'#4ade80':r>=6.5?'#3b82f6':r>=5.5?'#eab308':'#ef4444';
   const ratingBg = r => r>=8.5?'rgba(34,197,94,0.18)':r>=7.5?'rgba(74,222,128,0.15)':r>=6.5?'rgba(59,130,246,0.15)':r>=5.5?'rgba(234,179,8,0.15)':'rgba(239,68,68,0.15)';
@@ -6462,7 +6510,52 @@ function renderPlayerPage(pid) {
   const posIcon = posEmoji[p.position]||'⚽';
   const attrGroups = { Technical:['passing','shooting','dribbling'], Physical:['pace','strength','stamina'], Mental:['vision','tackling','positioning'] };
   const attrBar = (label, val) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;"><div style="width:90px;font-size:11px;color:var(--text2);flex-shrink:0;">${label.replace(/([A-Z])/g,' $1').trim()}</div><div style="flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;"><div style="width:${val||0}%;height:100%;background:${val>=80?'var(--green)':val>=65?'#86efac':val>=50?'var(--accent)':val>=35?'var(--yellow)':'var(--red)'};border-radius:3px;"></div></div><div style="width:24px;text-align:right;font-family:var(--mono);font-size:11px;">${val||'—'}</div></div>`;
-  const matchRatingGrid = matchRatings.length ? matchRatings.map((r,i)=>`<div title="Match ${i+1}: ${r}" style="width:32px;height:32px;border-radius:6px;background:${ratingBg(r)};border:1px solid ${ratingColor(r)}33;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:${ratingColor(r)};">${r}</div>`).join('') : '<div style="color:var(--text3);font-size:12px;padding:8px;">No appearances yet this season</div>';
+  // Season log table — FotMob style with all columns
+  const matchLogTable = matchHistory.length > 0 ? `
+    <div style="overflow-x:auto;margin-top:4px;">
+    <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border2);background:var(--bg3);">
+          <th style="text-align:left;padding:5px 6px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;white-space:nowrap;">Competition</th>
+          <th style="text-align:left;padding:5px 6px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;white-space:nowrap;">Date</th>
+          <th style="text-align:left;padding:5px 6px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;white-space:nowrap;">Opponent</th>
+          <th style="text-align:center;padding:5px 5px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Result</th>
+          <th style="text-align:center;padding:5px 5px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;" title="Minutes Played">Min</th>
+          <th style="text-align:center;padding:5px 5px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;" title="Goals">⚽</th>
+          <th style="text-align:center;padding:5px 5px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;" title="Assists">🅰️</th>
+          <th style="text-align:center;padding:5px 5px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;" title="Yellow Cards">🟨</th>
+          <th style="text-align:center;padding:5px 5px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;" title="Red Cards">🟥</th>
+          <th style="text-align:center;padding:5px 6px;font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Rating</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${[...matchHistory].reverse().map(m => {
+          const rc = ratingColor(m.rating);
+          const rb = ratingBg(m.rating);
+          const resColor = m.result==='W'?'var(--green)':m.result==='D'?'var(--yellow)':'var(--red)';
+          const compShort = (m.comp||'League').replace('Champions League','UCL').replace('Europa League','UEL').replace('Conference League','UECL');
+          const goals = m.goals||0; const assists = m.assists||0; const yellow = m.yellow||0; const red = m.red||0;
+          return `<tr style="border-bottom:1px solid var(--border);cursor:default;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+            <td style="padding:5px 6px;white-space:nowrap;"><span style="font-size:9px;font-family:var(--mono);color:var(--text3);background:var(--bg4);border-radius:3px;padding:1px 4px;">${compShort}</span></td>
+            <td style="padding:5px 6px;color:var(--text2);font-family:var(--mono);font-size:10px;white-space:nowrap;">${m.date}</td>
+            <td style="padding:5px 6px;font-weight:500;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.home?'vs':'@'} ${m.opp}</td>
+            <td style="padding:5px 5px;text-align:center;white-space:nowrap;">
+              <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${resColor};">${m.result}</span>
+              <span style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-left:3px;">${m.gf}–${m.ga}</span>
+            </td>
+            <td style="padding:5px 5px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text2);">${m.mins||90}'</td>
+            <td style="padding:5px 5px;text-align:center;font-family:var(--mono);font-size:11px;font-weight:700;color:${goals>0?'var(--green)':'var(--text3)'};">${goals>0?goals:'-'}</td>
+            <td style="padding:5px 5px;text-align:center;font-family:var(--mono);font-size:11px;font-weight:700;color:${assists>0?'var(--accent)':'var(--text3)'};">${assists>0?assists:'-'}</td>
+            <td style="padding:5px 5px;text-align:center;">${yellow>0?`<span style="display:inline-block;width:10px;height:13px;background:#eab308;border-radius:2px;font-size:9px;line-height:13px;text-align:center;">${yellow>1?yellow:''}</span>`:'-'}</td>
+            <td style="padding:5px 5px;text-align:center;">${red>0?`<span style="display:inline-block;width:10px;height:13px;background:#ef4444;border-radius:2px;font-size:9px;line-height:13px;text-align:center;"></span>`:'-'}</td>
+            <td style="padding:5px 6px;text-align:center;">
+              <span style="display:inline-block;padding:2px 7px;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:800;background:${rb};color:${rc};border:1px solid ${rc}33;">${m.rating}</span>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>` : '<div style="color:var(--text3);font-size:12px;padding:8px;">No appearances yet this season</div>';
 
   const html = `
   <div style="max-width:900px;margin:0 auto;">
@@ -6491,7 +6584,7 @@ function renderPlayerPage(pid) {
         </div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;">
       <!-- LEFT: Attributes -->
       <div class="card">
         <div class="card-title">Attributes</div>
@@ -6508,9 +6601,22 @@ function renderPlayerPage(pid) {
       <!-- RIGHT -->
       <div>
         <div class="card mb12">
-          <div class="card-title">Season Ratings — ${p.stats.apps} apps</div>
-          ${avgRating ? `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="background:${ratingBg(parseFloat(avgRating))};border-radius:10px;padding:10px 16px;text-align:center;"><div style="font-size:26px;font-weight:900;font-family:var(--mono);color:${ratingColor(parseFloat(avgRating))};line-height:1;">${avgRating}</div><div style="font-size:9px;color:${ratingColor(parseFloat(avgRating))};text-transform:uppercase;letter-spacing:.08em;margin-top:2px;">Season Avg</div></div><div style="font-size:11px;color:var(--text2);line-height:1.8;"><div>🟢 ${matchRatings.filter(r=>r>=7.5).length} great</div><div>🔵 ${matchRatings.filter(r=>r>=6.5&&r<7.5).length} good</div><div>🟡 ${matchRatings.filter(r=>r>=5.5&&r<6.5).length} average</div><div>🔴 ${matchRatings.filter(r=>r<5.5).length} poor</div></div></div>` : ''}
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">${matchRatingGrid}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div class="card-title" style="margin-bottom:0;">Season Log — ${p.stats.apps} apps</div>
+            ${avgRating ? `<div style="display:flex;align-items:center;gap:10px;">
+              <div style="display:flex;gap:6px;font-size:10px;color:var(--text2);">
+                <span>🟢 ${matchRatings.filter(r=>r>=7.5).length}</span>
+                <span>🔵 ${matchRatings.filter(r=>r>=6.5&&r<7.5).length}</span>
+                <span>🟡 ${matchRatings.filter(r=>r>=5.5&&r<6.5).length}</span>
+                <span>🔴 ${matchRatings.filter(r=>r<5.5).length}</span>
+              </div>
+              <div style="background:${ratingBg(parseFloat(avgRating))};border-radius:8px;padding:5px 10px;text-align:center;">
+                <span style="font-size:16px;font-weight:900;font-family:var(--mono);color:${ratingColor(parseFloat(avgRating))};">${avgRating}</span>
+                <span style="font-size:8px;color:${ratingColor(parseFloat(avgRating))};text-transform:uppercase;margin-left:3px;">avg</span>
+              </div>
+            </div>` : ''}
+          </div>
+          ${matchLogTable}
         </div>
         <div class="card">
           <div class="card-title">Contract</div>
@@ -7059,24 +7165,39 @@ function showGoalReplay(scorerName, assistName, minute) {
     const overlay = document.getElementById('goal-replay-overlay');
     overlay.classList.add('open');
 
-    // Pick random shot details
-    const shotTypes = ['Volley', 'Placed Finish', 'Header', 'Long Range', 'Tap-in', 'Curler', 'Power Shot', 'Chip', 'Lob', 'Counter'];
-    const zones = ['Six-yard Box', 'Penalty Spot', 'Edge of Box', 'Left Channel', 'Right Channel', 'Central Area', 'Outside Box'];
-    const hits = ['Bottom Left', 'Bottom Right', 'Top Left', 'Top Right', 'Centre Net', 'Off Post In', 'Under Bar'];
+    // Pick shot details
+    const shotTypes = ['Volley', 'Placed Finish', 'Header', 'Long Range', 'Tap-in', 'Curler', 'Power Shot', 'Chip', 'Lob'];
+    const zones = ['Six-yard Box', 'Penalty Spot', 'Edge of Box', 'Left Channel', 'Right Channel', 'Central Area'];
     const distances = ['4m', '6m', '8m', '11m', '14m', '18m', '22m', '26m'];
     const shotType = shotTypes[Math.floor(Math.random() * shotTypes.length)];
     const zone = zones[Math.floor(Math.random() * zones.length)];
-    const hit = hits[Math.floor(Math.random() * hits.length)];
     const distance = distances[Math.floor(Math.random() * distances.length)];
 
-    // Randomise ball path start and end positions
-    const ballStartX = 0.35 + Math.random() * 0.3;
-    const ballStartY = 0.55 + Math.random() * 0.2;
-    const ballEndX = 0.15 + Math.random() * 0.7;
-    const ballEndY = 0.05 + Math.random() * 0.35;
-    // Net impact point (0-1 in goal width/height)
-    const netX = 0.1 + Math.random() * 0.8;
-    const netY = 0.1 + Math.random() * 0.8;
+    // Net impact point drives BOTH the goal-face canvas AND the pitch ball endpoint
+    // netX: 0=far left post, 1=far right post
+    // netY: 0=crossbar, 1=ground level
+    const netX = 0.08 + Math.random() * 0.84;
+    const netY = 0.12 + Math.random() * 0.76;
+
+    // Derive hit label from netX/netY
+    const hitH = netX < 0.33 ? 'Left' : netX > 0.67 ? 'Right' : 'Centre';
+    const hitV = netY < 0.35 ? 'Top' : netY > 0.65 ? 'Bottom' : 'Mid';
+    const hit = `${hitV} ${hitH}`;
+
+    // Ball STARTS from shooter position (centre-ish penalty area depth)
+    const shooterX = 0.35 + Math.random() * 0.3;   // horizontal: left/right in box
+    const shooterY = 0.72 + Math.random() * 0.12;   // vertical: lower half of canvas = attacker
+
+    // Ball ENDS at goal — map netX to horizontal goal width on canvas, netY maps to near-top
+    // Goal spans cW*0.36 to cW*0.64, crossbar at cH*0.01, ground at cH*0.09
+    const ballEndXNorm = 0.36 + netX * 0.28;  // map netX across goal width
+    const ballEndYNorm = 0.01 + netY * 0.08;  // map netY within goal height
+
+    // GK dives toward the ball landing spot in the goal
+    const gkDiveDir = netX < 0.35 ? -1 : netX > 0.65 ? 1 : (Math.random() > 0.5 ? 1 : -1);
+    // GK starts central at goal line
+    const gkStartX = 0.50;
+    const gkStartY = 0.10;
 
     document.getElementById('goal-replay-scorer').textContent =
       `${scorerName}${assistName ? ` (assist: ${assistName})` : ''} · ${minute}'`;
@@ -7085,16 +7206,118 @@ function showGoalReplay(scorerName, assistName, minute) {
     document.getElementById('gr-zone').textContent = zone;
     document.getElementById('gr-hit').textContent = hit;
 
-    // Draw the net canvas
+    // Draw the net canvas (animated separately, once)
     const netCanvas = document.getElementById('goal-replay-net-canvas');
     drawGoalNet(netCanvas, netX, netY);
 
-    // Animate the pitch canvas
+    // ── Pitch canvas animation ──
     const canvas = document.getElementById('goal-replay-canvas');
     const wrap = document.getElementById('goal-replay-pitch-wrap');
     let frame = 0;
-    let phase = 0; // 0=approach 1=shot 2=freeze
-    const totalFrames = 140;
+    const SHOT_FRAME = 40;   // frame shooter kicks
+    const ARRIVE_FRAME = 90; // frame ball reaches goal
+    const totalFrames = 160;
+
+    function drawStickPlayer(ctx, x, y, r, shirtColor, pose, facingLeft) {
+      // Simple but readable stick figure footballer
+      ctx.save();
+      const headR = r * 0.5;
+      const bodyLen = r * 1.6;
+      const legLen = r * 1.3;
+      const armLen = r * 1.0;
+      const neckY = y - headR;
+      const shoulderY = neckY + headR * 0.5 + r * 0.1;
+      const hipY = shoulderY + bodyLen;
+      const fx = facingLeft ? -1 : 1;
+
+      // Shadow
+      ctx.beginPath();
+      ctx.ellipse(x, y + bodyLen + legLen + headR, r * 0.9, r * 0.22, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fill();
+
+      // Head
+      const headGrad = ctx.createRadialGradient(x - headR*0.2, neckY - headR*0.3, headR*0.1, x, neckY, headR);
+      headGrad.addColorStop(0, '#f5c58a'); headGrad.addColorStop(1, '#d4975a');
+      ctx.beginPath(); ctx.arc(x, neckY, headR, 0, Math.PI * 2);
+      ctx.fillStyle = headGrad; ctx.fill();
+
+      // Body (shirt)
+      ctx.fillStyle = shirtColor;
+      ctx.beginPath();
+      ctx.moveTo(x - r*0.35, shoulderY);
+      ctx.lineTo(x + r*0.35, shoulderY);
+      ctx.lineTo(x + r*0.28, hipY);
+      ctx.lineTo(x - r*0.28, hipY);
+      ctx.closePath(); ctx.fill();
+
+      // Shorts
+      ctx.fillStyle = '#1e3a5f';
+      ctx.beginPath();
+      ctx.moveTo(x - r*0.28, hipY);
+      ctx.lineTo(x + r*0.28, hipY);
+      ctx.lineTo(x + r*0.22, hipY + legLen*0.35);
+      ctx.lineTo(x - r*0.22, hipY + legLen*0.35);
+      ctx.closePath(); ctx.fill();
+
+      // Legs
+      ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = r * 0.28; ctx.lineCap = 'round';
+      if (pose === 'kick') {
+        // Planted leg
+        ctx.beginPath(); ctx.moveTo(x - fx*r*0.18, hipY);
+        ctx.lineTo(x - fx*r*0.12, hipY + legLen*0.5);
+        ctx.lineTo(x - fx*r*0.1, hipY + legLen); ctx.stroke();
+        // Kicking leg raised
+        ctx.beginPath(); ctx.moveTo(x + fx*r*0.18, hipY);
+        ctx.lineTo(x + fx*r*0.5, hipY - legLen*0.2);
+        ctx.lineTo(x + fx*r*0.7, hipY + legLen*0.15); ctx.stroke();
+        // Boot
+        ctx.fillStyle = '#111'; ctx.beginPath();
+        ctx.ellipse(x + fx*r*0.7, hipY + legLen*0.15, r*0.32, r*0.14, facingLeft ? 0.3 : -0.3, 0, Math.PI*2);
+        ctx.fill();
+      } else if (pose === 'dive') {
+        // Body tilted — both legs angled
+        ctx.beginPath(); ctx.moveTo(x - r*0.2, hipY);
+        ctx.lineTo(x + fx*r*0.6, hipY + legLen*0.5);
+        ctx.lineTo(x + fx*r*0.9, hipY + legLen*0.2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + r*0.2, hipY);
+        ctx.lineTo(x + fx*r*0.3, hipY + legLen*0.7);
+        ctx.lineTo(x + fx*r*0.1, hipY + legLen); ctx.stroke();
+      } else {
+        // Stand: straight legs
+        ctx.beginPath(); ctx.moveTo(x - r*0.18, hipY);
+        ctx.lineTo(x - r*0.12, hipY + legLen*0.5);
+        ctx.lineTo(x - r*0.14, hipY + legLen); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + r*0.18, hipY);
+        ctx.lineTo(x + r*0.15, hipY + legLen*0.5);
+        ctx.lineTo(x + r*0.14, hipY + legLen); ctx.stroke();
+      }
+
+      // Arms
+      ctx.strokeStyle = shirtColor; ctx.lineWidth = r * 0.22;
+      if (pose === 'kick') {
+        ctx.beginPath(); ctx.moveTo(x - fx*r*0.3, shoulderY + r*0.1);
+        ctx.lineTo(x - fx*r*0.7, shoulderY + r*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + fx*r*0.3, shoulderY + r*0.1);
+        ctx.lineTo(x + fx*r*0.6, shoulderY - r*0.3); ctx.stroke();
+      } else if (pose === 'dive') {
+        ctx.beginPath(); ctx.moveTo(x - r*0.3, shoulderY);
+        ctx.lineTo(x + fx*r*0.9, shoulderY - r*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + r*0.3, shoulderY);
+        ctx.lineTo(x + fx*r*0.7, shoulderY + r*0.2); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.moveTo(x - r*0.3, shoulderY);
+        ctx.lineTo(x - r*0.65, shoulderY + armLen*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + r*0.3, shoulderY);
+        ctx.lineTo(x + r*0.65, shoulderY + armLen*0.5); ctx.stroke();
+      }
+
+      // Shirt number
+      ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = `bold ${r*0.45}px Arial`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('10', x, shoulderY + bodyLen * 0.35);
+
+      ctx.restore();
+    }
 
     function animateReplay() {
       const W = wrap.clientWidth || 480;
@@ -7104,88 +7327,156 @@ function showGoalReplay(scorerName, assistName, minute) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const cW = canvas.width, cH = canvas.height;
 
-      // Grass
+      // ── Pitch background ──
       const grassGrad = ctx.createLinearGradient(0, 0, 0, cH);
-      grassGrad.addColorStop(0, '#166534'); grassGrad.addColorStop(1, '#14532d');
+      grassGrad.addColorStop(0, '#155a2e'); grassGrad.addColorStop(1, '#0f3d1e');
       ctx.fillStyle = grassGrad; ctx.fillRect(0, 0, cW, cH);
 
       // Pitch stripes
-      for (let i = 0; i < 8; i++) {
-        ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.025)' : 'transparent';
-        ctx.fillRect(i * cW / 8, 0, cW / 8, cH);
+      for (let i = 0; i < 10; i++) {
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.022)' : 'transparent';
+        ctx.fillRect(i * cW / 10, 0, cW / 10, cH);
       }
+
+      // Penalty arc (partial circle from penalty spot)
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cW * 0.5, cH * 0.38, cW * 0.14, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.stroke();
 
       // Penalty box
-      ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 2;
-      ctx.strokeRect(cW * 0.2, cH * 0.05, cW * 0.6, cH * 0.55);
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
+      ctx.strokeRect(cW * 0.18, cH * 0.05, cW * 0.64, cH * 0.57);
       // Six yard box
-      ctx.strokeRect(cW * 0.35, cH * 0.05, cW * 0.3, cH * 0.2);
+      ctx.strokeRect(cW * 0.345, cH * 0.05, cW * 0.31, cH * 0.18);
       // Penalty spot
-      ctx.beginPath(); ctx.arc(cW * 0.5, cH * 0.38, cW * 0.007, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(cW * 0.5, cH * 0.37, cW * 0.007, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fill();
       // Goal line
-      ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(cW * 0.2, cH * 0.05); ctx.lineTo(cW * 0.8, cH * 0.05); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.65)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(cW * 0.18, cH * 0.05); ctx.lineTo(cW * 0.82, cH * 0.05); ctx.stroke();
 
-      // Goal posts
+      // Goal posts & net
       ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 4;
-      ctx.strokeRect(cW * 0.36, cH * 0.01, cW * 0.28, cH * 0.08);
-      // Net lines
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 0.8;
-      for (let nx = 0; nx < 7; nx++) { ctx.beginPath(); ctx.moveTo(cW * 0.36 + nx * cW * 0.04, cH * 0.01); ctx.lineTo(cW * 0.36 + nx * cW * 0.04, cH * 0.09); ctx.stroke(); }
-      for (let ny = 0; ny < 3; ny++) { ctx.beginPath(); ctx.moveTo(cW * 0.36, cH * 0.01 + ny * cH * 0.04); ctx.lineTo(cW * 0.64, cH * 0.01 + ny * cH * 0.04); ctx.stroke(); }
+      ctx.strokeRect(cW * 0.36, cH * 0.005, cW * 0.28, cH * 0.075);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 0.9;
+      for (let nx = 0; nx <= 8; nx++) {
+        ctx.beginPath(); ctx.moveTo(cW * 0.36 + nx * cW * 0.035, cH * 0.005);
+        ctx.lineTo(cW * 0.36 + nx * cW * 0.035, cH * 0.08); ctx.stroke();
+      }
+      for (let ny = 0; ny <= 3; ny++) {
+        ctx.beginPath(); ctx.moveTo(cW * 0.36, cH * 0.005 + ny * cH * 0.025);
+        ctx.lineTo(cW * 0.64, cH * 0.005 + ny * cH * 0.025); ctx.stroke();
+      }
 
-      // Ball animation
-      const prog = Math.min(1, frame / 80);
-      const eased = prog < 0.5 ? 2 * prog * prog : -1 + (4 - 2 * prog) * prog;
-      const bX = cW * (ballStartX + (ballEndX - ballStartX) * eased);
-      const bY = cH * (ballStartY + (ballEndY - ballStartY) * eased);
-      // Ball trail
-      if (prog > 0.1) {
+      // ── GK position ──
+      // GK dives toward landing side when ball arrives
+      const gkProg = Math.max(0, Math.min(1, (frame - SHOT_FRAME) / (ARRIVE_FRAME - SHOT_FRAME)));
+      const gkDiveAmount = gkDiveDir * gkProg * cW * 0.12;
+      const gkBobUp = frame < SHOT_FRAME ? 0 : Math.max(0, (gkProg - 0.3) * -cH * 0.06); // dives low
+      const gkX = cW * gkStartX + gkDiveAmount;
+      const gkY = cH * gkStartY + gkBobUp;
+      const gkPose = frame >= SHOT_FRAME ? 'dive' : 'stand';
+      const gkFacingLeft = gkDiveDir < 0;
+      drawStickPlayer(ctx, gkX, gkY, cW * 0.018, '#ef4444', gkPose, gkFacingLeft);
+      // GK number/label
+      ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.font = `bold ${cW*0.013}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.fillText('GK', gkX, gkY - cW*0.032);
+
+      // ── Shooter position ──
+      const shooterPx = cW * shooterX;
+      const shooterPy = cH * shooterY;
+      const shooterPose = frame >= SHOT_FRAME ? 'kick' : 'stand';
+      // Shooter faces toward goal (up the pitch = left on this canvas view)
+      drawStickPlayer(ctx, shooterPx, shooterPy, cW * 0.022, '#3b82f6', shooterPose, false);
+
+      // ── Ball animation ──
+      const ballEndX = cW * ballEndXNorm;
+      const ballEndY = cH * ballEndYNorm;
+
+      let bX, bY, bR;
+      if (frame <= SHOT_FRAME) {
+        // Pre-shot: ball sits just in front of shooter's feet
+        bX = shooterPx + (Math.random() > 0.5 ? 1 : -1) * cW * 0.001;
+        bY = shooterPy + cH * 0.09;
+        bR = cW * 0.016;
+      } else {
+        // Ball travels from shooter toward goal
+        const shotProg = Math.min(1, (frame - SHOT_FRAME) / (ARRIVE_FRAME - SHOT_FRAME));
+        const eased = shotProg < 0.5 ? 2*shotProg*shotProg : -1+(4-2*shotProg)*shotProg;
+        // Parabolic arc: starts at feet, curves up slightly then into goal
+        const arcPeak = 0.3;
+        const arcY = eased < arcPeak ? -cH*0.08*(eased/arcPeak) : -cH*0.08*(1-(eased-arcPeak)/(1-arcPeak));
+        bX = shooterPx + (ballEndX - shooterPx) * eased;
+        bY = shooterPy + (ballEndY - shooterPy) * eased + arcY;
+        // Ball shrinks slightly as it moves away (perspective)
+        bR = cW * 0.018 * (1 - eased * 0.4);
+
+        // Ball trail
         for (let t = 5; t >= 1; t--) {
-          const tp = Math.max(0, (frame - t * 3) / 80);
-          const te = tp < 0.5 ? 2 * tp * tp : -1 + (4 - 2 * tp) * tp;
-          const tx = cW * (ballStartX + (ballEndX - ballStartX) * te);
-          const ty = cH * (ballStartY + (ballEndY - ballStartY) * te);
-          ctx.beginPath(); ctx.arc(tx, ty, cW * 0.008 * (1 - t * 0.15), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255,255,255,${0.08 * (6 - t)})`; ctx.fill();
+          const tp = Math.max(0, (frame - SHOT_FRAME - t * 2) / (ARRIVE_FRAME - SHOT_FRAME));
+          const te = tp < 0.5 ? 2*tp*tp : -1+(4-2*tp)*tp;
+          const tarcY = te < arcPeak ? -cH*0.08*(te/arcPeak) : -cH*0.08*(1-(te-arcPeak)/(1-arcPeak));
+          const tx = shooterPx + (ballEndX - shooterPx) * te;
+          const ty = shooterPy + (ballEndY - shooterPy) * te + tarcY;
+          ctx.beginPath(); ctx.arc(tx, ty, bR * 0.7 * (1 - t * 0.15), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${0.07 * (6 - t)})`; ctx.fill();
         }
       }
-      // Ball
-      const bR = cW * 0.018;
-      const bGrad = ctx.createRadialGradient(bX - bR * 0.3, bY - bR * 0.3, bR * 0.05, bX, bY, bR);
-      bGrad.addColorStop(0, '#ffffff'); bGrad.addColorStop(0.6, '#e5e7eb'); bGrad.addColorStop(1, '#9ca3af');
-      ctx.beginPath(); ctx.arc(bX, bY, bR, 0, Math.PI * 2); ctx.fillStyle = bGrad; ctx.fill();
-      // Ball seam spin
-      ctx.strokeStyle = 'rgba(50,50,50,0.4)'; ctx.lineWidth = 0.8;
-      const sp = frame * 0.2;
-      ctx.beginPath(); ctx.arc(bX, bY, bR * 0.65, sp, sp + Math.PI); ctx.stroke();
 
-      // Goal flash when ball reaches goal (prog > 0.85)
-      if (prog > 0.85) {
-        const flashAlpha = Math.max(0, 0.4 * Math.sin((prog - 0.85) / 0.15 * Math.PI));
+      // Ball
+      const bGrad = ctx.createRadialGradient(bX - bR*0.3, bY - bR*0.3, bR*0.05, bX, bY, bR);
+      bGrad.addColorStop(0, '#ffffff'); bGrad.addColorStop(0.55, '#e5e7eb'); bGrad.addColorStop(1, '#9ca3af');
+      ctx.beginPath(); ctx.arc(bX, bY, bR, 0, Math.PI * 2);
+      ctx.fillStyle = bGrad; ctx.fill();
+      const sp = frame * 0.25;
+      ctx.strokeStyle = 'rgba(40,40,40,0.45)'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.arc(bX, bY, bR * 0.6, sp, sp + Math.PI); ctx.stroke();
+
+      // ── Goal impact flash ──
+      if (frame >= ARRIVE_FRAME) {
+        const flashProg = Math.min(1, (frame - ARRIVE_FRAME) / 20);
+        const flashAlpha = Math.max(0, 0.55 * Math.sin(flashProg * Math.PI));
         ctx.fillStyle = `rgba(34,197,94,${flashAlpha})`;
-        ctx.fillRect(cW * 0.36, 0, cW * 0.28, cH * 0.1);
-        // "GOAL!" text
-        const textAlpha = Math.min(1, (prog - 0.85) * 7);
+        ctx.fillRect(cW * 0.36, 0, cW * 0.28, cH * 0.09);
+
+        // GOAL! text bursting in
+        const textAlpha = Math.min(1, (frame - ARRIVE_FRAME) / 10);
+        const textScale = 1 + Math.max(0, 0.3 * (1 - (frame - ARRIVE_FRAME) / 15));
         ctx.save();
-        ctx.font = `bold ${cW * 0.055}px 'Arial Black', Arial, sans-serif`;
+        ctx.translate(cW * 0.5, cH * 0.5);
+        ctx.scale(textScale, textScale);
+        ctx.font = `bold ${cW * 0.07}px 'Arial Black', Arial, sans-serif`;
         ctx.fillStyle = `rgba(255,255,255,${textAlpha})`;
-        ctx.textAlign = 'center';
-        ctx.shadowColor = 'rgba(34,197,94,0.8)'; ctx.shadowBlur = 20;
-        ctx.fillText('GOAL!', cW * 0.5, cH * 0.55);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(34,197,94,0.9)'; ctx.shadowBlur = 28;
+        ctx.fillText('GOAL!', 0, 0);
+        // Scorer name
+        ctx.font = `bold ${cW * 0.028}px Arial, sans-serif`;
+        ctx.fillStyle = `rgba(255,220,50,${textAlpha})`;
+        ctx.shadowBlur = 10;
+        ctx.fillText(scorerName, 0, cW * 0.055);
         ctx.restore();
+
+        // Net bulge indicator at goal on canvas
+        const bpX = cW * ballEndXNorm;
+        const bpY = cH * ballEndYNorm;
+        ctx.beginPath(); ctx.arc(bpX, bpY, cW * 0.015 + (frame - ARRIVE_FRAME) * 0.5, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(34,197,94,${flashAlpha * 0.8})`; ctx.lineWidth = 2; ctx.stroke();
       }
 
-      // REPLAY watermark
+      // ── HUD overlays ──
       ctx.save();
-      ctx.font = `bold ${cW * 0.018}px Arial, sans-serif`;
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.textAlign = 'left';
-      ctx.fillText('REPLAY', cW * 0.02, cH * 0.06);
-      // Minute indicator
-      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(cW * 0.02, cH * 0.07, cW * 0.09, cH * 0.04);
-      ctx.fillStyle = '#22c55e'; ctx.textAlign = 'center';
-      ctx.fillText(`${minute}'`, cW * 0.065, cH * 0.1);
+      // REPLAY badge
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(cW*0.02, cH*0.015, cW*0.1, cH*0.042);
+      ctx.fillStyle = '#ffffff'; ctx.font = `bold ${cW*0.018}px Arial`; ctx.textAlign = 'left';
+      ctx.fillText('REPLAY', cW*0.027, cH*0.047);
+      // Minute pill
+      ctx.fillStyle = 'rgba(34,197,94,0.85)'; ctx.beginPath();
+      ctx.roundRect(cW*0.02, cH*0.065, cW*0.075, cH*0.038, 3); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${cW*0.016}px Arial`; ctx.textAlign = 'center';
+      ctx.fillText(`${minute}'`, cW*0.0575, cH*0.092);
       ctx.restore();
 
       frame++;
@@ -7195,63 +7486,92 @@ function showGoalReplay(scorerName, assistName, minute) {
     }
     animateReplay();
 
-    // Store resolve so close button can call it
     window._goalReplayResolve = resolve;
   });
 }
 
 function drawGoalNet(canvas, nx, ny) {
-  // nx, ny = 0-1 normalized position in goal where ball hits
+  // nx, ny = 0-1 position in goal face where ball hits (nx: left=0, right=1; ny: top=0, bottom=1)
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const W = canvas.width || 180, H = canvas.height || 120;
+  canvas.width = W; canvas.height = H;
 
-  // Background — goal face view
-  ctx.fillStyle = '#0a1a0a'; ctx.fillRect(0, 0, W, H);
+  // Background — looking at the goal from the front
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#0c1f0c'); bgGrad.addColorStop(1, '#071407');
+  ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
 
-  // Goal frame
-  ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 4;
-  ctx.strokeRect(W * 0.05, H * 0.05, W * 0.9, H * 0.9);
-
-  // Net grid
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 0.8;
-  const cols = 8, rows = 5;
-  for (let c = 1; c < cols; c++) { ctx.beginPath(); ctx.moveTo(W * 0.05 + c * W * 0.9 / cols, H * 0.05); ctx.lineTo(W * 0.05 + c * W * 0.9 / cols, H * 0.95); ctx.stroke(); }
-  for (let r = 1; r < rows; r++) { ctx.beginPath(); ctx.moveTo(W * 0.05, H * 0.05 + r * H * 0.9 / rows); ctx.lineTo(W * 0.95, H * 0.05 + r * H * 0.9 / rows); ctx.stroke(); }
-
-  // Zone labels
-  const zoneX = ['Left', 'Centre', 'Right'];
-  const zoneY = ['Top', 'Mid', 'Low'];
-  ctx.font = '7px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.textAlign = 'center';
-  for (let c = 0; c < 3; c++) for (let r = 0; r < 3; r++) {
-    ctx.fillText(`${zoneY[r]} ${zoneX[c]}`, W * (0.05 + (c + 0.5) * 0.9 / 3), H * (0.05 + (r + 0.5) * 0.9 / 3) + 3);
+  // Net grid with perspective effect — lines converge slightly toward back
+  const G_L = W*0.04, G_R = W*0.96, G_T = H*0.04, G_B = H*0.94;
+  const gW = G_R - G_L, gH = G_B - G_T;
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.8;
+  const cols = 10, rows = 6;
+  for (let c = 0; c <= cols; c++) {
+    const x = G_L + c * gW / cols;
+    ctx.beginPath(); ctx.moveTo(x, G_T); ctx.lineTo(x, G_B); ctx.stroke();
+  }
+  for (let r = 0; r <= rows; r++) {
+    const y = G_T + r * gH / rows;
+    ctx.beginPath(); ctx.moveTo(G_L, y); ctx.lineTo(G_R, y); ctx.stroke();
   }
 
-  // Impact point
-  const px = W * (0.05 + nx * 0.9);
-  const py = H * (0.05 + ny * 0.9);
+  // Goal frame — thick white posts and crossbar
+  ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 5;
+  ctx.strokeRect(G_L, G_T, gW, gH);
+
+  // Zone heat overlay: highlight the third where ball hit
+  const zoneX = Math.floor(nx * 3); // 0=left, 1=centre, 2=right
+  const zoneY = Math.floor(ny * 3); // 0=top, 1=mid, 2=low — but only 2 zones vertically
+  const hzL = G_L + zoneX * gW / 3;
+  const hzT = G_T + zoneY * gH / 3;
+  ctx.fillStyle = 'rgba(34,197,94,0.08)';
+  ctx.fillRect(hzL, hzT, gW/3, gH/3);
+
+  // Impact point coordinates
+  const px = G_L + nx * gW;
+  const py = G_T + ny * gH;
+
+  // Net distortion — wavy lines radiating from impact
+  ctx.strokeStyle = 'rgba(34,197,94,0.25)'; ctx.lineWidth = 1;
+  for (let a = 0; a < 12; a++) {
+    const angle = a * Math.PI / 6;
+    const len = 18 + Math.random() * 8;
+    ctx.beginPath(); ctx.moveTo(px, py);
+    ctx.lineTo(px + Math.cos(angle) * len, py + Math.sin(angle) * len);
+    ctx.stroke();
+  }
 
   // Ripple rings
   for (let i = 3; i >= 1; i--) {
-    ctx.beginPath(); ctx.arc(px, py, i * 12, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(34,197,94,${0.12 * i})`; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(px, py, i * 11, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(34,197,94,${0.15 * i})`; ctx.lineWidth = 1.5; ctx.stroke();
   }
-  // Impact dot
-  const dotGrad = ctx.createRadialGradient(px, py, 0, px, py, 10);
-  dotGrad.addColorStop(0, '#4ade80'); dotGrad.addColorStop(1, '#16a34a');
-  ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI * 2); ctx.fillStyle = dotGrad; ctx.fill();
+
+  // Impact dot (glowing)
+  const dotGrad = ctx.createRadialGradient(px, py, 0, px, py, 9);
+  dotGrad.addColorStop(0, '#86efac'); dotGrad.addColorStop(0.5, '#22c55e'); dotGrad.addColorStop(1, 'rgba(34,197,94,0)');
+  ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI * 2); ctx.fillStyle = dotGrad; ctx.fill();
   ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
 
-  // Net bulge lines radiating from impact
-  ctx.strokeStyle = 'rgba(34,197,94,0.35)'; ctx.lineWidth = 1;
-  for (let a = 0; a < 8; a++) {
-    const angle = a * Math.PI / 4;
-    ctx.beginPath(); ctx.moveTo(px, py);
-    ctx.lineTo(px + Math.cos(angle) * 18, py + Math.sin(angle) * 18); ctx.stroke();
+  // Zone labels (3x2 grid)
+  const zoneLabelsX = ['Left', 'Centre', 'Right'];
+  const zoneLabelsY = ['Top', 'Low'];
+  ctx.font = `bold ${W*0.055}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let c = 0; c < 3; c++) {
+    for (let r = 0; r < 2; r++) {
+      const lx = G_L + (c + 0.5) * gW / 3;
+      const ly = G_T + (r + 0.5) * gH / 2;
+      const isHit = c === zoneX && Math.floor(ny * 2) === r;
+      ctx.fillStyle = isHit ? 'rgba(34,197,94,0.55)' : 'rgba(255,255,255,0.12)';
+      ctx.fillText(`${zoneLabelsY[r]} ${zoneLabelsX[c]}`, lx, ly);
+    }
   }
 
-  // Title
-  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = 'bold 8px Arial'; ctx.textAlign = 'center';
-  ctx.fillText('SHOT PLACEMENT', W * 0.5, H * 0.99);
+  // Title bar
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, H*0.88, W, H*0.12);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = `bold ${W*0.065}px Arial`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('SHOT PLACEMENT', W*0.5, H*0.94);
 }
 
 function closeGoalReplay() {
