@@ -3827,13 +3827,12 @@ async function simOneDay() {
     return null;
   })();
 
-  // CONFLICT RESOLUTION: if league and UEFA match fall on same day, postpone UEFA to next free mid-week
+  // CONFLICT RESOLUTION: UEFA/cup takes priority — if both fall on same day, postpone the league match
   if (myLeagueMatch && myUEFAMatch) {
-    // Reschedule the UEFA match by shifting it to the next available mid-week round
-    const uefaMatch = myUEFAMatch.match;
-    const nextMidWeekRound = thisRound + 1;
-    uefaMatch.round = nextMidWeekRound;
-    notify(`📅 Schedule conflict — UEFA match rescheduled to Week ${nextMidWeekRound}.`, 'warn');
+    // Reschedule the league match one week forward
+    const nextLeagueRound = thisRound + 1;
+    myLeagueMatch.round = nextLeagueRound;
+    notify(`📅 Schedule conflict — League match rescheduled to Week ${nextLeagueRound}. UEFA fixture takes priority.`, 'warn');
   }
 
   // --- PLAY LEAGUE MATCH ---
@@ -7263,6 +7262,7 @@ function closeGoalReplay() {
 }
 
 
+function closeVAR() {
   document.getElementById('var-overlay').classList.remove('open');
   if (_varTimeout) { clearTimeout(_varTimeout); _varTimeout = null; }
   // Stop the canvas animation loop
